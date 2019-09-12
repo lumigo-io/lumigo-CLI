@@ -29,6 +29,7 @@ USAGE
 # Commands
 <!-- commands -->
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
+* [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 
 ## `lumigo-cli help [COMMAND]`
 
@@ -46,4 +47,22 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.1/src/commands/help.ts)_
+
+## `lumigo-cli sls-remove`
+
+Describe the command here
+
+```
+USAGE
+  $ lumigo-cli sls-remove
+
+OPTIONS
+  -n, --name=name  name to print
+
+DESCRIPTION
+  ...
+  Extra documentation goes here
+```
+
+_See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/sls-remove.js)_
 <!-- commandsstop -->
