@@ -10,17 +10,17 @@ class SlsRemoveCommand extends Command {
 		AWS.config.region = region;
     
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);
-		const bucketName = await getBucketName(stackName, region);
+		const bucketName = await getBucketName(stackName);
     
 		if (!bucketName) {
 			throw new Error(`Stack [${stackName}] in [${region}] does not have a "ServerlessDeploymentBucketName", are you sure it was deployed with Serverless framework?`);
 		}
 
 		this.log(`emptying deployment bucket [${bucketName}]...`);
-		await emptyBucket(bucketName, region);
+		await emptyBucket(bucketName);
     
 		this.log(`removing the stack [${stackName}] in [${region}]...`);
-		await deleteStack(stackName, region);
+		await deleteStack(stackName);
     
 		this.log("stack has been deleted!");
 	}
