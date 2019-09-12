@@ -1,0 +1,62 @@
+{
+  "name": "lumigo-cli",
+  "description": "A collection of helpful commands for working with AWS Lambda",
+  "version": "0.0.0",
+  "author": "Lumigo LTD (https://lumigo.io)",
+  "bin": {
+    "lumigo-cli": "./bin/run"
+  },
+  "bugs": "https://github.com/lumigo-io/lumigo-cli/issues",
+  "dependencies": {
+    "@oclif/command": "^1.5.19",
+    "@oclif/config": "^1.13.3",
+    "@oclif/plugin-help": "^2.2.1"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1.22.2",
+    "eslint": "^5.16.0",
+    "eslint-config-oclif": "^3.1.0",
+    "globby": "^10.0.1"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json",
+    "/src"
+  ],
+  "homepage": "https://github.com/lumigo-io/lumigo-cli",
+  "keywords": [
+    "serverless",
+    "node",
+    "nodejs",
+    "serverless framework",
+    "serverless applications",
+    "serverless plugins",
+    "api gateway",
+    "lambda",
+    "aws",
+    "aws lambda",
+    "amazon",
+    "amazon web services"
+  ],
+  "license": "Apache 2.0",
+  "main": "src/index.js",
+  "oclif": {
+    "commands": "./src/commands",
+    "bin": "lumigo-cli",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
+  },
+  "repository": "lumigo-io/lumigo-cli",
+  "scripts": {
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "eslint .",
+    "prepack": "oclif-dev manifest && oclif-dev readme",
+    "test": "jest",
+    "version": "oclif-dev readme && git add README.md"
+  }
+}
