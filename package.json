@@ -10,13 +10,30 @@
   "dependencies": {
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.13.3",
-    "@oclif/plugin-help": "^2.2.1"
+    "@oclif/plugin-help": "^2.2.1",
+    "aws-sdk": "^2.528.0",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
+    "@commitlint/cli": "^8.1.0",
+    "@commitlint/config-conventional": "^8.0.0",
     "@oclif/dev-cli": "^1.22.2",
+    "@oclif/test": "^1.2.5",
+    "codecov": "^3.5.0",
     "eslint": "^5.16.0",
     "eslint-config-oclif": "^3.1.0",
-    "globby": "^10.0.1"
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "globby": "^10.0.1",
+    "husky": "^3.0.0",
+    "jest": "^24.9.0",
+    "lint-staged": "^9.1.0",
+    "prettier": "^1.18.2",
+    "semantic-release": "^15.13.18"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -56,7 +73,33 @@
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint .",
     "prepack": "oclif-dev manifest && oclif-dev readme",
-    "test": "jest",
-    "version": "oclif-dev readme && git add README.md"
+    "codecov": "codecov",
+    "test": "jest --config=jest.config.js",
+    "test:lint": "eslint .",
+    "version": "oclif-dev readme && git add README.md",
+    "semantic-release": "semantic-release",
+    "prettier:ci": "prettier --list-different \"src/**/*.js\"",
+    "prettier:fix": "prettier --write \"./src/**/*.js\""
+  },
+  "prettier": {
+    "useTabs": true,
+    "tabWidth": 4,
+    "printWidth": 90
+  },
+  "greenkeeper": {
+    "ignore": [
+      "eslint"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ]
   }
 }

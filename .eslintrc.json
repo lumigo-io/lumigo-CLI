@@ -1,0 +1,27 @@
+{
+	"env": {
+		"browser": false,
+		"es6": true,
+		"mocha": true,
+    "node": true,
+    "jest": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 2017
+	},
+	"rules": {
+		"indent": ["error", "tab"],
+		"linebreak-style": ["error", "unix"],
+		"quotes": ["error", "double", { "avoidEscape": true }],
+		"semi": ["error", "always"],
+		"no-console": 0
+	},
+	"extends": ["eslint:recommended", "prettier"],
+	"globals": {
+		"console": true,
+		"require": true,
+		"module": true,
+		"process": true,
+		"setTimeout": true
+  }
+}
