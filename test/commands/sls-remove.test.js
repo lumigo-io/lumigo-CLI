@@ -50,7 +50,7 @@ beforeEach(() => {
 describe("sls-remove", () => {
 	test
 		.stdout()
-		.command(["sls-remove", "hello-world-dev", "us-east-1"])
+		.command(["sls-remove", "-n", "hello-world-dev", "-r", "us-east-1"])
 		.it("sls-remove hello-world-dev us-east-1", ctx => {
 			expect(ctx.stdout).to.contain("getting the deployment bucket name for [hello-world-dev] in [us-east-1]");
 			expect(ctx.stdout).to.contain(`emptying deployment bucket [${bucketName}]...`);
@@ -73,7 +73,7 @@ describe("sls-remove", () => {
 		const errorMessage = 'Stack [hello-world-dev] in [us-east-1] does not have a "ServerlessDeploymentBucketName", are you sure it was deployed with Serverless framework?';
 		test
 			.stdout()
-			.command(["sls-remove", "hello-world-dev", "us-east-1"])
+			.command(["sls-remove", "-n", "hello-world-dev", "-r", "us-east-1"])
 			.catch(err => expect(err.message).to.equal(errorMessage))
 			.it("throws when the CloudFormation stack was not created by SLS");
 	});

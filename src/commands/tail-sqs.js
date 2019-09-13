@@ -1,13 +1,13 @@
 const _ = require("lodash");
 const AWS = require("aws-sdk");
-const {Command} = require("@oclif/command");
+const {Command, flags} = require("@oclif/command");
 
 let seenMessageIds = [];
 
 class TailSqsCommand extends Command {
 	async run() {
-		const {args} = this.parse(TailSqsCommand);
-		const {queueName, region} = args;
+		const {flags} = this.parse(TailSqsCommand);
+		const {queueName, region} = flags;
     
 		AWS.config.region = region;
 
@@ -20,18 +20,18 @@ class TailSqsCommand extends Command {
 }
 
 TailSqsCommand.description = "Tails the messages going into a SQS queue";
-TailSqsCommand.args = [
-	{
-		name: "queueName",
-		required: true,
+TailSqsCommand.flags = {
+	queueName: flags.string({
+		char: "n",
 		description: "name of the SQS queue, e.g. task-queue-dev",
-	},
-	{
-		name: "region",
-		requred: true,
-		description: "AWS region, e.g. us-east-1"
-	}
-];
+		required: true
+	}),
+	region: flags.string({
+		char: "r",
+		description: "AWS region, e.g. us-east-1",
+		required: true
+	})
+};
 
 const getQueueUrl = async (queueName) => {
 	const SQS = new AWS.SQS();

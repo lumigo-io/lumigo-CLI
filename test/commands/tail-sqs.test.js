@@ -28,7 +28,7 @@ describe("tail-sqs", () => {
     
 		test
 			.stdout()
-			.command(["tail-sqs", "queue-dev", "us-east-1"])
+			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
 			.catch(() => {})
 			.it("finds the right one", ctx => {				
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
@@ -54,7 +54,7 @@ describe("tail-sqs", () => {
     
 		test
 			.stdout()
-			.command(["tail-sqs", "queue-dev", "us-east-1"])
+			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
 			.catch(() => {})
 			.it("displays them in the console", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
@@ -90,7 +90,7 @@ describe("tail-sqs", () => {
     
 		test
 			.stdout()
-			.command(["tail-sqs", "queue-dev", "us-east-1"])
+			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
 			.catch(() => {})
 			.it("do not show them again", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
