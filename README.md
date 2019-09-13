@@ -6,7 +6,7 @@ A collection of helpful commands for working with AWS Lambda.
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/lumigo-cli.svg)](https://npmjs.org/package/lumigo-cli)
 [![Downloads/week](https://img.shields.io/npm/dw/lumigo-cli.svg)](https://npmjs.org/package/lumigo-cli)
-[![License](https://img.shields.io/npm/l/lumigo-cli.svg)](https://github.com/lumigo-io/lumigo-cli/blob/master/package.json)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 <!-- toc -->
 * [Usage](#usage)
