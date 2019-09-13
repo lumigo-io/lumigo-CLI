@@ -30,7 +30,8 @@ USAGE
 <!-- commands -->
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
 * [`lumigo-cli sls-remove STACKNAME [REGION]`](#lumigo-cli-sls-remove-stackname-region)
-* [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
+* [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
+* [`lumigo-cli tail-sqs QUEUENAME [REGION]`](#lumigo-cli-tail-sqs-queuename-region)
 
 ## `lumigo-cli help [COMMAND]`
 
@@ -64,13 +65,13 @@ ARGUMENTS
 
 _See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/sls-remove.js)_
 
-## `lumigo-cli tail-sqs`
+## `lumigo-cli tail-kinesis`
 
 Describe the command here
 
 ```
 USAGE
-  $ lumigo-cli tail-sqs
+  $ lumigo-cli tail-kinesis
 
 OPTIONS
   -n, --name=name  name to print
@@ -78,6 +79,21 @@ OPTIONS
 DESCRIPTION
   ...
   Extra documentation goes here
+```
+
+_See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/tail-kinesis.js)_
+
+## `lumigo-cli tail-sqs QUEUENAME [REGION]`
+
+Tails the messages going into a SQS queue
+
+```
+USAGE
+  $ lumigo-cli tail-sqs QUEUENAME [REGION]
+
+ARGUMENTS
+  QUEUENAME  name of the SQS queue, e.g. task-queue-dev
+  REGION     AWS region, e.g. us-east-1
 ```
 
 _See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/tail-sqs.js)_
