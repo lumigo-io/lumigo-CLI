@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const AWS = require("aws-sdk");
+const {getQueueUrl} = require("../lib/sqs");
 const {Command, flags} = require("@oclif/command");
 
 let seenMessageIds = [];
@@ -31,19 +32,6 @@ TailSqsCommand.flags = {
 		description: "AWS region, e.g. us-east-1",
 		required: true
 	})
-};
-
-const getQueueUrl = async (queueName) => {
-	const SQS = new AWS.SQS();
-	const resp = await SQS.listQueues({
-		QueueNamePrefix: queueName
-	}).promise();
-
-	return resp.QueueUrls.find(url => {
-		const segments = url.split("/");
-		// find the exact match
-		return segments[segments.length-1] === queueName;
-	});
 };
 
 const pollSqs = async (queueUrl) => {
