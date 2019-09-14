@@ -29,6 +29,7 @@ USAGE
 # Commands
 <!-- commands -->
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
+* [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
@@ -51,13 +52,13 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.1/src/commands/help.ts)_
 
-## `lumigo-cli replay-sqs-dlq`
+## `lumigo-cli list-lambda`
 
 Describe the command here
 
 ```
 USAGE
-  $ lumigo-cli replay-sqs-dlq
+  $ lumigo-cli list-lambda
 
 OPTIONS
   -n, --name=name  name to print
@@ -65,6 +66,23 @@ OPTIONS
 DESCRIPTION
   ...
   Extra documentation goes here
+```
+
+_See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/list-lambda.js)_
+
+## `lumigo-cli replay-sqs-dlq`
+
+Replays the messages in a SQS DLQ back to the main queue
+
+```
+USAGE
+  $ lumigo-cli replay-sqs-dlq
+
+OPTIONS
+  -c, --concurrency=concurrency    [default: 10] how many concurrent pollers to run
+  -d, --dlqQueueName=dlqQueueName  (required) name of the SQS DLQ queue, e.g. task-queue-dlq-dev
+  -n, --queueName=queueName        (required) name of the SQS queue, e.g. task-queue-dev
+  -r, --region=region              (required) AWS region, e.g. us-east-1
 ```
 
 _See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/replay-sqs-dlq.js)_
