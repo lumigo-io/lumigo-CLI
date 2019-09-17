@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const {Command, flags} = require("@oclif/command");
 const webserver = require("../lib/webserver");
+const readline = require("readline");
 
 class TailSnsCommand extends Command {
 	async run() {
@@ -37,7 +38,7 @@ const getTopicArn = async (topicName) => {
 			NextToken: nextToken
 		}).promise();
 
-		const matchingTopic = resp.Topics.find(x => x.TopicArn.endsWith(topicName));
+		const matchingTopic = resp.Topics.find(x => x.TopicArn.endsWith(":" + topicName));
 		if (matchingTopic) {
 			return matchingTopic.TopicArn;
 		}
@@ -62,12 +63,16 @@ const pollSns = async (topicArn) => {
   
 	const subscriptionArn = await subscribeToSNS(topicArn, url);
   
-	const stdin = process.openStdin();	
-	stdin.on("data", async () => {
+	readline.emitKeypressEvents(process.stdin);
+	process.stdin.setRawMode(true);
+	const stdin = process.openStdin();
+	stdin.once("keypress", async () => {
+		console.log("stopping...");
+    
 		await stop();
 		await unsubscribeFromSNS(subscriptionArn);
 
-		process.exit();
+		process.exit(0);
 	});
 };
 

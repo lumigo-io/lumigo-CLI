@@ -8,10 +8,14 @@ const respond = (onConfirmed) => (req, res, next) => {
 		axios.get(body.SubscribeURL).then(() => {
 			console.log("confirmed SNS subscription");
 			onConfirmed();
+      
+			res.send(200);
 			next();
 		});
 	} else {
 		console.log(body.Message);
+    
+		res.send(200);
 		next();
 	}
 };
