@@ -1,0 +1,46 @@
+const restify = require("restify");
+const axios = require("axios");
+const ngrok = require("ngrok");
+
+const respond = (onConfirmed) => (req, res, next) => {
+	const body = JSON.parse(req.body);
+	if (body.Type === "SubscriptionConfirmation") {
+		axios.get(body.SubscribeURL).then(() => {
+			console.log("confirmed SNS subscription");
+			onConfirmed();
+			next();
+		});
+	} else {
+		console.log(body.Message);
+		next();
+	}
+};
+
+const start = async (onConfirmed) => {
+	const port = 8000 + Math.ceil(Math.random() * 1000);
+	const url = await ngrok.connect(port);
+
+	var server = restify.createServer();
+	server.post("/", respond(onConfirmed));
+  
+	server.use(restify.plugins.bodyParser());
+
+	server.listen(port, function() {
+		console.log(`listening at ${url}`);
+	});
+  
+	return {
+		url,
+		stop: async () => {
+			console.log("stopping webserver...");
+			server.close();
+      
+			console.log("terminating ngrok process...");
+			await ngrok.kill();
+		}
+	};
+};
+
+module.exports = {
+	start
+};

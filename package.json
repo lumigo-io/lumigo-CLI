@@ -12,10 +12,13 @@
     "@oclif/config": "^1.13.3",
     "@oclif/plugin-help": "^2.2.1",
     "aws-sdk": "^2.528.0",
+    "axios": "^0.19.0",
     "cli-table": "^0.3.1",
     "humanize": "0.0.9",
     "lodash": "^4.17.15",
-    "moment": "^2.24.0"
+    "moment": "^2.24.0",
+    "ngrok": "^3.2.5",
+    "restify": "^8.4.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.1.0",

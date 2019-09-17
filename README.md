@@ -33,6 +33,7 @@ USAGE
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
+* [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
 
 ## `lumigo-cli help [COMMAND]`
@@ -54,18 +55,15 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.1
 
 ## `lumigo-cli list-lambda`
 
-Describe the command here
+List Lambda functions in ALL regions
 
 ```
 USAGE
   $ lumigo-cli list-lambda
 
 OPTIONS
-  -n, --name=name  name to print
-
-DESCRIPTION
-  ...
-  Extra documentation goes here
+  -i, --inactive       only include functions that are inactive for 30 days
+  -r, --region=region  only include functions in an AWS region, e.g. us-east-1
 ```
 
 _See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/list-lambda.js)_
@@ -116,6 +114,24 @@ OPTIONS
 ```
 
 _See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/tail-kinesis.js)_
+
+## `lumigo-cli tail-sns`
+
+Describe the command here
+
+```
+USAGE
+  $ lumigo-cli tail-sns
+
+OPTIONS
+  -n, --name=name  name to print
+
+DESCRIPTION
+  ...
+  Extra documentation goes here
+```
+
+_See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/tail-sns.js)_
 
 ## `lumigo-cli tail-sqs`
 
