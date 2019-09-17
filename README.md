@@ -117,18 +117,15 @@ _See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cl
 
 ## `lumigo-cli tail-sns`
 
-Describe the command here
+Tails the messages going into a SNS topic
 
 ```
 USAGE
   $ lumigo-cli tail-sns
 
 OPTIONS
-  -n, --name=name  name to print
-
-DESCRIPTION
-  ...
-  Extra documentation goes here
+  -n, --topicName=topicName  (required) name of the SNS topic, e.g. task-topic-dev
+  -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
 _See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.0.0/src/commands/tail-sns.js)_
