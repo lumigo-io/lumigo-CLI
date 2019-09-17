@@ -5,9 +5,13 @@ const {Command, flags} = require("@oclif/command");
 class SlsRemoveCommand extends Command {
 	async run() {
 		const {flags} = this.parse(SlsRemoveCommand);
-		const {stackName, region} = flags;
+		const {stackName, region, profile} = flags;
     
 		AWS.config.region = region;
+		if (profile) {
+			const credentials = new AWS.SharedIniFileCredentials({ profile });
+			AWS.config.credentials = credentials;
+		}
     
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);
 		const bucketName = await getBucketName(stackName);
@@ -37,6 +41,11 @@ SlsRemoveCommand.flags = {
 		char: "r",
 		description: "AWS region, e.g. us-east-1",
 		required: true
+	}),
+	profile: flags.string({
+		char: "p",
+		description: "AWS CLI profile name",
+		required: false
 	})
 };
 

@@ -8,9 +8,13 @@ let seenMessageIds = [];
 class TailSqsCommand extends Command {
 	async run() {
 		const {flags} = this.parse(TailSqsCommand);
-		const {queueName, region} = flags;
+		const {queueName, region, profile} = flags;
     
 		AWS.config.region = region;
+		if (profile) {
+			const credentials = new AWS.SharedIniFileCredentials({ profile });
+			AWS.config.credentials = credentials;
+		}
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);
 		const queueUrl = await getQueueUrl(queueName);
@@ -34,6 +38,11 @@ TailSqsCommand.flags = {
 		char: "r",
 		description: "AWS region, e.g. us-east-1",
 		required: true
+	}),
+	profile: flags.string({
+		char: "p",
+		description: "AWS CLI profile name",
+		required: false
 	})
 };
 

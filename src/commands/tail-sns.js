@@ -6,9 +6,13 @@ const readline = require("readline");
 class TailSnsCommand extends Command {
 	async run() {
 		const {flags} = this.parse(TailSnsCommand);
-		const {topicName, region} = flags;
+		const {topicName, region, profile} = flags;
     
 		AWS.config.region = region;
+		if (profile) {
+			const credentials = new AWS.SharedIniFileCredentials({ profile });
+			AWS.config.credentials = credentials;
+		}
     
 		this.log(`finding the topic [${topicName}] in [${region}]`);
 		const topicArn = await getTopicArn(topicName);
@@ -28,6 +32,11 @@ TailSnsCommand.flags = {
 		char: "r",
 		description: "AWS region, e.g. us-east-1",
 		required: true
+	}),
+	profile: flags.string({
+		char: "p",
+		description: "AWS CLI profile name",
+		required: false
 	})
 };
 

@@ -6,9 +6,13 @@ const {Command, flags} = require("@oclif/command");
 class ReplaySqsDlqCommand extends Command {
 	async run() {
 		const {flags} = this.parse(ReplaySqsDlqCommand);
-		const {dlqQueueName, queueName, region, concurrency} = flags;
+		const {dlqQueueName, queueName, region, concurrency, profile} = flags;
     
 		AWS.config.region = region;
+		if (profile) {
+			const credentials = new AWS.SharedIniFileCredentials({ profile });
+			AWS.config.credentials = credentials;
+		}
     
 		this.log(`finding the queue [${dlqQueueName}] in [${region}]`);
 		const dlqQueueUrl = await getQueueUrl(dlqQueueName);
@@ -45,6 +49,11 @@ ReplaySqsDlqCommand.flags = {
 		description: "how many concurrent pollers to run",
 		required: false,
 		default: 10
+	}),
+	profile: flags.string({
+		char: "p",
+		description: "AWS CLI profile name",
+		required: false
 	})
 };
 

@@ -21,7 +21,12 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 class ListLambdaCommand extends Command {
 	async run() {
 		const {flags} = this.parse(ListLambdaCommand);
-		const {inactive, region} = flags;
+		const {inactive, region, profile} = flags;
+    
+		if (profile) {
+			const credentials = new AWS.SharedIniFileCredentials({ profile });
+			AWS.config.credentials = credentials;
+		}
     
 		if (region) {
 			show(await getFunctionsInRegion(region, inactive));
@@ -42,6 +47,11 @@ ListLambdaCommand.flags = {
 	region: flags.string({
 		char: "r",
 		description: "only include functions in an AWS region, e.g. us-east-1",
+		required: false
+	}),
+	profile: flags.string({
+		char: "p",
+		description: "AWS CLI profile name",
 		required: false
 	})
 };

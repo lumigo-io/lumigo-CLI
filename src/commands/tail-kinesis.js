@@ -5,9 +5,13 @@ const {Command, flags} = require("@oclif/command");
 class TailKinesisCommand extends Command {
 	async run() {
 		const {flags} = this.parse(TailKinesisCommand);
-		const {streamName, region} = flags;
+		const {streamName, region, profile} = flags;
 
 		AWS.config.region = region;
+		if (profile) {
+			const credentials = new AWS.SharedIniFileCredentials({ profile });
+			AWS.config.credentials = credentials;
+		}
 
 		this.log(`checking Kinesis stream [${streamName}] in [${region}]`);
 		const stream = await describeStream(streamName);
@@ -31,6 +35,11 @@ TailKinesisCommand.flags = {
 		char: "r",
 		description: "AWS region, e.g. us-east-1",
 		required: true
+	}),
+	profile: flags.string({
+		char: "p",
+		description: "AWS CLI profile name",
+		required: false
 	})
 };
 
