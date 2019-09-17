@@ -1,7 +1,7 @@
 {
   "name": "lumigo-cli",
   "description": "A collection of helpful commands for working with AWS Lambda",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Lumigo LTD (https://lumigo.io)",
   "bin": {
     "lumigo-cli": "./bin/run"
