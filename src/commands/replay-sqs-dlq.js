@@ -2,6 +2,7 @@ const _ = require("lodash");
 const AWS = require("aws-sdk");
 const {getQueueUrl} = require("../lib/sqs");
 const {Command, flags} = require("@oclif/command");
+const {checkVersion} = require("../lib/version-check");
 
 class ReplaySqsDlqCommand extends Command {
 	async run() {
@@ -13,6 +14,8 @@ class ReplaySqsDlqCommand extends Command {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
+    
+		checkVersion();
     
 		this.log(`finding the queue [${dlqQueueName}] in [${region}]`);
 		const dlqQueueUrl = await getQueueUrl(dlqQueueName);

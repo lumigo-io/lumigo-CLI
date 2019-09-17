@@ -4,6 +4,7 @@ const Table = require("cli-table");
 const humanize = require("humanize");
 const moment = require("moment");
 const {Command, flags} = require("@oclif/command");
+const {checkVersion} = require("../lib/version-check");
 
 const allLambdaRegions = [
 	"us-east-1", "us-east-2", 
@@ -27,6 +28,8 @@ class ListLambdaCommand extends Command {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
+    
+		checkVersion();
     
 		if (region) {
 			show(await getFunctionsInRegion(region, inactive));

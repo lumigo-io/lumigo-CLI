@@ -1,6 +1,7 @@
 const _ = require("lodash");
 const AWS = require("aws-sdk");
 const {Command, flags} = require("@oclif/command");
+const {checkVersion} = require("../lib/version-check");
 
 class SlsRemoveCommand extends Command {
 	async run() {
@@ -12,6 +13,8 @@ class SlsRemoveCommand extends Command {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
+    
+		checkVersion();
     
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);
 		const bucketName = await getBucketName(stackName);

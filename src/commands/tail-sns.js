@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const {Command, flags} = require("@oclif/command");
 const webserver = require("../lib/webserver");
 const readline = require("readline");
+const {checkVersion} = require("../lib/version-check");
 
 class TailSnsCommand extends Command {
 	async run() {
@@ -13,6 +14,8 @@ class TailSnsCommand extends Command {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
+    
+		checkVersion();
     
 		this.log(`finding the topic [${topicName}] in [${region}]`);
 		const topicArn = await getTopicArn(topicName);

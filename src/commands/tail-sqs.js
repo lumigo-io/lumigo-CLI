@@ -2,6 +2,7 @@ const _ = require("lodash");
 const AWS = require("aws-sdk");
 const {getQueueUrl} = require("../lib/sqs");
 const {Command, flags} = require("@oclif/command");
+const {checkVersion} = require("../lib/version-check");
 
 let seenMessageIds = [];
 
@@ -15,6 +16,8 @@ class TailSqsCommand extends Command {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
+    
+		checkVersion();
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);
 		const queueUrl = await getQueueUrl(queueName);
