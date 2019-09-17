@@ -48,7 +48,7 @@ beforeEach(() => {
 	});
   
 	mockOpenStdin.mockReturnValue({
-		once: (_event, cb) => Promise.delay(1000).then(async () => await cb())
+		once: (_event, cb) => Promise.delay(1000).then(cb)
 	});
 });
 
