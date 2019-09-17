@@ -9,9 +9,8 @@ const checkVersion = async () => {
 	if (semver.gt(npmVersion, version)) {
 		console.log(""`
 ===============================================================
-A new version of lumigo-cli is available on NPM: v${npmVersion}!
-
-Please run "npm i -g lumigo-cli" to update :-)
+     v${npmVersion} of this CLI is now available on NPM.
+       Please run "npm i -g lumigo-cli" to update :-)
 ===============================================================
     ```);
 	}
