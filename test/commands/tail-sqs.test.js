@@ -1,17 +1,30 @@
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
+const Promise = require("bluebird");
 
 const mockListQueues = jest.fn();
 AWS.SQS.prototype.listQueues = mockListQueues;
 const mockReceiveMessage = jest.fn();
 AWS.SQS.prototype.receiveMessage = mockReceiveMessage;
+const mockOpenStdin = jest.fn();
+process.openStdin = mockOpenStdin;
+process.stdin.setRawMode = jest.fn();
+process.exit = jest.fn();
 
 const consoleLog = jest.fn();
 console.log = consoleLog;
 
 beforeEach(() => {
+	mockOpenStdin.mockReturnValue({
+		once: (_event, cb) => Promise.delay(1000).then(cb)
+	});
+});
+
+afterEach(() => {
 	mockListQueues.mockReset();
 	mockReceiveMessage.mockReset();
+	consoleLog.mockReset();
+	mockOpenStdin.mockReset();
 });
 
 describe("tail-sqs", () => {
@@ -22,15 +35,13 @@ describe("tail-sqs", () => {
 				"https://sqs.us-east-1.amazonaws.com/12345/queue-dev-dlq"
 			]);
       
-			givenReceiveMessageReturns([]);
-			givenReceiveMessageFails(); // force the command to exit
+			givenReceiveMessageAlwaysReturns([]);
 		});
     
 		test
 			.stdout()
 			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
-			.catch(() => {})
-			.it("finds the right one", ctx => {				
+			.it("finds the right one", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");
 			});
@@ -48,24 +59,22 @@ describe("tail-sqs", () => {
 			}, {
 				MessageId: "2",
 				Body: "message 2"
-			}]);
-			givenReceiveMessageFails(); // force the command to exit
+			}]);      
+			givenReceiveMessageAlwaysReturns([]);
 		});
     
 		test
 			.stdout()
 			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
-			.catch(() => {})
 			.it("displays them in the console", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");      
 
 				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
 				// hence this workaround...
-				expect(consoleLog.mock.calls).to.have.lengthOf(2);
-				const [msg1, msg2] = consoleLog.mock.calls;
-				expect(msg1[0]).to.equal("message 1");
-				expect(msg2[0]).to.equal("message 2");
+				const logMessages = consoleLog.mock.calls.map(x => x[0]).join("\n");
+				expect(logMessages).to.contain("message 1");
+				expect(logMessages).to.contain("message 2");
 			});
 	});
   
@@ -76,32 +85,30 @@ describe("tail-sqs", () => {
 			]);
       
 			const messages = [{
-				MessageId: "1",
-				Body: "message 1"
+				MessageId: "3",
+				Body: "message 3"
 			}, {
-				MessageId: "2",
-				Body: "message 2"
+				MessageId: "4",
+				Body: "message 4"
 			}];
       
 			givenReceiveMessageReturns(messages); // received the messages the first time
 			givenReceiveMessageReturns(messages); // received them again, but they should not be shown again
-			givenReceiveMessageFails(); // force the command to exit
+			givenReceiveMessageAlwaysReturns([]);
 		});
     
 		test
 			.stdout()
 			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
-			.catch(() => {})
 			.it("do not show them again", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");      
 
 				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
 				// hence this workaround...
-				expect(consoleLog.mock.calls).to.have.lengthOf(2); // note: this is 2 instead of 4
-				const [msg1, msg2] = consoleLog.mock.calls;
-				expect(msg1[0]).to.equal("message 1");
-				expect(msg2[0]).to.equal("message 2");
+				const logMessages = consoleLog.mock.calls.map(x => x[0]).join("\n");
+				expect(logMessages).to.contain("message 3");
+				expect(logMessages).to.contain("message 4");
 			});
 	});
 });
@@ -122,8 +129,10 @@ function givenReceiveMessageReturns(messages) {
 	});
 };
 
-function givenReceiveMessageFails() {
-	mockReceiveMessage.mockReturnValueOnce({
-		promise: () => Promise.reject(new Error("boom"))
+function givenReceiveMessageAlwaysReturns(messages) {
+	mockReceiveMessage.mockReturnValue({
+		promise: () => Promise.resolve({
+			Messages: messages
+		})
 	});
 };

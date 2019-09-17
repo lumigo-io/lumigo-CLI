@@ -16,7 +16,10 @@ class TailSqsCommand extends Command {
 		const queueUrl = await getQueueUrl(queueName);
     
 		this.log(`polling SQS queue [${queueUrl}]...`);
+		this.log("press <any key> to stop");
 		await pollSqs(queueUrl);
+    
+		process.exit(0);
 	}
 }
 
@@ -36,18 +39,30 @@ TailSqsCommand.flags = {
 
 const pollSqs = async (queueUrl) => {
 	const SQS = new AWS.SQS();
+  
+	let polling = true;
+	const readline = require("readline");
+	readline.emitKeypressEvents(process.stdin);
+	process.stdin.setRawMode(true);
+	const stdin = process.openStdin();
+	stdin.once("data", () => {
+		polling = false;
+		console.log("stopping...");
+		seenMessageIds = [];
+	});
+
 	// eslint-disable-next-line no-constant-condition
-	while (true) {
+	while (polling) {
 		const resp = await SQS.receiveMessage({
 			QueueUrl: queueUrl,
 			MaxNumberOfMessages: 10,
-			WaitTimeSeconds: 20
+			WaitTimeSeconds: 5
 		}).promise();
 
 		if (_.isEmpty(resp.Messages)) {
 			continue;
 		}
-
+    
 		resp.Messages.forEach(msg => {
 			if (!seenMessageIds.includes(msg.MessageId)) {
 				console.log(msg.Body);
@@ -60,6 +75,8 @@ const pollSqs = async (queueUrl) => {
 			}
 		});
 	}
+  
+	console.log("stopped");
 };
 
 module.exports = TailSqsCommand;
