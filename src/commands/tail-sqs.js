@@ -45,7 +45,7 @@ const pollSqs = async (queueUrl) => {
 	readline.emitKeypressEvents(process.stdin);
 	process.stdin.setRawMode(true);
 	const stdin = process.openStdin();
-	stdin.once("data", () => {
+	stdin.once("keypress", () => {
 		polling = false;
 		console.log("stopping...");
 		seenMessageIds = [];
