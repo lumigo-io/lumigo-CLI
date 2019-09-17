@@ -13,7 +13,10 @@ class TailKinesisCommand extends Command {
 		const stream = await describeStream(streamName);
     
 		this.log(`polling Kinesis stream [${streamName}] (${stream.shardIds.length} shards)...`);
+		this.log("press <any key> to stop");
 		await pollKinesis(streamName, stream.shardIds);
+    
+		process.exit(0);
 	}
 }
 
@@ -46,6 +49,17 @@ const describeStream = async (streamName) => {
 
 const pollKinesis = async (streamName, shardIds) => {
 	const Kinesis = new AWS.Kinesis();
+  
+	let polling = true;
+	const readline = require("readline");
+	readline.emitKeypressEvents(process.stdin);
+	process.stdin.setRawMode(true);
+	const stdin = process.openStdin();
+	stdin.once("keypress", () => {
+		polling = false;
+		console.log("stopping...");
+	});
+
 	const promises = shardIds.map(async (shardId) => {
 		const iteratorResp = await Kinesis.getShardIterator({
 			ShardId: shardId,
@@ -56,7 +70,7 @@ const pollKinesis = async (streamName, shardIds) => {
 		let shardIterator = iteratorResp.ShardIterator;
     
 		// eslint-disable-next-line no-constant-condition
-		while (true) {
+		while (polling) {
 			const resp = await Kinesis.getRecords({
 				ShardIterator: shardIterator,
 				Limit: 10
@@ -74,6 +88,8 @@ const pollKinesis = async (streamName, shardIds) => {
 	});
 
 	await Promise.all(promises);
+  
+	console.log("stopped");
 };
 
 module.exports = TailKinesisCommand;
