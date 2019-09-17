@@ -19,7 +19,7 @@ $ npm install -g lumigo-cli
 $ lumigo-cli COMMAND
 running command...
 $ lumigo-cli (-v|--version|version)
-lumigo-cli/0.1.0 darwin-x64 node-v10.16.0
+lumigo-cli/0.2.0 darwin-x64 node-v10.16.0
 $ lumigo-cli --help [COMMAND]
 USAGE
   $ lumigo-cli COMMAND
@@ -62,11 +62,12 @@ USAGE
   $ lumigo-cli list-lambda
 
 OPTIONS
-  -i, --inactive       only include functions that are inactive for 30 days
-  -r, --region=region  only include functions in an AWS region, e.g. us-east-1
+  -i, --inactive         only include functions that are inactive for 30 days
+  -p, --profile=profile  AWS CLI profile name
+  -r, --region=region    only include functions in an AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.1.0/src/commands/list-lambda.js)_
+_See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.2.0/src/commands/list-lambda.js)_
 
 ## `lumigo-cli replay-sqs-dlq`
 
@@ -80,10 +81,11 @@ OPTIONS
   -c, --concurrency=concurrency    [default: 10] how many concurrent pollers to run
   -d, --dlqQueueName=dlqQueueName  (required) name of the SQS DLQ queue, e.g. task-queue-dlq-dev
   -n, --queueName=queueName        (required) name of the SQS queue, e.g. task-queue-dev
+  -p, --profile=profile            AWS CLI profile name
   -r, --region=region              (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.1.0/src/commands/replay-sqs-dlq.js)_
+_See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.2.0/src/commands/replay-sqs-dlq.js)_
 
 ## `lumigo-cli sls-remove`
 
@@ -95,10 +97,11 @@ USAGE
 
 OPTIONS
   -n, --stackName=stackName  (required) name of the CloudFormation stack, e.g. hello-world-dev
+  -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.1.0/src/commands/sls-remove.js)_
+_See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.2.0/src/commands/sls-remove.js)_
 
 ## `lumigo-cli tail-kinesis`
 
@@ -110,10 +113,11 @@ USAGE
 
 OPTIONS
   -n, --streamName=streamName  (required) name of the Kinesis stream, e.g. event-stream-dev
+  -p, --profile=profile        AWS CLI profile name
   -r, --region=region          (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.1.0/src/commands/tail-kinesis.js)_
+_See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.2.0/src/commands/tail-kinesis.js)_
 
 ## `lumigo-cli tail-sns`
 
@@ -125,10 +129,11 @@ USAGE
 
 OPTIONS
   -n, --topicName=topicName  (required) name of the SNS topic, e.g. task-topic-dev
+  -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.1.0/src/commands/tail-sns.js)_
+_See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.2.0/src/commands/tail-sns.js)_
 
 ## `lumigo-cli tail-sqs`
 
@@ -140,8 +145,9 @@ USAGE
 
 OPTIONS
   -n, --queueName=queueName  (required) name of the SQS queue, e.g. task-queue-dev
+  -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.1.0/src/commands/tail-sqs.js)_
+_See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.2.0/src/commands/tail-sqs.js)_
 <!-- commandsstop -->
