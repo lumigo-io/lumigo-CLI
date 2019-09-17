@@ -1,5 +1,4 @@
-const Promise = require("bluebird");
-const childProcess = Promise.promisifyAll(require("child_process"));
+const childProcess = require("child_process");
 const semver = require("semver");
 
 const checkVersion = async () => {
