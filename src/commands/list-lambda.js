@@ -5,17 +5,7 @@ const humanize = require("humanize");
 const moment = require("moment");
 const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
-
-const allLambdaRegions = [
-	"us-east-1", "us-east-2", 
-	"us-west-1", "us-west-2",
-	"ap-south-1",
-	"ap-northeast-1", "ap-northeast-2",
-	"ap-southeast-1", "ap-southeast-2",
-	"ca-central-1",
-	"eu-central-1", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1",
-	"sa-east-1"
-];
+const {regions} = require("../lib/lambda");
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
@@ -145,7 +135,7 @@ const getFunctionsInRegion = async (region, inactive) => {
 };
 
 const getFunctionsinAllRegions = async (inactive) => {
-	const promises = allLambdaRegions.map(region => getFunctionsInRegion(region, inactive));
+	const promises = regions.map(region => getFunctionsInRegion(region, inactive));
 	const results = await Promise.all(promises);
 	return _.flatMap(results);
 };

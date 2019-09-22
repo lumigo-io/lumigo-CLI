@@ -28,6 +28,7 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`lumigo-cli analyze-lambda-cost`](#lumigo-cli-analyze-lambda-cost)
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
@@ -35,6 +36,21 @@ USAGE
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
+
+## `lumigo-cli analyze-lambda-cost`
+
+Analyze Lambda functions costs in ALL regions
+
+```
+USAGE
+  $ lumigo-cli analyze-lambda-cost
+
+OPTIONS
+  -p, --profile=profile  AWS CLI profile name
+  -r, --region=region    only include functions in an AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.3.4/src/commands/analyze-lambda-cost.js)_
 
 ## `lumigo-cli help [COMMAND]`
 
