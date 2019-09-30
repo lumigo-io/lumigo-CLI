@@ -33,9 +33,11 @@ USAGE
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
+* [`lumigo-cli switch-profile`](#lumigo-cli-switch-profile)
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
+* [`lumigo-cli whoami`](#lumigo-cli-whoami)
 
 ## `lumigo-cli analyze-lambda-cost`
 
@@ -120,6 +122,17 @@ OPTIONS
 
 _See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/sls-remove.js)_
 
+## `lumigo-cli switch-profile`
+
+Switch AWS profiles
+
+```
+USAGE
+  $ lumigo-cli switch-profile
+```
+
+_See code: [src/commands/switch-profile.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/switch-profile.js)_
+
 ## `lumigo-cli tail-kinesis`
 
 Tails the records going into a Kinesis stream
@@ -167,4 +180,15 @@ OPTIONS
 ```
 
 _See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/tail-sqs.js)_
+
+## `lumigo-cli whoami`
+
+See your current AWS profile name
+
+```
+USAGE
+  $ lumigo-cli whoami
+```
+
+_See code: [src/commands/whoami.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/whoami.js)_
 <!-- commandsstop -->
