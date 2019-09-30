@@ -19,7 +19,7 @@ $ npm install -g lumigo-cli
 $ lumigo-cli COMMAND
 running command...
 $ lumigo-cli (-v|--version|version)
-lumigo-cli/0.4.0 darwin-x64 node-v10.16.0
+lumigo-cli/0.5.0 darwin-x64 node-v10.16.0
 $ lumigo-cli --help [COMMAND]
 USAGE
   $ lumigo-cli COMMAND
@@ -50,7 +50,7 @@ OPTIONS
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.4.0/src/commands/analyze-lambda-cost.js)_
+_See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/analyze-lambda-cost.js)_
 
 ## `lumigo-cli help [COMMAND]`
 
@@ -83,7 +83,7 @@ OPTIONS
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.4.0/src/commands/list-lambda.js)_
+_See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/list-lambda.js)_
 
 ## `lumigo-cli replay-sqs-dlq`
 
@@ -101,7 +101,7 @@ OPTIONS
   -r, --region=region              (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.4.0/src/commands/replay-sqs-dlq.js)_
+_See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/replay-sqs-dlq.js)_
 
 ## `lumigo-cli sls-remove`
 
@@ -118,7 +118,7 @@ OPTIONS
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.4.0/src/commands/sls-remove.js)_
+_See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/sls-remove.js)_
 
 ## `lumigo-cli tail-kinesis`
 
@@ -134,7 +134,7 @@ OPTIONS
   -r, --region=region          (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.4.0/src/commands/tail-kinesis.js)_
+_See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/tail-kinesis.js)_
 
 ## `lumigo-cli tail-sns`
 
@@ -150,7 +150,7 @@ OPTIONS
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.4.0/src/commands/tail-sns.js)_
+_See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/tail-sns.js)_
 
 ## `lumigo-cli tail-sqs`
 
@@ -166,5 +166,5 @@ OPTIONS
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.4.0/src/commands/tail-sqs.js)_
+_See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.5.0/src/commands/tail-sqs.js)_
 <!-- commandsstop -->
