@@ -112,6 +112,7 @@ USAGE
   $ lumigo-cli sls-remove
 
 OPTIONS
+  -e, --emptyS3Buckets       empty all S3 buckets that are part of the stack
   -n, --stackName=stackName  (required) name of the CloudFormation stack, e.g. hello-world-dev
   -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
