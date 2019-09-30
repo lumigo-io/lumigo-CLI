@@ -6,7 +6,7 @@ const {checkVersion} = require("../lib/version-check");
 class SlsRemoveCommand extends Command {
 	async run() {
 		const {flags} = this.parse(SlsRemoveCommand);
-		const {stackName, region, profile} = flags;
+		const {stackName, emptyS3Buckets, region, profile} = flags;
     
 		AWS.config.region = region;
 		if (profile) {
@@ -17,14 +17,30 @@ class SlsRemoveCommand extends Command {
 		checkVersion();
     
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);
-		const bucketName = await getBucketName(stackName);
+		const deploymentBucketName = await getDeploymentBucketName(stackName);
     
-		if (!bucketName) {
+		if (!deploymentBucketName) {
 			throw new Error(`Stack [${stackName}] in [${region}] does not have a "ServerlessDeploymentBucketName", are you sure it was deployed with Serverless framework?`);
 		}
 
-		this.log(`emptying deployment bucket [${bucketName}]...`);
-		await emptyBucket(bucketName);
+		this.log(`emptying deployment bucket [${deploymentBucketName}]...`);
+		await emptyBucket(deploymentBucketName);
+    
+		if (emptyS3Buckets) {
+			this.log("finding other S3 buckets...");
+			const bucketNames = (await getBucketNames(stackName))
+				.filter(x => x !== deploymentBucketName);
+        
+			if (bucketNames.length > 0) {
+				this.log(`found ${bucketNames.length} buckets (excluding the deployment bucket)`);
+				for (const bucketName of bucketNames) {
+					this.log(`emptying bucket [${bucketName}]...`);
+					await emptyBucket(bucketName);
+				}
+			} else {
+				this.log("no other S3 buckets are found besides the deployment bucket");
+			}
+		}
     
 		this.log(`removing the stack [${stackName}] in [${region}]...`);
 		await deleteStack(stackName);
@@ -40,6 +56,12 @@ SlsRemoveCommand.flags = {
 		description: "name of the CloudFormation stack, e.g. hello-world-dev",
 		required: true
 	}),
+	emptyS3Buckets: flags.boolean({
+		char: "e",
+		description: "empty all S3 buckets that are part of the stack",
+		default: false,
+		required: false
+	}),
 	region: flags.string({
 		char: "r",
 		description: "AWS region, e.g. us-east-1",
@@ -52,12 +74,19 @@ SlsRemoveCommand.flags = {
 	})
 };
 
-const getBucketName = async (stackName) => {
+const getDeploymentBucketName = async (stackName) => {
 	const CloudFormation = new AWS.CloudFormation();
 	const resp = await CloudFormation.describeStacks({ StackName: stackName }).promise();
 	const stack = resp.Stacks[0];
 	const bucketNameOutput = stack.Outputs.find(x => x.OutputKey === "ServerlessDeploymentBucketName");
 	return _.get(bucketNameOutput, "OutputValue");
+};
+
+const getBucketNames = async (stackName) => {
+	const CloudFormation = new AWS.CloudFormation();
+	const resp = await CloudFormation.describeStackResources({ StackName: stackName }).promise();
+	const s3Buckets = resp.StackResources.filter(x => x.ResourceType === "AWS::S3::Bucket");
+	return s3Buckets.map(x => x.PhysicalResourceId);
 };
 
 const emptyBucket = async (bucketName) => {
