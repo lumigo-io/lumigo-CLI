@@ -39,7 +39,6 @@ class SwitchProfileCommand extends Command {
       
 			if (accountToSwitchTo.endsWith("(current default profile)")) {
 				this.log(`stay logged in as [${profileName}]`);
-				this.exit();
 			} else {
 				replaceDefaultProfile(profileName);
 			}
