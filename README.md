@@ -34,6 +34,7 @@ USAGE
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 * [`lumigo-cli switch-profile`](#lumigo-cli-switch-profile)
+* [`lumigo-cli tail-dynamodb`](#lumigo-cli-tail-dynamodb)
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
@@ -132,6 +133,22 @@ USAGE
 ```
 
 _See code: [src/commands/switch-profile.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.6.0/src/commands/switch-profile.js)_
+
+## `lumigo-cli tail-dynamodb`
+
+Tails the records going into a DynamoDB stream
+
+```
+USAGE
+  $ lumigo-cli tail-dynamodb
+
+OPTIONS
+  -n, --tableName=tableName  (required) name of the DynamoDB table, e.g. users-dev
+  -p, --profile=profile      AWS CLI profile name
+  -r, --region=region        (required) AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/tail-dynamodb.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.6.0/src/commands/tail-dynamodb.js)_
 
 ## `lumigo-cli tail-kinesis`
 
