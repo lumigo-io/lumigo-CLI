@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const {getQueueUrl} = require("../lib/sqs");
 const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
+require("colors");
 
 let seenMessageIds = [];
 
@@ -77,7 +78,8 @@ const pollSqs = async (queueUrl) => {
     
 		resp.Messages.forEach(msg => {
 			if (!seenMessageIds.includes(msg.MessageId)) {
-				console.log(msg.Body);
+				const timestamp = new Date().toJSON().grey.bold.bgWhite;
+				console.log(timestamp, "\n", msg.Body);
 				seenMessageIds.push(msg.MessageId);
 
 				// only remember 1000 messages

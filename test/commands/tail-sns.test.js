@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
@@ -80,7 +81,7 @@ describe("tail-sns", () => {
 			.command(["tail-sns", "-n", "my-topic-dev", "-r", "us-east-1"])
 			.it("creates a new webserver and connects to ngrok", ctx => {
 				expect(ctx.stdout).to.contain("finding the topic [my-topic-dev] in [us-east-1]");
-				const logMessages = consoleLog.mock.calls.map(x => x[0]).join("\n");
+				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
 				expect(logMessages).to.contain("listening at https://lumigo.io");
 				expect(mockConnect.mock.calls).to.have.length(1);
 			});
@@ -91,7 +92,7 @@ describe("tail-sns", () => {
 			.it("stops the webserver when disconnected", async () => {
 				await Promise.delay(1000); // wait for mockOpenStdin to trigger callback
 
-				const logMessages = consoleLog.mock.calls.map(x => x[0]).join("\n");
+				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
 				expect(logMessages).to.contain("stopping webserver...");
 				expect(logMessages).to.contain("terminating ngrok process...");        
 			});
@@ -111,7 +112,7 @@ describe("tail-sns", () => {
 				}));
 			})
 			.it("handles SNS subscription flow", async () => {
-				const logMessages = consoleLog.mock.calls.map(x => x[0]).join("\n");
+				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
 				expect(logMessages).to.contain("listening at https://lumigo.io");
 				expect(logMessages).to.contain("confirmed SNS subscription");
 				expect(logMessages).to.contain("polling SNS topic [arn:aws:sns:us-east-1:12345:my-topic-dev]...");

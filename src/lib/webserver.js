@@ -1,6 +1,7 @@
 const restify = require("restify");
 const axios = require("axios");
 const ngrok = require("ngrok");
+require("colors");
 
 const respond = (onConfirmed) => (req, res, next) => {
 	const body = JSON.parse(req.body);
@@ -13,7 +14,8 @@ const respond = (onConfirmed) => (req, res, next) => {
 			next();
 		});
 	} else {
-		console.log(body.Message);
+		const timestamp = new Date().toJSON().grey.bold.bgWhite;
+		console.log(timestamp, "\n", body.Message);
     
 		res.send(200);
 		next();

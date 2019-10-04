@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
@@ -72,7 +73,7 @@ describe("tail-sqs", () => {
 
 				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
 				// hence this workaround...
-				const logMessages = consoleLog.mock.calls.map(x => x[0]).join("\n");
+				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
 				expect(logMessages).to.contain("message 1");
 				expect(logMessages).to.contain("message 2");
 			});
@@ -106,7 +107,7 @@ describe("tail-sqs", () => {
 
 				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
 				// hence this workaround...
-				const logMessages = consoleLog.mock.calls.map(x => x[0]).join("\n");
+				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
 				expect(logMessages).to.contain("message 3");
 				expect(logMessages).to.contain("message 4");
 			});

@@ -2,6 +2,7 @@ const _ = require("lodash");
 const AWS = require("aws-sdk");
 const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
+require("colors");
 
 class TailKinesisCommand extends Command {
 	async run() {
@@ -90,8 +91,9 @@ const pollKinesis = async (streamName, shardIds) => {
       
 			if (!_.isEmpty(resp.Records)) {
 				resp.Records.forEach(record => {
+					const timestamp = new Date().toJSON().grey.bold.bgWhite;
 					const data = Buffer.from(record.Data, "base64").toString("utf-8");
-					console.log(data);
+					console.log(timestamp, "\n", data);
 				});
 			}
       
