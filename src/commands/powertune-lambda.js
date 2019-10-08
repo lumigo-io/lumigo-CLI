@@ -8,6 +8,7 @@ require("colors");
 
 const ApplicationId = "arn:aws:serverlessrepo:us-east-1:451282441545:applications/aws-lambda-power-tuning";
 const StackName = "serverlessrepo-lumigo-cli-powertuning-lambda";
+const ONE_SECOND = 1000;
   
 class PowertuneLambdaCommand extends Command {
 	async run() {
@@ -26,11 +27,22 @@ class PowertuneLambdaCommand extends Command {
 		const version = await getLatestVersion();  
 		this.log(`the latest version of aws-lambda-power-tuning SAR is ${version}`);
     
-		this.log(`looking for deployed CloudFormation stack in [${region}]`);
-		let stateMachineArn = await findCloudFormation(version);
-		if (!stateMachineArn) {
+		this.log(`looking for deployed CloudFormation stack [${StackName}] in [${region}]`);
+		let stateMachineArn;
+		const findCfnResult = await findCloudFormation(version);
+		switch (findCfnResult.result) {
+		case "not found":
+			this.log("stack is not found");
 			this.log(`deploying the aws-lambda-power-tuning SAR [${version}] to [${region}]`);
 			stateMachineArn = await deploySAR(version);
+			break;
+		case "outdated":
+			this.log(`stack is deployed but is running an outdated version [${findCfnResult.version}]`);
+			stateMachineArn = await deploySAR(version, true);
+			break;
+		default:
+			this.log("stack is deployed and up-to-date");
+			stateMachineArn = findCfnResult.stateMachineArn;
 		}
     
 		this.log(`the State Machine is ${stateMachineArn}`);
@@ -117,14 +129,24 @@ const findCloudFormation = async (version) => {
 		const currentVersion = semverTag.Value;
 		if (currentVersion !== version) {
 			console.log(`the deployed CloudFormation stack is of an older version [${currentVersion}]`);
-			return null;
+			return {
+				result: "outdated",
+				version: currentVersion
+			};
 		}
 
 		const smArnOutput = stack.Outputs.find(x => x.OutputKey === "StateMachineARN");
-		return smArnOutput.OutputValue;
+		const stateMachineArn = smArnOutput.OutputValue;
+		return {
+			result: "active",
+			version: version,
+			stateMachineArn: stateMachineArn
+		};
 	} catch (err) {
 		console.log("the SAR has not been deployed yet");
-		return null;
+		return {
+			result: "not found"
+		};
 	}
 };
 
@@ -147,14 +169,15 @@ const generateCloudFormationTemplate = async (version) => {
 		}
     
 		return resp.TemplateUrl;
-	}, { // 10s between attempts, for a total of 3 mins
-		retries: 18,
+	}, { // 1s between attempts, for a total of 3 mins
+		retries: 180,
 		factor: 1,
-		minTimeout: 10000,
+		minTimeout: ONE_SECOND,
+		maxTimeout: ONE_SECOND
 	});
 };
 
-const waitForComplete = async (stackName) => {
+const waitForCloudFormationComplete = async (stackName) => {
 	const CloudFormation = new AWS.CloudFormation();
 	const FailedStates = [
 		"ROLLBACK_COMPLETE",
@@ -175,38 +198,54 @@ const waitForComplete = async (stackName) => {
 		} else if (!stack.StackStatus.endsWith("COMPLETE")) {
 			throw new Error(`stack is in [${stack.StackStatus}] status`);
 		} else {
-			console.log("SAR deployment completed");
+			return stack.Outputs;			
 		}
-
-		return stack.Outputs;
 	}, {
-		retries: 30, // 5 mins
-		minTimeout: 10000,
-		maxTimeout: 10000,
+		retries: 300, // 5 mins
+		factor: 1,
+		minTimeout: ONE_SECOND,
+		maxTimeout: ONE_SECOND,
 		onRetry: () => console.log("still waiting...")
 	});
 };
 
-const deploySAR = async (version) => {
+const deploySAR = async (version, isUpdate = false) => {
 	const url = await generateCloudFormationTemplate(version);
 	console.log("CloudFormation template has been generated");
   
 	const CloudFormation = new AWS.CloudFormation();
   
-	await CloudFormation.createStack({
-		StackName: StackName,
-		Capabilities: [ "CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND" ],
-		TemplateURL: url,
-		Tags: [{
-			Key: "serverlessrepo:applicationId",
-			Value: ApplicationId
-		}, {
-			Key: "serverlessrepo:semanticVersion",
-			Value: version
-		}]
-	}).promise();	
+	if (isUpdate) {
+		await CloudFormation.updateStack({
+			StackName: StackName,
+			Capabilities: [ "CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND" ],
+			TemplateURL: url,
+			Tags: [{
+				Key: "serverlessrepo:applicationId",
+				Value: ApplicationId
+			}, {
+				Key: "serverlessrepo:semanticVersion",
+				Value: version
+			}]
+		}).promise();
+	} else {
+		await CloudFormation.createStack({
+			StackName: StackName,
+			Capabilities: [ "CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND" ],
+			TemplateURL: url,
+			Tags: [{
+				Key: "serverlessrepo:applicationId",
+				Value: ApplicationId
+			}, {
+				Key: "serverlessrepo:semanticVersion",
+				Value: version
+			}]
+		}).promise();
+	}
   
-	const outputs = await waitForComplete(StackName);
+	const outputs = await waitForCloudFormationComplete(StackName);
+	console.log("SAR deployment completed");
+  
 	const smOutput = outputs.find(x => x.OutputKey === "StateMachineARN");
 	return smOutput.OutputValue;
 };
@@ -249,9 +288,10 @@ const waitForStateMachineOutput = async (executionArn) => {
 			throw new Error("still running...");
 		}
 	}, {
-		retries: 60, // 10 mins
-		minTimeout: 10000,
-		maxTimeout: 10000
+		retries: 600, // 10 mins
+		factor: 1,
+		minTimeout: ONE_SECOND,
+		maxTimeout: ONE_SECOND
 	});
 };
 
