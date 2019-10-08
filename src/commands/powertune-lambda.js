@@ -128,7 +128,6 @@ const findCloudFormation = async (version) => {
 		const semverTag = stack.Tags.find(x => x.Key === "serverlessrepo:semanticVersion");
 		const currentVersion = semverTag.Value;
 		if (currentVersion !== version) {
-			console.log(`the deployed CloudFormation stack is of an older version [${currentVersion}]`);
 			return {
 				result: "outdated",
 				version: currentVersion
@@ -143,7 +142,6 @@ const findCloudFormation = async (version) => {
 			stateMachineArn: stateMachineArn
 		};
 	} catch (err) {
-		console.log("the SAR has not been deployed yet");
 		return {
 			result: "not found"
 		};
