@@ -11,6 +11,7 @@
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.13.3",
     "@oclif/plugin-help": "^2.2.1",
+    "async-retry": "^1.2.3",
     "aws-profile-utils": "0.0.3",
     "aws-sdk": "^2.528.0",
     "axios": "^0.19.0",
@@ -22,7 +23,8 @@
     "moment": "^2.24.0",
     "ngrok": "^3.2.5",
     "restify": "^8.4.0",
-    "semver": "^6.3.0"
+    "semver": "^6.3.0",
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.1.0",

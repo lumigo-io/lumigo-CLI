@@ -31,6 +31,7 @@ USAGE
 * [`lumigo-cli analyze-lambda-cost`](#lumigo-cli-analyze-lambda-cost)
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
+* [`lumigo-cli powertune-lambda`](#lumigo-cli-powertune-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 * [`lumigo-cli switch-profile`](#lumigo-cli-switch-profile)
@@ -87,6 +88,25 @@ OPTIONS
 ```
 
 _See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.8.0/src/commands/list-lambda.js)_
+
+## `lumigo-cli powertune-lambda`
+
+Powertunes a Lambda function for cost or speed
+
+```
+USAGE
+  $ lumigo-cli powertune-lambda
+
+OPTIONS
+  -e, --payload=payload            [default: {}] the JSON payload to send to the function
+  -i, --invocations=invocations    [default: 100] the number of invocations to run for each configuration
+  -n, --functionName=functionName  (required) name of the Lambda function
+  -p, --profile=profile            AWS CLI profile name
+  -r, --region=region              (required) AWS region, e.g. us-east-1
+  -s, --strategy=cost|speed        (required) what to powertune the function for - either "cost" or "speed"
+```
+
+_See code: [src/commands/powertune-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.8.0/src/commands/powertune-lambda.js)_
 
 ## `lumigo-cli replay-sqs-dlq`
 

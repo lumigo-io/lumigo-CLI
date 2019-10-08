@@ -1,7 +1,7 @@
 const childProcess = require("child_process");
 const semver = require("semver");
 
-const checkVersion = async () => {
+const checkVersion = () => {
 	const packageJson = require("../../package.json");
 	const version = packageJson.version;
 	const npmVersion = childProcess.execSync("npm show lumigo-cli version").toString().trim();
