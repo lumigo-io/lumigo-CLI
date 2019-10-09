@@ -19,7 +19,7 @@ $ npm install -g lumigo-cli
 $ lumigo-cli COMMAND
 running command...
 $ lumigo-cli (-v|--version|version)
-lumigo-cli/0.9.0 darwin-x64 node-v10.16.0
+lumigo-cli/0.10.0 darwin-x64 node-v10.16.0
 $ lumigo-cli --help [COMMAND]
 USAGE
   $ lumigo-cli COMMAND
@@ -55,7 +55,7 @@ OPTIONS
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/analyze-lambda-cost.js)_
+_See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/analyze-lambda-cost.js)_
 
 ## `lumigo-cli help [COMMAND]`
 
@@ -76,21 +76,19 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.1
 
 ## `lumigo-cli list-kinesis-shards`
 
-Describe the command here
+Lists the shards of a Kinesis stream
 
 ```
 USAGE
   $ lumigo-cli list-kinesis-shards
 
 OPTIONS
-  -n, --name=name  name to print
-
-DESCRIPTION
-  ...
-  Extra documentation goes here
+  -n, --streamName=streamName  (required) name of the Kinesis stream, e.g. event-stream-dev
+  -p, --profile=profile        AWS CLI profile name
+  -r, --region=region          (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/list-kinesis-shards.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.8.0/src/commands/list-kinesis-shards.js)_
+_See code: [src/commands/list-kinesis-shards.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/list-kinesis-shards.js)_
 
 ## `lumigo-cli list-lambda`
 
@@ -106,7 +104,7 @@ OPTIONS
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/list-lambda.js)_
+_See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/list-lambda.js)_
 
 ## `lumigo-cli powertune-lambda`
 
@@ -125,7 +123,7 @@ OPTIONS
   -s, --strategy=cost|speed        (required) what to powertune the function for - either "cost" or "speed"
 ```
 
-_See code: [src/commands/powertune-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/powertune-lambda.js)_
+_See code: [src/commands/powertune-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/powertune-lambda.js)_
 
 ## `lumigo-cli replay-sqs-dlq`
 
@@ -143,7 +141,7 @@ OPTIONS
   -r, --region=region              (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/replay-sqs-dlq.js)_
+_See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/replay-sqs-dlq.js)_
 
 ## `lumigo-cli sls-remove`
 
@@ -160,7 +158,7 @@ OPTIONS
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/sls-remove.js)_
+_See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/sls-remove.js)_
 
 ## `lumigo-cli switch-profile`
 
@@ -171,7 +169,7 @@ USAGE
   $ lumigo-cli switch-profile
 ```
 
-_See code: [src/commands/switch-profile.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/switch-profile.js)_
+_See code: [src/commands/switch-profile.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/switch-profile.js)_
 
 ## `lumigo-cli tail-dynamodb`
 
@@ -187,7 +185,7 @@ OPTIONS
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-dynamodb.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/tail-dynamodb.js)_
+_See code: [src/commands/tail-dynamodb.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/tail-dynamodb.js)_
 
 ## `lumigo-cli tail-kinesis`
 
@@ -203,7 +201,7 @@ OPTIONS
   -r, --region=region          (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/tail-kinesis.js)_
+_See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/tail-kinesis.js)_
 
 ## `lumigo-cli tail-sns`
 
@@ -219,7 +217,7 @@ OPTIONS
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/tail-sns.js)_
+_See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/tail-sns.js)_
 
 ## `lumigo-cli tail-sqs`
 
@@ -235,7 +233,7 @@ OPTIONS
   -r, --region=region        (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/tail-sqs.js)_
+_See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/tail-sqs.js)_
 
 ## `lumigo-cli whoami`
 
@@ -246,5 +244,5 @@ USAGE
   $ lumigo-cli whoami
 ```
 
-_See code: [src/commands/whoami.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.9.0/src/commands/whoami.js)_
+_See code: [src/commands/whoami.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.10.0/src/commands/whoami.js)_
 <!-- commandsstop -->
