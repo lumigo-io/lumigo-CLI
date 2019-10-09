@@ -30,6 +30,7 @@ USAGE
 <!-- commands -->
 * [`lumigo-cli analyze-lambda-cost`](#lumigo-cli-analyze-lambda-cost)
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
+* [`lumigo-cli list-kinesis-shards`](#lumigo-cli-list-kinesis-shards)
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
 * [`lumigo-cli powertune-lambda`](#lumigo-cli-powertune-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
@@ -72,6 +73,24 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.1/src/commands/help.ts)_
+
+## `lumigo-cli list-kinesis-shards`
+
+Describe the command here
+
+```
+USAGE
+  $ lumigo-cli list-kinesis-shards
+
+OPTIONS
+  -n, --name=name  name to print
+
+DESCRIPTION
+  ...
+  Extra documentation goes here
+```
+
+_See code: [src/commands/list-kinesis-shards.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.8.0/src/commands/list-kinesis-shards.js)_
 
 ## `lumigo-cli list-lambda`
 
