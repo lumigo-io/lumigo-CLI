@@ -1,6 +1,9 @@
+const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 const fs = require("fs");
+const inquirer = require("inquirer");
+const childProcess = require("child_process");
 
 const mockListApplicationVersions = jest.fn();
 AWS.ServerlessApplicationRepository.prototype.listApplicationVersions = mockListApplicationVersions;
@@ -19,6 +22,10 @@ AWS.StepFunctions.prototype.startExecution = mockStartExecution;
 const mockDescribeExecution = jest.fn();
 AWS.StepFunctions.prototype.describeExecution = mockDescribeExecution;
 const mockReadFileSync = jest.fn();
+const mockPrompt = jest.fn();
+inquirer.prompt = mockPrompt;
+const mockExecSync = jest.fn();
+childProcess.execSync = mockExecSync;
 
 const consoleLog = jest.fn();
 console.log = consoleLog;
@@ -51,6 +58,8 @@ beforeEach(() => {
 	});
   
 	mockReadFileSync.mockReturnValueOnce(fileContent);
+	mockPrompt.mockImplementation(() => ({ visualize: "no" }));
+	mockExecSync.mockImplementation(() => "");
 });
 
 afterEach(() => {
@@ -59,11 +68,13 @@ afterEach(() => {
 	mockGetCloudFormationTemplate.mockReset();
 	mockDescribeStacks.mockReset();
 	mockCreateStack.mockReset();
-	// mockUpdateStack.mockReset();
+	mockUpdateStack.mockReset();
 	mockStartExecution.mockReset();
 	mockDescribeExecution.mockReset();
 	consoleLog.mockReset();
 	mockReadFileSync.mockReset();
+	mockPrompt.mockReset();
+	mockExecSync.mockReset();
 });
 
 const stateMachineArn = "arn:aws:states:us-east-1:123:execution:powerTuningStateMachine";
@@ -261,6 +272,59 @@ describe("powertune-lambda", () => {
 				expect(input.payload).to.equal(fileContent);
 			});
 	});
+  
+	describe("when user chooses to visualize the result", () => {
+		beforeEach(() => {
+			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
+			givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
+			givenDescribeExecutionReturns("SUCCEEDED", {
+				results: {
+					stateMachine: {
+						visualization: "https://lambda-power-tuning.show/#123"
+					}
+				}
+			});
+			givenUserChooseToVisualizeResult();
+		});
+    
+		test
+			.stdout()
+			.command(["powertune-lambda", "-n", "my-function", "-s", "speed", "-r", "us-east-1"])
+			.it("opens the browser with Python", () => {
+				const commands = _.flatMap(mockExecSync.mock.calls).join("\n");
+				expect(commands).to.contain(['python -m webbrowser "https://lambda-power-tuning.show/#123"']);
+			});
+      
+		describe("if python is not available", () => {
+			beforeEach(() => {
+				givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
+				givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
+				givenDescribeExecutionReturns("SUCCEEDED", {
+					results: {
+						stateMachine: {
+							visualization: "https://lambda-power-tuning.show/#123"
+						}
+					}
+				});
+				givenUserChooseToVisualizeResult();
+				mockExecSync.mockImplementation(cmd => {
+					if (cmd.startsWith("python")) {
+						throw new Error("python: command not found");
+					} else {
+						return "";
+					}
+				});
+			});
+      
+			test
+				.stdout()
+				.command(["powertune-lambda", "-n", "my-function", "-s", "speed", "-r", "us-east-1"])
+				.it("opens the browser with native 'open' command", () => {
+					const commands = _.flatMap(mockExecSync.mock.calls).join("\n");
+					expect(commands).to.contain(['open "https://lambda-power-tuning.show/#123"']);
+				});
+		});
+	});
 });
 
 function givenListAppVersionsReturns(versions, hasMore = false) {
@@ -326,4 +390,8 @@ function givenDescribeExecutionReturns(status, output) {
 			output: JSON.stringify(output)
 		})
 	});
+}
+
+function givenUserChooseToVisualizeResult() {
+	mockPrompt.mockImplementation(() => ({ visualize: "yes" }));
 }

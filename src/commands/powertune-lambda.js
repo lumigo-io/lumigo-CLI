@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const AWS = require("aws-sdk");
 const Semver = require("semver");
 const Retry = require("async-retry");
@@ -5,6 +6,8 @@ const uuid = require("uuid/v4");
 const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
 const fs = require("fs");
+const inquirer = require("inquirer");
+const childProcess = require("child_process");
 require("colors");
 
 const ApplicationId = "arn:aws:serverlessrepo:us-east-1:451282441545:applications/aws-lambda-power-tuning";
@@ -63,6 +66,23 @@ class PowertuneLambdaCommand extends Command {
     
 		const result = await waitForStateMachineOutput(executionArn);
 		this.log(JSON.stringify(result, null, 2).yellow);
+    
+		// since v2.1.1 the powertuning SFN returns a visualization URL as well
+		const visualizationUrl = _.get(result, "results.stateMachine.visualization");
+		if (visualizationUrl) {
+			const {visualize} = await inquirer.prompt([
+				{
+					type: "list",
+					name: "visualize",
+					message: "Do you want to open the visualization to see more results?",
+					choices: ["yes", "no"]
+				}
+			]);
+      
+			if (visualize === "yes") {
+				openVisualization(visualizationUrl);				
+			}
+		}
 	}
 }
 
@@ -107,6 +127,15 @@ PowertuneLambdaCommand.flags = {
 		required: false,
 		exclusive: ["payload"]
 	})
+};
+
+const openVisualization = (url) => {
+	try {
+		// this works on many platforms
+		childProcess.execSync(`python -m webbrowser "${url}"`);
+	} catch (err) {
+		childProcess.execSync(`open "${url}"`);
+	}	
 };
 
 const getLatestVersion = async (nextToken, acc) => {
