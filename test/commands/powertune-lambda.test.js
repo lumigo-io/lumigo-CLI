@@ -1,5 +1,6 @@
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
+const fs = require("fs");
 
 const mockListApplicationVersions = jest.fn();
 AWS.ServerlessApplicationRepository.prototype.listApplicationVersions = mockListApplicationVersions;
@@ -17,9 +18,14 @@ const mockStartExecution = jest.fn();
 AWS.StepFunctions.prototype.startExecution = mockStartExecution;
 const mockDescribeExecution = jest.fn();
 AWS.StepFunctions.prototype.describeExecution = mockDescribeExecution;
+const mockReadFileSync = jest.fn();
 
 const consoleLog = jest.fn();
 console.log = consoleLog;
+
+const fileContent = JSON.stringify({
+	foo: "bar"
+});
 
 beforeEach(() => {
 	mockCreateCloudFormationTemplate.mockReturnValueOnce({
@@ -43,6 +49,8 @@ beforeEach(() => {
 			executionArn: "execution-arn"
 		})
 	});
+  
+	mockReadFileSync.mockReturnValueOnce(fileContent);
 });
 
 afterEach(() => {
@@ -55,6 +63,7 @@ afterEach(() => {
 	mockStartExecution.mockReset();
 	mockDescribeExecution.mockReset();
 	consoleLog.mockReset();
+	mockReadFileSync.mockReset();
 });
 
 const stateMachineArn = "arn:aws:states:us-east-1:123:execution:powerTuningStateMachine";
@@ -228,6 +237,28 @@ describe("powertune-lambda", () => {
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.have.length(1);
 				expect(mockDescribeExecution.mock.calls).to.have.length(1);
+			});
+	});
+  
+	describe("when the user provides a file as payload", () => {
+		beforeEach(() => {
+			// not sure why, but if I monkeypatch fs in global then all the tests
+			// fail with "globby.sync is not a function"
+			// hence why I'm monkeypatching in the test instead
+			fs.readFileSync = mockReadFileSync;
+			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
+			givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
+			givenDescribeExecutionReturns("SUCCEEDED", {});
+		});
+    
+		test
+			.stdout()
+			.command(["powertune-lambda", "-n", "my-function", "-s", "speed", "-r", "us-east-1", "-f", "input.json"])
+			.it("sends the file content as payload instead", () => {
+				expect(mockReadFileSync.mock.calls).to.have.length(1);
+				const [req] = mockStartExecution.mock.calls[0];
+				const input = JSON.parse(req.input);
+				expect(input.payload).to.equal(fileContent);
 			});
 	});
 });

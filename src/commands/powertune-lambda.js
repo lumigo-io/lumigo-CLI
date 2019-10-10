@@ -4,6 +4,7 @@ const Retry = require("async-retry");
 const uuid = require("uuid/v4");
 const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
+const fs = require("fs");
 require("colors");
 
 const ApplicationId = "arn:aws:serverlessrepo:us-east-1:451282441545:applications/aws-lambda-power-tuning";
@@ -13,7 +14,7 @@ const ONE_SECOND = 1000;
 class PowertuneLambdaCommand extends Command {
 	async run() {
 		const {flags} = this.parse(PowertuneLambdaCommand);
-		const {functionName, region, profile, strategy, invocations, payload} = flags;
+		const {functionName, region, profile, strategy, invocations, file} = flags;
     
 		AWS.config.region = region;
 		if (profile) {
@@ -46,6 +47,12 @@ class PowertuneLambdaCommand extends Command {
 		}
     
 		this.log(`the State Machine is ${stateMachineArn}`);
+    
+		let payload = flags.payload || "{}";
+		if (file) {
+			this.log(`loading payload from [${file}]...`);
+			payload = fs.readFileSync(file, "utf8");
+		}
     
 		// eslint-disable-next-line no-unused-vars
 		const [_arn, _aws, _states, _region, accountId, ...rest] = stateMachineArn.split(":");
@@ -93,6 +100,12 @@ PowertuneLambdaCommand.flags = {
 		description: "the JSON payload to send to the function",
 		required: false,
 		default: "{}"
+	}),
+	file: flags.string({
+		char: "f",
+		description: "file that contains the JSON payload to send to the function",
+		required: false,
+		exclusive: ["payload"]
 	})
 };
 
