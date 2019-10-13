@@ -4,15 +4,21 @@ const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
 require("colors");
 
+let endpointOverride;
+
 class TailDynamodbCommand extends Command {
 	async run() {
 		const {flags} = this.parse(TailDynamodbCommand);
-		const {tableName, region, profile} = flags;
+		const {tableName, region, profile, endpoint} = flags;
 
 		AWS.config.region = region;
 		if (profile) {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
+		}
+    
+		if (endpoint) {
+			endpointOverride = endpoint;
 		}
     
 		checkVersion();
@@ -53,11 +59,33 @@ TailDynamodbCommand.flags = {
 		char: "p",
 		description: "AWS CLI profile name",
 		required: false
+	}),
+	endpoint: flags.string({
+		char: "e",
+		description: "DynamoDB endpoint (for when using dynamodb-local)",
+		required: false
 	})
 };
 
+const getDynamoDBClient = () => {
+	if (endpointOverride) {
+		return new AWS.DynamoDB({ endpoint: endpointOverride });
+	} else {
+		return new AWS.DynamoDB();
+	}
+};
+
+const getDynamoDBStreamsClient = () => {
+	if (endpointOverride) {
+		return new AWS.DynamoDBStreams({ endpoint: endpointOverride });
+	} else {
+		return new AWS.DynamoDBStreams();
+	}
+};
+
 const getStreamArn = async (tableName) => {
-	const DynamoDB = new AWS.DynamoDB();
+	const DynamoDB = getDynamoDBClient();
+  
 	const resp = await DynamoDB.describeTable({
 		TableName: tableName
 	}).promise();
@@ -66,7 +94,8 @@ const getStreamArn = async (tableName) => {
 };
 
 const describeStream = async (streamArn) => {
-	const DynamoDBStreams = new AWS.DynamoDBStreams();
+	const DynamoDBStreams = getDynamoDBStreamsClient();
+  
 	const resp = await DynamoDBStreams.describeStream({
 		StreamArn: streamArn
 	}).promise();
@@ -80,7 +109,7 @@ const describeStream = async (streamArn) => {
 };
 
 const pollDynamoDBStreams = async (streamArn, shardIds) => {
-	const DynamoDBStreams = new AWS.DynamoDBStreams();
+	const DynamoDBStreams = getDynamoDBStreamsClient();
   
 	let polling = true;
 	const readline = require("readline");
