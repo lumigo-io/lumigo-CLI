@@ -61,7 +61,18 @@ const describeStream = async (streamName) => {
 };
 
 const pollKinesis = async (streamName, shardIds) => {
-	const Kinesis = new AWS.Kinesis();
+	const Kinesis = new AWS.Kinesis({
+		maxRetries: 20,
+		// lots more retries, always 250ms apart so not to be retrying
+		// too quickly as Kinesis only gives you 5 reads per sec per shard
+		// and if you have lots of Lambda functions reading from the stream
+		// already then it's likely you'll have to retry a lot to get
+		// records from the stream
+		retryDelayOptions: { 
+			base: 250,
+			customBackoff: () => 250
+		}
+	});
   
 	let polling = true;
 	const readline = require("readline");
@@ -88,7 +99,7 @@ const pollKinesis = async (streamName, shardIds) => {
 				ShardIterator: shardIterator,
 				Limit: 10
 			}).promise();
-      
+
 			if (!_.isEmpty(resp.Records)) {
 				resp.Records.forEach(record => {
 					const timestamp = new Date().toJSON().grey.bold.bgWhite;
