@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
+const zlib = require("zlib");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
 
@@ -18,12 +19,6 @@ const consoleLog = jest.fn();
 console.log = consoleLog;
 
 beforeEach(() => {
-	mockDescribeStream.mockReset();
-	mockGetShardIterator.mockReset();
-	mockGetRecords.mockReset();
-	consoleLog.mockReset();
-	mockOpenStdin.mockReset();
-  
 	mockGetShardIterator.mockReturnValue({
 		promise: () => Promise.resolve({
 			ShardIterator: "iterator"
@@ -33,6 +28,14 @@ beforeEach(() => {
 	mockOpenStdin.mockReturnValue({
 		once: (_event, cb) => Promise.delay(1000).then(cb)
 	});
+});
+
+afterEach(() => {
+	mockDescribeStream.mockReset();
+	mockGetShardIterator.mockReset();
+	mockGetRecords.mockReset();
+	consoleLog.mockReset();
+	mockOpenStdin.mockReset();
 });
 
 describe("tail-kinesis", () => {
@@ -50,11 +53,8 @@ describe("tail-kinesis", () => {
 				expect(ctx.stdout).to.contain("checking Kinesis stream [stream-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling Kinesis stream [stream-dev] (1 shards)...");
 
-				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
-				// hence this workaround...
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call);
-				expect(logMessages).to.contain("message 1");
-				expect(logMessages).to.contain("message 2");
+				thenMessageIsLogged("message 1");
+				thenMessageIsLogged("message 2");
 			});
 	});
   
@@ -74,15 +74,54 @@ describe("tail-kinesis", () => {
 				expect(ctx.stdout).to.contain("checking Kinesis stream [stream-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling Kinesis stream [stream-dev] (2 shards)...");
 
-				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
-				// hence this workaround...
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call);
-				expect(logMessages).to.contain("message 1");
-				expect(logMessages).to.contain("message 2");
-				expect(logMessages).to.contain("message 3");
+				thenMessageIsLogged("message 1");
+				thenMessageIsLogged("message 2");
+				thenMessageIsLogged("message 3");
+			});
+	});
+  
+	describe("when the records are zipped", () => {
+		beforeEach(() => {
+			givenDescribeStreamsReturns(["shard01"]);
+			givenGetRecordsReturns(["message 1", "message 2"], true);
+			givenGetRecordsAlwaysReturns([]);
+		});
+    
+		test
+			.stdout()
+			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
+			.it("displays unzipped messages in the console", () => {
+				thenMessageIsLogged("message 1");
+				thenMessageIsLogged("message 2");
+			});
+	});
+  
+	describe("when the records are JSON", () => {
+		const data1 = { message: 42 };
+		const data2 = { foo: "bar" };
+
+		beforeEach(() => {
+			givenDescribeStreamsReturns(["shard01"]);
+			givenGetRecordsReturns([JSON.stringify(data1), JSON.stringify(data2)]);
+			givenGetRecordsAlwaysReturns([]);
+		});
+    
+		test
+			.stdout()
+			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
+			.it("displays prettified JSON messages in the console", () => {
+				thenMessageIsLogged(JSON.stringify(data1, undefined, 2));
+				thenMessageIsLogged(JSON.stringify(data2, undefined, 2));
 			});
 	});
 });
+
+function thenMessageIsLogged(message) {
+	// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
+	// hence this workaround...
+	const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
+	expect(logMessages).to.contain(message);
+}
 
 function givenDescribeStreamsReturns(shardIds) {
 	mockDescribeStream.mockReturnValueOnce({
@@ -96,11 +135,13 @@ function givenDescribeStreamsReturns(shardIds) {
 	});
 };
 
-function givenGetRecordsReturns(messages) {
+function givenGetRecordsReturns(messages, zip = false) {
 	mockGetRecords.mockReturnValueOnce({
 		promise: () => Promise.resolve({
 			Records: messages.map(msg => ({
-				Data: Buffer.from(msg, "utf-8").toString("base64")
+				Data: zip 
+					? zlib.gzipSync(Buffer.from(msg, "utf-8")).toString("base64")
+					: Buffer.from(msg, "utf-8").toString("base64")
 			})),
 			NextIterator: "iterator more"
 		})

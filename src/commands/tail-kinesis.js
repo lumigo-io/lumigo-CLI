@@ -1,8 +1,11 @@
 const _ = require("lodash");
+const zlib = require("zlib");
 const AWS = require("aws-sdk");
 const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
 require("colors");
+
+// let isZipped;
 
 class TailKinesisCommand extends Command {
 	async run() {
@@ -101,11 +104,7 @@ const pollKinesis = async (streamName, shardIds) => {
 			}).promise();
 
 			if (!_.isEmpty(resp.Records)) {
-				resp.Records.forEach(record => {
-					const timestamp = new Date().toJSON().grey.bold.bgWhite;
-					const data = Buffer.from(record.Data, "base64").toString("utf-8");
-					console.log(timestamp, "\n", data);
-				});
+				resp.Records.forEach(show);
 			}
       
 			shardIterator = resp.NextShardIterator;
@@ -115,6 +114,27 @@ const pollKinesis = async (streamName, shardIds) => {
 	await Promise.all(promises);
   
 	console.log("stopped");
+};
+
+const show = (record) => {
+	const timestamp = new Date().toJSON().grey.bold.bgWhite;
+	console.log(timestamp);
+  
+	const buffer = Buffer.from(record.Data, "base64");
+
+	let data;
+	try {
+		data = zlib.gunzipSync(buffer).toString("utf8");
+	} catch (_error) {
+		data = buffer.toString("utf8");
+	}
+      
+	try {
+		const obj = JSON.parse(data);
+		console.log(JSON.stringify(obj, undefined, 2));
+	} catch (_error) {
+		console.log(data);  
+	}
 };
 
 module.exports = TailKinesisCommand;
