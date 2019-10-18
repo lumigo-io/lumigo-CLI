@@ -27,13 +27,13 @@ beforeEach(() => {
 	mockGetRecords.mockReset();
 	consoleLog.mockReset();
 	mockOpenStdin.mockReset();
-  
+
 	mockGetShardIterator.mockReturnValue({
 		promise: () => Promise.resolve({
 			ShardIterator: "iterator"
 		})
 	});
-  
+
 	mockOpenStdin.mockReturnValue({
 		once: (_event, cb) => Promise.delay(1000).then(cb)
 	});
@@ -44,7 +44,7 @@ describe("tail-dynamodb", () => {
 		beforeEach(() => {
 			givenDescribeTableReturns();
 		});
-    
+
 		test
 			.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
@@ -56,14 +56,14 @@ describe("tail-dynamodb", () => {
 
 	describe("when the stream has one shard", () => {
 		const streamArn = "arn:aws:dynamodb:us-east-1:12345:table/users-dev/stream/2019-10-03T20:40:59.351";
-    
+
 		beforeEach(() => {
 			givenDescribeTableReturns(streamArn);
 			givenDescribeStreamsReturns(["shard01"]);
 			givenGetRecordsReturns([genEvent("message 1"), genEvent("message 2")]);
 			givenGetRecordsAlwaysReturns([]);
 		});
-    
+
 		test
 			.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
@@ -78,7 +78,7 @@ describe("tail-dynamodb", () => {
 				expect(logMessages).to.contain("message 2");
 			});
 	});
-  
+
 	describe("when the stream has more than one shard", () => {
 		const streamArn = "arn:aws:dynamodb:us-east-1:12345:table/users-dev/stream/2019-10-03T20:40:59.351";
 
@@ -90,7 +90,7 @@ describe("tail-dynamodb", () => {
 			givenGetRecordsReturns([genEvent("message 3")]);
 			givenGetRecordsAlwaysReturns([]);
 		});
-    
+
 		test
 			.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
@@ -102,7 +102,8 @@ describe("tail-dynamodb", () => {
 				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
 				expect(logMessages).to.contain("message 1");
 				expect(logMessages).to.contain("message 2");
-				expect(logMessages).to.contain("message 3");
+				// because each shard return the first event and since there is no shard03, the message 3 won't be fetched
+				expect(logMessages).to.not.contain("message 3");
 			});
 	});
 });
@@ -112,7 +113,7 @@ function givenDescribeTableReturns(streamArn) {
 		promise: () => Promise.resolve({
 			Table: {
 				LatestStreamArn: streamArn
-			}			
+			}
 		})
 	});
 }

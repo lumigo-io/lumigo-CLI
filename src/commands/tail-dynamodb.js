@@ -16,29 +16,29 @@ class TailDynamodbCommand extends Command {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
-    
+
 		if (endpoint) {
 			endpointOverride = endpoint;
 		}
-    
+
 		checkVersion();
 
 		this.log(`checking DynamoDB table [${tableName}] in [${region}]`);
 		const streamArn = await getStreamArn(tableName);
-    
+
 		if (!streamArn) {
 			this.log("table doesn't have a stream, exiting...");
 			this.exit();
 		}
-    
+
 		this.log(`stream arn is: ${streamArn}`);
 		this.log(`checking DynamoDB stream [${streamArn}] in [${region}]`);
 		const stream = await describeStream(streamArn);
-    
+
 		this.log(`polling DynamoDB stream for table [${tableName}] (${stream.shardIds.length} shards)...`);
 		this.log("press <any key> to stop");
 		await pollDynamoDBStreams(streamArn, stream.shardIds);
-    
+
 		process.exit(0);
 	}
 }
@@ -85,21 +85,21 @@ const getDynamoDBStreamsClient = () => {
 
 const getStreamArn = async (tableName) => {
 	const DynamoDB = getDynamoDBClient();
-  
+
 	const resp = await DynamoDB.describeTable({
 		TableName: tableName
 	}).promise();
-  
+
 	return resp.Table.LatestStreamArn;
 };
 
 const describeStream = async (streamArn) => {
 	const DynamoDBStreams = getDynamoDBStreamsClient();
-  
+
 	const resp = await DynamoDBStreams.describeStream({
 		StreamArn: streamArn
 	}).promise();
-  
+
 	return {
 		arn: resp.StreamDescription.StreamArn,
 		status: resp.StreamDescription.StreamStatus,
@@ -110,7 +110,7 @@ const describeStream = async (streamArn) => {
 
 const pollDynamoDBStreams = async (streamArn, shardIds) => {
 	const DynamoDBStreams = getDynamoDBStreamsClient();
-  
+
 	let polling = true;
 	const readline = require("readline");
 	readline.emitKeypressEvents(process.stdin);
@@ -127,29 +127,41 @@ const pollDynamoDBStreams = async (streamArn, shardIds) => {
 			StreamArn: streamArn,
 			ShardIteratorType: "LATEST"
 		}).promise();
-    
+
 		let shardIterator = iteratorResp.ShardIterator;
-    
+
 		// eslint-disable-next-line no-constant-condition
 		while (polling) {
-			const resp = await DynamoDBStreams.getRecords({
-				ShardIterator: shardIterator,
-				Limit: 10
-			}).promise();
-      
-			if (!_.isEmpty(resp.Records)) {
+			let resp;
+
+			if (!shardIterator) {
+				break;
+			}
+
+			try {
+				resp = await DynamoDBStreams.getRecords({
+					ShardIterator: shardIterator,
+					Limit: 10,
+				}).promise();
+			} catch (e) {
+				console.error(`Error while getting records for shard (${shardIterator.yellow}): ${e.message.red}`);
+
+				break;
+			}
+
+			if (resp && !_.isEmpty(resp.Records)) {
 				resp.Records.forEach(record => {
 					const timestamp = new Date().toJSON().grey.bold.bgWhite;
 					console.log(timestamp, "\n", JSON.stringify(record, undefined, 2));
 				});
 			}
-      
+
 			shardIterator = resp.NextShardIterator;
 		}
 	});
 
 	await Promise.all(promises);
-  
+
 	console.log("stopped");
 };
 
