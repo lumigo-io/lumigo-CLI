@@ -28,6 +28,7 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`lumigo-cli analyze-lambda-cold-starts`](#lumigo-cli-analyze-lambda-cold-starts)
 * [`lumigo-cli analyze-lambda-cost`](#lumigo-cli-analyze-lambda-cost)
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
 * [`lumigo-cli list-kinesis-shards`](#lumigo-cli-list-kinesis-shards)
@@ -41,6 +42,24 @@ USAGE
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
 * [`lumigo-cli whoami`](#lumigo-cli-whoami)
+
+## `lumigo-cli analyze-lambda-cold-starts`
+
+Analyze Lambda functions cold starts in ALL regions
+
+```
+USAGE
+  $ lumigo-cli analyze-lambda-cold-starts
+
+OPTIONS
+  -d, --days=days        only find cold starts in the last X days
+  -h, --hours=hours      [default: 1] only find cold starts in the last X hours
+  -n, --name=name        only analyze this function, e.g. hello-world
+  -p, --profile=profile  AWS CLI profile name
+  -r, --region=region    only include functions in an AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/analyze-lambda-cold-starts.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.14.1/src/commands/analyze-lambda-cold-starts.js)_
 
 ## `lumigo-cli analyze-lambda-cost`
 
