@@ -1,7 +1,7 @@
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const Octokit = require("@octokit/rest");
-const { cli } = require("cli-ux");
+const inquirer = require("inquirer");
 
 class FeedbackCommand extends Command {
 	async run() {
@@ -49,14 +49,28 @@ FeedbackCommand.flags = {
 };
 
 const createAuthenticatedOctokit = async () => {
-	const userName = await cli.prompt("Enter your GitHub user name");
-	const password = await cli.prompt("Password", { type: "hide" });
+	const answers = await inquirer.prompt([
+		{
+			name: "userName",
+			message: "Enter your GitHub user name"
+		},
+		{
+			name: "password",
+			message: "Password",
+			type: "password"
+		}]);
 	return new Octokit({
 		auth: {
-			username: userName,
-			password: password,
+			username: answers.userName,
+			password: answers.password,
 			async on2fa() {
-				return cli.prompt("Enter your two-factor token", { type: "mask" });
+				return inquirer.prompt([
+					{
+						name: "mfa",
+						message: "Enter your two-factor token",
+						type: "password"
+					} 
+				]).then(x => x.mfa);
 			}
 		}
 	});
