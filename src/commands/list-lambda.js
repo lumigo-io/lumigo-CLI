@@ -1,11 +1,12 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const Table = require("cli-table");
 const humanize = require("humanize");
 const moment = require("moment");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
-const { regions } = require("../lib/lambda");
+const Lambda = require("../lib/lambda");
+require("colors");
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
@@ -14,10 +15,7 @@ class ListLambdaCommand extends Command {
 		const { flags } = this.parse(ListLambdaCommand);
 		const { inactive, region, profile } = flags;
 
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.profile = profile;
 
 		checkVersion();
 
@@ -49,7 +47,31 @@ ListLambdaCommand.flags = {
 	})
 };
 
+const getFunctionsInRegion = async (region, inactive) => {
+	const functions = await Lambda.getFunctionsInRegion(region);
+	const functionNames = functions.map(x => x.functionName);
+	const lastInvokedOn = await getLastInvocationDates(region, functionNames);
+  
+	return functions.map(x => {
+		const lastUsed = lastInvokedOn[x.functionName];
+		return Object.assign({ lastUsed }, x);
+	}).filter(x => {
+		if (!inactive) {
+			return true;
+		} else {
+			return inactive && x.lastUsed.startsWith("inactive");
+		}
+	});
+};
+
+const getFunctionsinAllRegions = async inactive => {
+	const promises = Lambda.regions.map(region => getFunctionsInRegion(region, inactive));
+	const results = await Promise.all(promises);
+	return _.flatMap(results);
+};
+
 const getLastInvocationDates = async (region, functionNames) => {
+	const AWS = getAWSSDK();
 	const CloudWatch = new AWS.CloudWatch({ region });
 
 	const thirtyDaysAgo = new Date();
@@ -69,16 +91,22 @@ const getLastInvocationDates = async (region, functionNames) => {
 		},
 		ReturnData: true
 	}));
-
-	const resp = await CloudWatch.getMetricData({
-		StartTime: thirtyDaysAgo,
-		EndTime: new Date(),
-		ScanBy: "TimestampDescending",
-		MetricDataQueries: queries
-	}).promise();
-
+  
+	// CloudWatch only allows 100 queries per request
+	const promises = _.chunk(queries, 10).map(async chunk => {
+		const resp = await CloudWatch.getMetricData({
+			StartTime: thirtyDaysAgo,
+			EndTime: new Date(),
+			ScanBy: "TimestampDescending",
+			MetricDataQueries: chunk
+		}).promise();
+    
+		return resp.MetricDataResults;
+	});
+	const metricDataResults = _.flatMap(await Promise.all(promises));
+	
 	const lastInvocationDates = functionNames.map(functionName => {
-		const metricData = resp.MetricDataResults.find(r => r.Label === functionName);
+		const metricData = metricDataResults.find(r => r.Label === functionName);
 		if (_.isEmpty(metricData.Timestamps)) {
 			return [functionName, "inactive for 30 days"];
 		}
@@ -90,74 +118,24 @@ const getLastInvocationDates = async (region, functionNames) => {
 	return _.fromPairs(lastInvocationDates);
 };
 
-const getFunctionsInRegion = async (region, inactive) => {
-	const Lambda = new AWS.Lambda({ region });
-
-	const loop = async (acc = [], marker) => {
-		const resp = await Lambda.listFunctions({
-			Marker: marker,
-			MaxItems: 50
-		}).promise();
-
-		if (_.isEmpty(resp.Functions)) {
-			return acc;
-		}
-
-		const functionNames = resp.Functions.map(x => x.FunctionName);
-		const lastInvokedOn = await getLastInvocationDates(region, functionNames);
-
-		for (const func of resp.Functions) {
-			const functionDetails = {
-				region: region,
-				functionName: func.FunctionName,
-				runtime: func.Runtime,
-				memory: func.MemorySize,
-				codeSize: func.CodeSize,
-				lastModified: func.LastModified,
-				lastUsed: lastInvokedOn[func.FunctionName]
-			};
-
-			if (!inactive) {
-				acc.push(functionDetails);
-			} else if (inactive && functionDetails.lastUsed.startsWith("inactive")) {
-				acc.push(functionDetails);
-			}
-		}
-
-		if (resp.NextMarker) {
-			return await loop(acc, resp.NextMarker);
+const show = functions => {
+	const displayRuntime = runtime => {
+		if (runtime === "nodejs8.10") {
+			return runtime.red.bgWhite;
 		} else {
-			return acc;
+			return runtime;
 		}
 	};
 
-	return loop();
-};
-
-const getFunctionsinAllRegions = async inactive => {
-	const promises = regions.map(region => getFunctionsInRegion(region, inactive));
-	const results = await Promise.all(promises);
-	return _.flatMap(results);
-};
-
-const show = functions => {
 	const table = new Table({
-		head: [
-			"region",
-			"name",
-			"runtime",
-			"memory",
-			"code size",
-			"last modified",
-			"last used"
-		]
+		head: [ "region", "name", "runtime", "memory", "code size", "last modified", "last used" ]
 	});
 	functions.forEach(x => {
 		table.push([
 			x.region,
 			humanize.truncatechars(x.functionName, 50),
-			x.runtime,
-			x.memory,
+			displayRuntime(x.runtime),
+			x.memorySize,
 			humanize.filesize(x.codeSize),
 			moment(new Date(x.lastModified)).fromNow(),
 			x.lastUsed
@@ -165,6 +143,21 @@ const show = functions => {
 	});
 
 	console.log(table.toString());
+  
+	const node8Function = functions.find(x => x.runtime === "nodejs8.10");
+	if (node8Function) {
+		console.log(`
+nodejs8.10 runtime is coming to EOL. There will be 2 stages to the deprecation process:
+
+1. Disable Function Create.
+Beginning January 6, 2020, customers will no longer be able to create functions using Node.js 8.10
+
+2. Disable Function Update.
+Beginning February 3, 2020, customers will no longer be able to update functions using Node.js 8.10
+
+After this period, both function creation and updates will be disabled permanently. However, existing Node 8.x functions will 
+still be available to process invocation events.`);
+	}
 };
 
 module.exports = ListLambdaCommand;
