@@ -1,36 +1,39 @@
 const _ = require("lodash");
 const AWS = require("aws-sdk");
-const {getQueueUrl} = require("../lib/sqs");
-const {Command, flags} = require("@oclif/command");
-const {checkVersion} = require("../lib/version-check");
+const { getQueueUrl } = require("../lib/sqs");
+const { Command, flags } = require("@oclif/command");
+const { checkVersion } = require("../lib/version-check");
 
 class ReplaySqsDlqCommand extends Command {
 	async run() {
-		const {flags} = this.parse(ReplaySqsDlqCommand);
-		const {dlqQueueName, queueName, region, concurrency, profile} = flags;
-    
+		const { flags } = this.parse(ReplaySqsDlqCommand);
+		const { dlqQueueName, queueName, region, concurrency, profile } = flags;
+
 		AWS.config.region = region;
 		if (profile) {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
-    
+
 		checkVersion();
-    
+
 		this.log(`finding the queue [${dlqQueueName}] in [${region}]`);
 		const dlqQueueUrl = await getQueueUrl(dlqQueueName);
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);
 		const queueUrl = await getQueueUrl(queueName);
-    
-		this.log(`replaying events from [${dlqQueueUrl}] to [${queueUrl}] with ${concurrency} concurrent pollers`);
+
+		this.log(
+			`replaying events from [${dlqQueueUrl}] to [${queueUrl}] with ${concurrency} concurrent pollers`
+		);
 		replay(dlqQueueUrl, queueUrl, concurrency);
-    
+
 		this.log("all done!");
 	}
 }
 
-ReplaySqsDlqCommand.description = "Replays the messages in a SQS DLQ back to the main queue";
+ReplaySqsDlqCommand.description =
+	"Replays the messages in a SQS DLQ back to the main queue";
 ReplaySqsDlqCommand.flags = {
 	dlqQueueName: flags.string({
 		char: "d",
@@ -78,7 +81,7 @@ const runPoller = async (dlqQueueUrl, queueUrl) => {
 
 		if (_.isEmpty(resp.Messages)) {
 			emptyReceives += 1;
-      
+
 			// if we don't receive anything 10 times in a row, assume the queue is empty
 			if (emptyReceives >= 10) {
 				break;
@@ -97,7 +100,7 @@ const runPoller = async (dlqQueueUrl, queueUrl) => {
 			QueueUrl: queueUrl,
 			Entries: sendEntries
 		}).promise();
-    
+
 		const deleteEntries = resp.Messages.map(msg => ({
 			Id: msg.MessageId,
 			ReceiptHandle: msg.ReceiptHandle

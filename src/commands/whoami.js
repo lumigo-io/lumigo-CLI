@@ -1,18 +1,20 @@
-const {Command} = require("@oclif/command");
-const {getProfiles} = require("aws-profile-utils");
+const { Command } = require("@oclif/command");
+const { getProfiles } = require("aws-profile-utils");
 
 class WhoamiCommand extends Command {
 	async run() {
 		const profiles = getProfiles();
-    
+
 		if (!profiles["default"]) {
 			this.log("No default profile set.");
 			this.exit();
 		}
-    
+
 		if (Object.keys(profiles).length === 1) {
 			this.log("You don't have any named profiles set up");
-			this.log("Run 'aws configure --profile profile-name' to set up named profiles");
+			this.log(
+				"Run 'aws configure --profile profile-name' to set up named profiles"
+			);
 			this.exit();
 		}
 
@@ -34,8 +36,10 @@ WhoamiCommand.description = "See your current AWS profile name";
 
 // Check if default === other profiles found
 function areEqual(profile, secondProfile) {
-	return profile.aws_access_key_id === secondProfile.aws_access_key_id &&
-    profile.aws_secret_access_key === secondProfile.aws_secret_access_key;
+	return (
+		profile.aws_access_key_id === secondProfile.aws_access_key_id &&
+		profile.aws_secret_access_key === secondProfile.aws_secret_access_key
+	);
 }
 
 module.exports = WhoamiCommand;

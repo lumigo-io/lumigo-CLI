@@ -1,32 +1,32 @@
 const _ = require("lodash");
 const AWS = require("aws-sdk");
-const {getQueueUrl} = require("../lib/sqs");
-const {Command, flags} = require("@oclif/command");
-const {checkVersion} = require("../lib/version-check");
+const { getQueueUrl } = require("../lib/sqs");
+const { Command, flags } = require("@oclif/command");
+const { checkVersion } = require("../lib/version-check");
 require("colors");
 
 let seenMessageIds = [];
 
 class TailSqsCommand extends Command {
 	async run() {
-		const {flags} = this.parse(TailSqsCommand);
-		const {queueName, region, profile} = flags;
-    
+		const { flags } = this.parse(TailSqsCommand);
+		const { queueName, region, profile } = flags;
+
 		AWS.config.region = region;
 		if (profile) {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
-    
+
 		checkVersion();
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);
 		const queueUrl = await getQueueUrl(queueName);
-    
+
 		this.log(`polling SQS queue [${queueUrl}]...`);
 		this.log("press <any key> to stop");
 		await pollSqs(queueUrl);
-    
+
 		process.exit(0);
 	}
 }
@@ -50,9 +50,9 @@ TailSqsCommand.flags = {
 	})
 };
 
-const pollSqs = async (queueUrl) => {
+const pollSqs = async queueUrl => {
 	const SQS = new AWS.SQS();
-  
+
 	let polling = true;
 	const readline = require("readline");
 	readline.emitKeypressEvents(process.stdin);
@@ -75,7 +75,7 @@ const pollSqs = async (queueUrl) => {
 		if (_.isEmpty(resp.Messages)) {
 			continue;
 		}
-    
+
 		resp.Messages.forEach(msg => {
 			if (!seenMessageIds.includes(msg.MessageId)) {
 				const timestamp = new Date().toJSON().grey.bold.bgWhite;
@@ -89,7 +89,7 @@ const pollSqs = async (queueUrl) => {
 			}
 		});
 	}
-  
+
 	console.log("stopped");
 };
 

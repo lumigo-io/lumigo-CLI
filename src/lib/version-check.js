@@ -5,8 +5,11 @@ const checkVersion = () => {
 	const packageJson = require("../../package.json");
 	const version = packageJson.version;
 	try {
-		const npmVersion = childProcess.execSync("npm show lumigo-cli version").toString().trim();
-  
+		const npmVersion = childProcess
+			.execSync("npm show lumigo-cli version")
+			.toString()
+			.trim();
+
 		if (semver.gt(npmVersion, version)) {
 			console.log(`
   ===============================================================
@@ -15,9 +18,8 @@ const checkVersion = () => {
   ===============================================================
       `);
 		}
-	// eslint-disable-next-line no-empty
-	} catch (err) {
-	}
+		// eslint-disable-next-line no-empty
+	} catch (err) {}
 };
 
 module.exports = {

@@ -1,15 +1,15 @@
 const _ = require("lodash");
 const AWS = require("aws-sdk");
-const {Command, flags} = require("@oclif/command");
-const {checkVersion} = require("../lib/version-check");
+const { Command, flags } = require("@oclif/command");
+const { checkVersion } = require("../lib/version-check");
 require("colors");
 
 let endpointOverride;
 
 class TailDynamodbCommand extends Command {
 	async run() {
-		const {flags} = this.parse(TailDynamodbCommand);
-		const {tableName, region, profile, endpoint} = flags;
+		const { flags } = this.parse(TailDynamodbCommand);
+		const { tableName, region, profile, endpoint } = flags;
 
 		AWS.config.region = region;
 		if (profile) {
@@ -35,7 +35,9 @@ class TailDynamodbCommand extends Command {
 		this.log(`checking DynamoDB stream [${streamArn}] in [${region}]`);
 		const stream = await describeStream(streamArn);
 
-		this.log(`polling DynamoDB stream for table [${tableName}] (${stream.shardIds.length} shards)...`);
+		this.log(
+			`polling DynamoDB stream for table [${tableName}] (${stream.shardIds.length} shards)...`
+		);
 		this.log("press <any key> to stop");
 		await pollDynamoDBStreams(streamArn, stream.shardIds);
 
@@ -83,7 +85,7 @@ const getDynamoDBStreamsClient = () => {
 	}
 };
 
-const getStreamArn = async (tableName) => {
+const getStreamArn = async tableName => {
 	const DynamoDB = getDynamoDBClient();
 
 	const resp = await DynamoDB.describeTable({
@@ -93,7 +95,7 @@ const getStreamArn = async (tableName) => {
 	return resp.Table.LatestStreamArn;
 };
 
-const describeStream = async (streamArn) => {
+const describeStream = async streamArn => {
 	const DynamoDBStreams = getDynamoDBStreamsClient();
 
 	const resp = await DynamoDBStreams.describeStream({
@@ -121,7 +123,7 @@ const pollDynamoDBStreams = async (streamArn, shardIds) => {
 		console.log("stopping...");
 	});
 
-	const promises = shardIds.map(async (shardId) => {
+	const promises = shardIds.map(async shardId => {
 		const iteratorResp = await DynamoDBStreams.getShardIterator({
 			ShardId: shardId,
 			StreamArn: streamArn,
@@ -141,10 +143,12 @@ const pollDynamoDBStreams = async (streamArn, shardIds) => {
 			try {
 				resp = await DynamoDBStreams.getRecords({
 					ShardIterator: shardIterator,
-					Limit: 10,
+					Limit: 10
 				}).promise();
 			} catch (e) {
-				console.error(`Error while getting records for shard (${shardIterator.yellow}): ${e.message.red}`);
+				console.error(
+					`Error while getting records for shard (${shardIterator.yellow}): ${e.message.red}`
+				);
 
 				break;
 			}

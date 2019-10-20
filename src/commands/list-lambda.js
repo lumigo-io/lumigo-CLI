@@ -3,24 +3,24 @@ const AWS = require("aws-sdk");
 const Table = require("cli-table");
 const humanize = require("humanize");
 const moment = require("moment");
-const {Command, flags} = require("@oclif/command");
-const {checkVersion} = require("../lib/version-check");
-const {regions} = require("../lib/lambda");
+const { Command, flags } = require("@oclif/command");
+const { checkVersion } = require("../lib/version-check");
+const { regions } = require("../lib/lambda");
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 class ListLambdaCommand extends Command {
 	async run() {
-		const {flags} = this.parse(ListLambdaCommand);
-		const {inactive, region, profile} = flags;
-    
+		const { flags } = this.parse(ListLambdaCommand);
+		const { inactive, region, profile } = flags;
+
 		if (profile) {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
-    
+
 		checkVersion();
-    
+
 		if (region) {
 			show(await getFunctionsInRegion(region, inactive));
 		} else {
@@ -51,10 +51,10 @@ ListLambdaCommand.flags = {
 
 const getLastInvocationDates = async (region, functionNames) => {
 	const CloudWatch = new AWS.CloudWatch({ region });
-  
+
 	const thirtyDaysAgo = new Date();
-	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
-  
+	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
 	const queries = functionNames.map(functionName => ({
 		Id: functionName.toLowerCase().replace(/\W/g, ""),
 		Label: functionName,
@@ -69,14 +69,14 @@ const getLastInvocationDates = async (region, functionNames) => {
 		},
 		ReturnData: true
 	}));
-  
+
 	const resp = await CloudWatch.getMetricData({
 		StartTime: thirtyDaysAgo,
 		EndTime: new Date(),
 		ScanBy: "TimestampDescending",
 		MetricDataQueries: queries
 	}).promise();
-  
+
 	const lastInvocationDates = functionNames.map(functionName => {
 		const metricData = resp.MetricDataResults.find(r => r.Label === functionName);
 		if (_.isEmpty(metricData.Timestamps)) {
@@ -85,8 +85,8 @@ const getLastInvocationDates = async (region, functionNames) => {
 
 		const lastInvokedOn = _.max(metricData.Timestamps);
 		return [functionName, moment(lastInvokedOn).fromNow()];
-	});	
-  
+	});
+
 	return _.fromPairs(lastInvocationDates);
 };
 
@@ -98,12 +98,12 @@ const getFunctionsInRegion = async (region, inactive) => {
 			Marker: marker,
 			MaxItems: 50
 		}).promise();
-    
+
 		if (_.isEmpty(resp.Functions)) {
 			return acc;
 		}
-    
-		const functionNames = resp.Functions.map(x => x.FunctionName);    
+
+		const functionNames = resp.Functions.map(x => x.FunctionName);
 		const lastInvokedOn = await getLastInvocationDates(region, functionNames);
 
 		for (const func of resp.Functions) {
@@ -116,7 +116,7 @@ const getFunctionsInRegion = async (region, inactive) => {
 				lastModified: func.LastModified,
 				lastUsed: lastInvokedOn[func.FunctionName]
 			};
-      
+
 			if (!inactive) {
 				acc.push(functionDetails);
 			} else if (inactive && functionDetails.lastUsed.startsWith("inactive")) {
@@ -134,28 +134,36 @@ const getFunctionsInRegion = async (region, inactive) => {
 	return loop();
 };
 
-const getFunctionsinAllRegions = async (inactive) => {
+const getFunctionsinAllRegions = async inactive => {
 	const promises = regions.map(region => getFunctionsInRegion(region, inactive));
 	const results = await Promise.all(promises);
 	return _.flatMap(results);
 };
 
-const show = (functions) => {
+const show = functions => {
 	const table = new Table({
-		head: ["region", "name", "runtime", "memory", "code size", "last modified", "last used"]
+		head: [
+			"region",
+			"name",
+			"runtime",
+			"memory",
+			"code size",
+			"last modified",
+			"last used"
+		]
 	});
 	functions.forEach(x => {
-		table.push([ 
-			x.region, 
+		table.push([
+			x.region,
 			humanize.truncatechars(x.functionName, 50),
-			x.runtime, 
+			x.runtime,
 			x.memory,
 			humanize.filesize(x.codeSize),
 			moment(new Date(x.lastModified)).fromNow(),
 			x.lastUsed
 		]);
 	});
-  
+
 	console.log(table.toString());
 };
 

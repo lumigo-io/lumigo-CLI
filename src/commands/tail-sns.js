@@ -1,25 +1,25 @@
 const AWS = require("aws-sdk");
-const {Command, flags} = require("@oclif/command");
+const { Command, flags } = require("@oclif/command");
 const webserver = require("../lib/webserver");
 const readline = require("readline");
-const {checkVersion} = require("../lib/version-check");
+const { checkVersion } = require("../lib/version-check");
 
 class TailSnsCommand extends Command {
 	async run() {
-		const {flags} = this.parse(TailSnsCommand);
-		const {topicName, region, profile} = flags;
-    
+		const { flags } = this.parse(TailSnsCommand);
+		const { topicName, region, profile } = flags;
+
 		AWS.config.region = region;
 		if (profile) {
 			const credentials = new AWS.SharedIniFileCredentials({ profile });
 			AWS.config.credentials = credentials;
 		}
-    
+
 		checkVersion();
-    
+
 		this.log(`finding the topic [${topicName}] in [${region}]`);
 		const topicArn = await getTopicArn(topicName);
-    		
+
 		await pollSns(topicArn);
 	}
 }
@@ -43,9 +43,9 @@ TailSnsCommand.flags = {
 	})
 };
 
-const getTopicArn = async (topicName) => {
+const getTopicArn = async topicName => {
 	const SNS = new AWS.SNS();
-	const loop = async (nextToken) => {
+	const loop = async nextToken => {
 		const resp = await SNS.listTopics({
 			NextToken: nextToken
 		}).promise();
@@ -54,7 +54,7 @@ const getTopicArn = async (topicName) => {
 		if (matchingTopic) {
 			return matchingTopic.TopicArn;
 		}
-    
+
 		if (resp.NextToken) {
 			return await loop(resp.NextToken);
 		} else {
@@ -65,22 +65,20 @@ const getTopicArn = async (topicName) => {
 	return loop();
 };
 
-const pollSns = async (topicArn) => {
-	const { url, stop } = await webserver.start(
-		() => {
-			console.log(`polling SNS topic [${topicArn}]...`);
-			console.log("press <any key> to stop");
-		}
-	);
-  
+const pollSns = async topicArn => {
+	const { url, stop } = await webserver.start(() => {
+		console.log(`polling SNS topic [${topicArn}]...`);
+		console.log("press <any key> to stop");
+	});
+
 	const subscriptionArn = await subscribeToSNS(topicArn, url);
-  
+
 	readline.emitKeypressEvents(process.stdin);
 	process.stdin.setRawMode(true);
 	const stdin = process.openStdin();
 	stdin.once("keypress", async () => {
 		console.log("stopping...");
-    
+
 		await stop();
 		await unsubscribeFromSNS(subscriptionArn);
 
@@ -96,18 +94,18 @@ const subscribeToSNS = async (topicArn, url) => {
 		Endpoint: url,
 		ReturnSubscriptionArn: true
 	}).promise();
-  
+
 	console.log("subscribed to SNS");
 
 	return resp.SubscriptionArn;
 };
 
-const unsubscribeFromSNS = async (subscriptionArn) => {
+const unsubscribeFromSNS = async subscriptionArn => {
 	const SNS = new AWS.SNS();
 	await SNS.unsubscribe({
 		SubscriptionArn: subscriptionArn
 	}).promise();
-  
+
 	console.log("unsubscribed from SNS");
 };
 

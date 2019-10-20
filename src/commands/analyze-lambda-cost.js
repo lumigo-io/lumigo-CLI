@@ -1,9 +1,9 @@
 const _ = require("lodash");
-const {getAWSSDK} = require("../lib/aws");
+const { getAWSSDK } = require("../lib/aws");
 const Table = require("cli-table");
 const humanize = require("humanize");
-const {Command, flags} = require("@oclif/command");
-const {checkVersion} = require("../lib/version-check");
+const { Command, flags } = require("@oclif/command");
+const { checkVersion } = require("../lib/version-check");
 const Lambda = require("../lib/lambda");
 require("colors");
 
@@ -13,13 +13,13 @@ const COST_PER_100MS = 0.000000208;
 
 class AnalyzeLambdaCostCommand extends Command {
 	async run() {
-		const {flags} = this.parse(AnalyzeLambdaCostCommand);
-		const {name, region, profile} = flags;
-    
+		const { flags } = this.parse(AnalyzeLambdaCostCommand);
+		const { name, region, profile } = flags;
+
 		global.profile = profile;
-    
+
 		checkVersion();
-    
+
 		if (name) {
 			show(await getFunctionInRegion(name, region));
 		} else if (region) {
@@ -53,17 +53,23 @@ AnalyzeLambdaCostCommand.flags = {
 const getFunctionInRegion = async (functionName, region) => {
 	const functionDetail = await Lambda.getFunctionInRegion(functionName, region);
 	const summary = await getCostSummary(region, [functionDetail]);
-	return [Object.assign({
-		totalCost: 0,
-		invocationCount: 0,
-		averageCost: 0
-	}, functionDetail, summary)];
+	return [
+		Object.assign(
+			{
+				totalCost: 0,
+				invocationCount: 0,
+				averageCost: 0
+			},
+			functionDetail,
+			summary
+		)
+	];
 };
 
-const getFunctionsInRegion = async (region) => {
+const getFunctionsInRegion = async region => {
 	const functions = await Lambda.getFunctionsInRegion(region);
 	const summaries = await getCostSummary(region, functions);
-  
+
 	return functions.map(x => {
 		const summary = summaries[x.functionName];
 		return Object.assign({}, x, summary);
@@ -79,33 +85,33 @@ const getFunctionsinAllRegions = async () => {
 const getCostSummary = async (region, functions) => {
 	const AWS = getAWSSDK();
 	const CloudWatch = new AWS.CloudWatch({ region });
-  
+
 	const thirtyDaysAgo = new Date();
-	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
-  
+	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
 	const queries = _.flatMap(functions, ({ functionName }) => [
 		invocationCountMetric(functionName),
 		durationMetric(functionName)
 	]);
-  
+
 	const resp = await CloudWatch.getMetricData({
 		StartTime: thirtyDaysAgo,
 		EndTime: new Date(),
 		ScanBy: "TimestampDescending",
 		MetricDataQueries: queries
 	}).promise();
-  
+
 	const summaries = functions.map(({ functionName, memorySize }) => {
 		const invocationCount = _.chain(resp.MetricDataResults)
 			.filter(r => r.Label === functionName + "InvocationCount")
 			.flatMap(r => r.Values)
 			.sum()
 			.value();
-      
+
 		if (invocationCount === 0) {
 			return [functionName, { totalCost: 0, averageCost: 0, invocationCount }];
 		}
-      
+
 		const totalDuration = _.chain(resp.MetricDataResults)
 			.filter(r => r.Label === functionName + "Duration")
 			.flatMap(r => r.Values)
@@ -113,43 +119,58 @@ const getCostSummary = async (region, functions) => {
 			.value();
 
 		const avgDuration = totalDuration / invocationCount;
-		const averageCost = Math.ceil(avgDuration / 100) * (memorySize / 128) * COST_PER_100MS + COST_PER_REQ;
-		const totalCost = averageCost * invocationCount;      
-    
+		const averageCost =
+			Math.ceil(avgDuration / 100) * (memorySize / 128) * COST_PER_100MS +
+			COST_PER_REQ;
+		const totalCost = averageCost * invocationCount;
+
 		return [functionName, { totalCost, averageCost, invocationCount }];
 	});
-  
+
 	return _.fromPairs(summaries);
 };
 
-const show = (functions) => {
-	const displayCost = x => x === 0 ? "-" : x.toFixed(10);
+const show = functions => {
+	const displayCost = x => (x === 0 ? "-" : x.toFixed(10));
 	const table = new Table({
-		head: ["region", "name", "runtime", "memory", "30 day ($)", "invocations", "avg ($)/invocation"]
+		head: [
+			"region",
+			"name",
+			"runtime",
+			"memory",
+			"30 day ($)",
+			"invocations",
+			"avg ($)/invocation"
+		]
 	});
 	_.sortBy(functions, "totalCost")
 		.reverse()
-	  .forEach(x => {
-			table.push([ 
-				x.region, 
+		.forEach(x => {
+			table.push([
+				x.region,
 				humanize.truncatechars(x.functionName, 40),
-				x.runtime, 
+				x.runtime,
 				x.memorySize,
 				displayCost(x.totalCost),
 				x.invocationCount,
 				displayCost(x.averageCost)
 			]);
 		});
-  
+
 	console.log(table.toString());
-  
+
 	console.log("DISCLAIMER: the above are estimated costs.".bold.red.bgWhite);
 	console.log("Actual cost can vary due to a number of factors such as free tier.");
-	console.log("To see estimated cost as a metric by function, check out our SAR app - async-custom-metrics - which you can install from:");
-	console.log("https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:374852340823:applications~async-custom-metrics".underline.bold.blue);
+	console.log(
+		"To see estimated cost as a metric by function, check out our SAR app - async-custom-metrics - which you can install from:"
+	);
+	console.log(
+		"https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:374852340823:applications~async-custom-metrics"
+			.underline.bold.blue
+	);
 };
 
-const invocationCountMetric = (functionName) => ({
+const invocationCountMetric = functionName => ({
 	Id: functionName.toLowerCase().replace(/\W/g, "") + "InvocationCount",
 	Label: functionName + "InvocationCount",
 	MetricStat: {
@@ -164,7 +185,7 @@ const invocationCountMetric = (functionName) => ({
 	ReturnData: true
 });
 
-const durationMetric = (functionName) => ({
+const durationMetric = functionName => ({
 	Id: functionName.toLowerCase().replace(/\W/g, "") + "Duration",
 	Label: functionName + "Duration",
 	MetricStat: {
