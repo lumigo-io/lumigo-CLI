@@ -93,16 +93,22 @@ const getCostSummary = async (region, functions) => {
 		invocationCountMetric(functionName),
 		durationMetric(functionName)
 	]);
-
-	const resp = await CloudWatch.getMetricData({
-		StartTime: thirtyDaysAgo,
-		EndTime: new Date(),
-		ScanBy: "TimestampDescending",
-		MetricDataQueries: queries
-	}).promise();
+  
+	// CloudWatch only allows 100 queries per request
+	const promises = _.chunk(queries, 100).map(async chunk => {
+		const resp = await CloudWatch.getMetricData({
+			StartTime: thirtyDaysAgo,
+			EndTime: new Date(),
+			ScanBy: "TimestampDescending",
+			MetricDataQueries: chunk
+		}).promise();
+    
+		return resp.MetricDataResults;
+	});
+	const metricDataResults = _.flatMap(await Promise.all(promises));
 
 	const summaries = functions.map(({ functionName, memorySize }) => {
-		const invocationCount = _.chain(resp.MetricDataResults)
+		const invocationCount = _.chain(metricDataResults)
 			.filter(r => r.Label === functionName + "InvocationCount")
 			.flatMap(r => r.Values)
 			.sum()
@@ -112,7 +118,7 @@ const getCostSummary = async (region, functions) => {
 			return [functionName, { totalCost: 0, averageCost: 0, invocationCount }];
 		}
 
-		const totalDuration = _.chain(resp.MetricDataResults)
+		const totalDuration = _.chain(metricDataResults)
 			.filter(r => r.Label === functionName + "Duration")
 			.flatMap(r => r.Values)
 			.sum()
