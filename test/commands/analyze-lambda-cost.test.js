@@ -5,6 +5,8 @@ const mockGetMetricData = jest.fn();
 AWS.CloudWatch.prototype.getMetricData = mockGetMetricData;
 const mockListFunctions = jest.fn();
 AWS.Lambda.prototype.listFunctions = mockListFunctions;
+const mockGetFunctionConfiguration = jest.fn();
+AWS.Lambda.prototype.getFunctionConfiguration = mockGetFunctionConfiguration;
 
 const consoleLog = jest.fn();
 console.log = consoleLog;
@@ -14,6 +16,7 @@ const command = "analyze-lambda-cost";
 afterEach(() => {
 	mockGetMetricData.mockReset();
 	mockListFunctions.mockReset();
+	mockGetFunctionConfiguration.mockReset();
 	consoleLog.mockReset();
 });
 
@@ -26,6 +29,7 @@ describe("analyze-lambda-cost", () => {
 			givenGetMetricDataAlwaysReturns([
 				{ functionName: "function-a", timestamps: [] }
 			]);
+			givenGetFunctionConfigurationAlwaysReturns("function-a");
 		});
     
 		test
@@ -54,6 +58,15 @@ describe("analyze-lambda-cost", () => {
 			.it("calls only one region", () => {
 				expect(consoleLog.mock.calls).to.have.length.greaterThan(1);
 				expect(mockListFunctions.mock.calls).to.have.length(1);
+			});
+    
+		test
+			.stdout()
+			.command([command, "-r", "us-east-1", "-n", "function-a"])
+			.it("calls only one function", () => {
+				expect(consoleLog.mock.calls).to.have.length.greaterThan(1);
+				expect(mockListFunctions.mock.calls).to.be.empty;
+				expect(mockGetFunctionConfiguration.mock.calls).to.have.lengthOf(1);
 			});
 	});
   
@@ -142,6 +155,18 @@ function givenListFunctionsAlwaysReturns (functionNames) {
 				CodeSize: 1024,
 				LastModified: new Date().toJSON()        
 			}))
+		})
+	});
+}
+
+function givenGetFunctionConfigurationAlwaysReturns (functionName) {
+	mockGetFunctionConfiguration.mockReturnValue({
+		promise: () => Promise.resolve({
+			FunctionName: functionName,
+			Runtime: "nodejs10.x",
+			MemorySize: 128,
+			CodeSize: 1024,
+			LastModified: new Date().toJSON()        
 		})
 	});
 }

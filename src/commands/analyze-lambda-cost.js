@@ -1,10 +1,10 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const {getAWSSDK} = require("../lib/aws");
 const Table = require("cli-table");
 const humanize = require("humanize");
 const {Command, flags} = require("@oclif/command");
 const {checkVersion} = require("../lib/version-check");
-const {regions} = require("../lib/lambda");
+const Lambda = require("../lib/lambda");
 require("colors");
 
 const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
@@ -14,16 +14,15 @@ const COST_PER_100MS = 0.000000208;
 class AnalyzeLambdaCostCommand extends Command {
 	async run() {
 		const {flags} = this.parse(AnalyzeLambdaCostCommand);
-		const {region, profile} = flags;
+		const {name, region, profile} = flags;
     
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.profile = profile;
     
 		checkVersion();
     
-		if (region) {
+		if (name) {
+			show(await getFunctionInRegion(name, region));
+		} else if (region) {
 			show(await getFunctionsInRegion(region));
 		} else {
 			show(await getFunctionsinAllRegions());
@@ -33,6 +32,12 @@ class AnalyzeLambdaCostCommand extends Command {
 
 AnalyzeLambdaCostCommand.description = "Analyze Lambda functions costs in ALL regions";
 AnalyzeLambdaCostCommand.flags = {
+	name: flags.string({
+		char: "n",
+		description: "only analyze this function, e.g. hello-world",
+		required: false,
+		dependsOn: ["region"]
+	}),
 	region: flags.string({
 		char: "r",
 		description: "only include functions in an AWS region, e.g. us-east-1",
@@ -45,37 +50,34 @@ AnalyzeLambdaCostCommand.flags = {
 	})
 };
 
-const invocationCountMetric = (functionName) => ({
-	Id: functionName.toLowerCase().replace(/\W/g, "") + "InvocationCount",
-	Label: functionName + "InvocationCount",
-	MetricStat: {
-		Metric: {
-			Dimensions: [{ Name: "FunctionName", Value: functionName }],
-			MetricName: "Invocations",
-			Namespace: "AWS/Lambda"
-		},
-		Period: ONE_DAY_IN_SECONDS,
-		Stat: "Sum"
-	},
-	ReturnData: true
-});
+const getFunctionInRegion = async (functionName, region) => {
+	const functionDetail = await Lambda.getFunctionInRegion(functionName, region);
+	const summary = await getCostSummary(region, [functionDetail]);
+	return [Object.assign({
+		totalCost: 0,
+		invocationCount: 0,
+		averageCost: 0
+	}, functionDetail, summary)];
+};
 
-const durationMetric = (functionName) => ({
-	Id: functionName.toLowerCase().replace(/\W/g, "") + "Duration",
-	Label: functionName + "Duration",
-	MetricStat: {
-		Metric: {
-			Dimensions: [{ Name: "FunctionName", Value: functionName }],
-			MetricName: "Duration",
-			Namespace: "AWS/Lambda"
-		},
-		Period: ONE_DAY_IN_SECONDS,
-		Stat: "Sum"
-	},
-	ReturnData: true
-});
+const getFunctionsInRegion = async (region) => {
+	const functions = await Lambda.getFunctionsInRegion(region);
+	const summaries = await getCostSummary(region, functions);
+  
+	return functions.map(x => {
+		const summary = summaries[x.functionName];
+		return Object.assign({}, x, summary);
+	});
+};
+
+const getFunctionsinAllRegions = async () => {
+	const promises = Lambda.regions.map(region => getFunctionsInRegion(region));
+	const results = await Promise.all(promises);
+	return _.flatMap(results);
+};
 
 const getCostSummary = async (region, functions) => {
+	const AWS = getAWSSDK();
 	const CloudWatch = new AWS.CloudWatch({ region });
   
 	const thirtyDaysAgo = new Date();
@@ -120,69 +122,19 @@ const getCostSummary = async (region, functions) => {
 	return _.fromPairs(summaries);
 };
 
-const getFunctionsInRegion = async (region) => {
-	const Lambda = new AWS.Lambda({ region });
-
-	const loop = async (acc = [], marker) => {
-		const resp = await Lambda.listFunctions({
-			Marker: marker,
-			MaxItems: 50
-		}).promise();
-    
-		if (_.isEmpty(resp.Functions)) {
-			return acc;
-		}
-    
-		const summaries = await getCostSummary(
-			region, 
-			resp.Functions.map(x => ({
-				functionName: x.FunctionName,
-				memorySize: x.MemorySize
-			})));
-
-		for (const func of resp.Functions) {
-			const functionDetails = {
-				region: region,
-				functionName: func.FunctionName,
-				runtime: func.Runtime,
-				memory: func.MemorySize,
-				totalCost: summaries[func.FunctionName].totalCost,
-				averageCost: summaries[func.FunctionName].averageCost,
-				invocationCount: summaries[func.FunctionName].invocationCount
-			};
-      
-			acc.push(functionDetails);
-		}
-
-		if (resp.NextMarker) {
-			return await loop(acc, resp.NextMarker);
-		} else {
-			return acc;
-		}
-	};
-
-	return loop();
-};
-
-const getFunctionsinAllRegions = async () => {
-	const promises = regions.map(region => getFunctionsInRegion(region));
-	const results = await Promise.all(promises);
-	return _.flatMap(results);
-};
-
 const show = (functions) => {
 	const displayCost = x => x === 0 ? "-" : x.toFixed(10);
 	const table = new Table({
-		head: ["region", "name", "runtime", "memory", "30 day cost ($)", "invocations", "avg cost ($)/invocation"]
+		head: ["region", "name", "runtime", "memory", "30 day ($)", "invocations", "avg ($)/invocation"]
 	});
 	_.sortBy(functions, "totalCost")
 		.reverse()
 	  .forEach(x => {
 			table.push([ 
 				x.region, 
-				humanize.truncatechars(x.functionName, 50),
+				humanize.truncatechars(x.functionName, 40),
 				x.runtime, 
-				x.memory,
+				x.memorySize,
 				displayCost(x.totalCost),
 				x.invocationCount,
 				displayCost(x.averageCost)
@@ -196,5 +148,35 @@ const show = (functions) => {
 	console.log("To see estimated cost as a metric by function, check out our SAR app - async-custom-metrics - which you can install from:");
 	console.log("https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:374852340823:applications~async-custom-metrics".underline.bold.blue);
 };
+
+const invocationCountMetric = (functionName) => ({
+	Id: functionName.toLowerCase().replace(/\W/g, "") + "InvocationCount",
+	Label: functionName + "InvocationCount",
+	MetricStat: {
+		Metric: {
+			Dimensions: [{ Name: "FunctionName", Value: functionName }],
+			MetricName: "Invocations",
+			Namespace: "AWS/Lambda"
+		},
+		Period: ONE_DAY_IN_SECONDS,
+		Stat: "Sum"
+	},
+	ReturnData: true
+});
+
+const durationMetric = (functionName) => ({
+	Id: functionName.toLowerCase().replace(/\W/g, "") + "Duration",
+	Label: functionName + "Duration",
+	MetricStat: {
+		Metric: {
+			Dimensions: [{ Name: "FunctionName", Value: functionName }],
+			MetricName: "Duration",
+			Namespace: "AWS/Lambda"
+		},
+		Period: ONE_DAY_IN_SECONDS,
+		Stat: "Sum"
+	},
+	ReturnData: true
+});
 
 module.exports = AnalyzeLambdaCostCommand;
