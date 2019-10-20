@@ -29,6 +29,7 @@ USAGE
 # Commands
 <!-- commands -->
 * [`lumigo-cli analyze-lambda-cost`](#lumigo-cli-analyze-lambda-cost)
+* [`lumigo-cli feedback`](#lumigo-cli-feedback)
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
 * [`lumigo-cli list-kinesis-shards`](#lumigo-cli-list-kinesis-shards)
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
@@ -56,6 +57,22 @@ OPTIONS
 ```
 
 _See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.14.1/src/commands/analyze-lambda-cost.js)_
+
+## `lumigo-cli-feedback`
+
+Suggest feature or report bug
+
+```
+USAGE
+  $ lumigo-cli feedback
+
+OPTIONS
+  -s, --subject=subject          (required) issue title
+  -t, --type=feature|bug         (required) feedback type
+  -d, --description=description  issue description
+```
+
+_See code: [src/commands/feedback.js](https://github.com/lumigo-io/lumigo-CLI/tree/master/src/commands/feedback.js)_
 
 ## `lumigo-cli help [COMMAND]`
 
