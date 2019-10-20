@@ -20,6 +20,8 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 			hours = days * 24;
 		}
     
+		this.log(`analyzing cold starts over the last ${hours} hours`);
+    
 		if (name) {
 			show(await getFunctionInRegion(name, region, hours));
 		} else if (region) {
@@ -130,9 +132,9 @@ const getStats = async (region, hours, functionNames) => {
     
 			return resp.results;
 		}, {
-			retries: 60, // 10 mins
-			minTimeout: 10000,
-			maxTimeout: 10000
+			retries: 200, // 10 mins
+			minTimeout: 3000,
+			maxTimeout: 3000
 		});
   
 		return results;
@@ -163,12 +165,12 @@ const formatInitDuration = n => {
 
 const show = (functions) => {
 	const table = new Table({
-		head: ["region", "name", "runtime", "memory", "count", "avg init", "max init"]
+		head: ["region", "name", "runtime", "memory", "count", "median init", "max init"]
 	});
 	_.sortBy(functions, ["coldStarts", "avgInitDuration"])
 		.reverse()
 	  .forEach(x => {
-			table.push([ 
+			table.push([
 				x.region, 
 				humanize.truncatechars(x.functionName, 45),
 				x.runtime, 
