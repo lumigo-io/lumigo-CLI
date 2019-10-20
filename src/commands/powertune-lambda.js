@@ -17,7 +17,7 @@ const ONE_SECOND = 1000;
 class PowertuneLambdaCommand extends Command {
 	async run() {
 		const {flags} = this.parse(PowertuneLambdaCommand);
-		const {functionName, region, profile, strategy, invocations, file} = flags;
+		const {functionName, region, profile, strategy, invocations, file, balancedWeight} = flags;
     
 		AWS.config.region = region;
 		if (profile) {
@@ -60,7 +60,7 @@ class PowertuneLambdaCommand extends Command {
 		// eslint-disable-next-line no-unused-vars
 		const [_arn, _aws, _states, _region, accountId, ...rest] = stateMachineArn.split(":");
 		const lambdaArn = `arn:aws:lambda:${region}:${accountId}:function:${functionName}`;
-		const executionArn = await startStateMachine(stateMachineArn, lambdaArn, invocations, payload, strategy);
+		const executionArn = await startStateMachine(stateMachineArn, lambdaArn, invocations, payload, strategy, balancedWeight);
 		this.log("State Machine execution started");
 		this.log(`execution ARN is ${executionArn}`);
     
@@ -105,9 +105,9 @@ PowertuneLambdaCommand.flags = {
 	}),
 	strategy: flags.string({
 		char: "s",
-		description: 'what to powertune the function for - either "cost" or "speed"',
+		description: 'what to powertune the function for - "cost", "speed" or "balanced"',
 		required: true,
-		options: ["cost", "speed"]
+		options: ["cost", "speed", "balanced"]
 	}),
 	invocations: flags.integer({
 		char: "i",
@@ -126,6 +126,12 @@ PowertuneLambdaCommand.flags = {
 		description: "file that contains the JSON payload to send to the function",
 		required: false,
 		exclusive: ["payload"]
+	}),
+	balancedWeight: flags.string({
+		char: "w",
+		description: 'the trade-off between cost and time, 0.0 is equivalent to "speed" strategy, 1.0 is equivalent to "cost" strategy',
+		required: false,
+		parse: x => parseFloat(x),
 	})
 };
 
@@ -290,7 +296,7 @@ const deploySAR = async (version, isUpdate = false) => {
 	return smOutput.OutputValue;
 };
 
-const startStateMachine = async (stateMachineArn, lambdaArn, iterations, payload, strategy) => {
+const startStateMachine = async (stateMachineArn, lambdaArn, iterations, payload, strategy, balancedWeight) => {
 	const StepFunctions = new AWS.StepFunctions();
 	const resp = await StepFunctions.startExecution({
 		stateMachineArn: stateMachineArn,
@@ -300,7 +306,8 @@ const startStateMachine = async (stateMachineArn, lambdaArn, iterations, payload
 			num: iterations,
 			payload: payload,
 			parallelInvocation: false,
-			strategy: strategy
+			strategy: strategy,
+			balancedWeight: balancedWeight
 		})
 	}).promise();
 
