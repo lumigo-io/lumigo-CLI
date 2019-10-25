@@ -278,10 +278,8 @@ describe("powertune-lambda", () => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
 			givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
 			givenDescribeExecutionReturns("SUCCEEDED", {
-				results: {
-					stateMachine: {
-						visualization: "https://lambda-power-tuning.show/#123"
-					}
+				stateMachine: {
+					visualization: "https://lambda-power-tuning.show/#123"
 				}
 			});
 			givenUserChooseToVisualizeResult();
@@ -300,10 +298,8 @@ describe("powertune-lambda", () => {
 				givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
 				givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
 				givenDescribeExecutionReturns("SUCCEEDED", {
-					results: {
-						stateMachine: {
-							visualization: "https://lambda-power-tuning.show/#123"
-						}
+					stateMachine: {
+						visualization: "https://lambda-power-tuning.show/#123"
 					}
 				});
 				givenUserChooseToVisualizeResult();

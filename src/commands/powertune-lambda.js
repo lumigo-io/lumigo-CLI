@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const Semver = require("semver");
 const Retry = require("async-retry");
 const uuid = require("uuid/v4");
@@ -25,14 +25,12 @@ class PowertuneLambdaCommand extends Command {
 			strategy,
 			invocations,
 			file,
-			balancedWeight
+			balancedWeight,
+			powerValues
 		} = flags;
 
-		AWS.config.region = region;
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.region = region;
+		global.profile = profile;
 
 		checkVersion();
 
@@ -83,7 +81,8 @@ class PowertuneLambdaCommand extends Command {
 			invocations,
 			payload,
 			strategy,
-			balancedWeight
+			balancedWeight,
+			powerValues
 		);
 		this.log("State Machine execution started");
 		this.log(`execution ARN is ${executionArn}`);
@@ -92,7 +91,8 @@ class PowertuneLambdaCommand extends Command {
 		this.log(JSON.stringify(result, null, 2).yellow);
 
 		// since v2.1.1 the powertuning SFN returns a visualization URL as well
-		const visualizationUrl = _.get(result, "results.stateMachine.visualization");
+		const visualizationUrl = _.get(result, "stateMachine.visualization");
+    
 		if (visualizationUrl) {
 			const { visualize } = await inquirer.prompt([
 				{
@@ -157,6 +157,18 @@ PowertuneLambdaCommand.flags = {
 			'the trade-off between cost and time, 0.0 is equivalent to "speed" strategy, 1.0 is equivalent to "cost" strategy',
 		required: false,
 		parse: x => parseFloat(x)
+	}),
+	powerValues: flags.string({
+		char: "v",
+		description: "comma-separated list of power values to be tested, e.g. 128,256,512,1024",
+		required: false,
+		parse: x => {
+			if (x === "ALL") {
+				return "ALL";
+			} else {
+				return x.split(",").map(n => parseInt(n));
+			}
+		}
 	})
 };
 
@@ -170,6 +182,7 @@ const openVisualization = url => {
 };
 
 const getLatestVersion = async (nextToken, acc) => {
+	const AWS = getAWSSDK();
 	const ServerlessRepo = new AWS.ServerlessApplicationRepository();
 	const resp = await ServerlessRepo.listApplicationVersions({
 		ApplicationId: ApplicationId,
@@ -190,6 +203,7 @@ const getLatestVersion = async (nextToken, acc) => {
 };
 
 const findCloudFormation = async version => {
+	const AWS = getAWSSDK();
 	const CloudFormation = new AWS.CloudFormation();
 
 	try {
@@ -224,6 +238,7 @@ const findCloudFormation = async version => {
 };
 
 const generateCloudFormationTemplate = async version => {
+	const AWS = getAWSSDK();
 	const ServerlessRepo = new AWS.ServerlessApplicationRepository();
 	const createResp = await ServerlessRepo.createCloudFormationTemplate({
 		ApplicationId: ApplicationId,
@@ -255,6 +270,7 @@ const generateCloudFormationTemplate = async version => {
 };
 
 const waitForCloudFormationComplete = async stackName => {
+	const AWS = getAWSSDK();
 	const CloudFormation = new AWS.CloudFormation();
 	const FailedStates = [
 		"ROLLBACK_COMPLETE",
@@ -297,6 +313,7 @@ const deploySAR = async (version, isUpdate = false) => {
 	const url = await generateCloudFormationTemplate(version);
 	console.log("CloudFormation template has been generated");
 
+	const AWS = getAWSSDK();
 	const CloudFormation = new AWS.CloudFormation();
 
 	if (isUpdate) {
@@ -346,8 +363,10 @@ const startStateMachine = async (
 	iterations,
 	payload,
 	strategy,
-	balancedWeight
+	balancedWeight,
+	powerValues  
 ) => {
+	const AWS = getAWSSDK();
 	const StepFunctions = new AWS.StepFunctions();
 	const resp = await StepFunctions.startExecution({
 		stateMachineArn: stateMachineArn,
@@ -358,7 +377,8 @@ const startStateMachine = async (
 			payload: payload,
 			parallelInvocation: false,
 			strategy: strategy,
-			balancedWeight: balancedWeight
+			balancedWeight: balancedWeight,
+			powerValues: powerValues
 		})
 	}).promise();
 
@@ -366,6 +386,7 @@ const startStateMachine = async (
 };
 
 const waitForStateMachineOutput = async executionArn => {
+	const AWS = getAWSSDK();
 	const StepFunctions = new AWS.StepFunctions();
 	const FailedStates = ["FAILED", "TIMED_OUT", "ABORTED"];
 

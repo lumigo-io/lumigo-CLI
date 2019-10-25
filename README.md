@@ -159,6 +159,7 @@ OPTIONS
   -p, --profile=profile                AWS CLI profile name
   -r, --region=region                  (required) AWS region, e.g. us-east-1
   -s, --strategy=cost|speed|balanced   (required) what to powertune the function for - "cost", "speed" or "balanced"
+  -v, --powerValues=powerValues        comma-separated list of power values to be tested, e.g. 128,256,512,1024
 
   -w, --balancedWeight=balancedWeight  the trade-off between cost and time, 0.0 is equivalent to "speed" strategy, 1.0
                                        is equivalent to "cost" strategy
