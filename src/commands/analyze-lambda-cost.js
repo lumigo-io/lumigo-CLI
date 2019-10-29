@@ -14,9 +14,10 @@ const COST_PER_100MS = 0.000000208;
 class AnalyzeLambdaCostCommand extends Command {
 	async run() {
 		const { flags } = this.parse(AnalyzeLambdaCostCommand);
-		const { name, region, profile } = flags;
+		const { name, region, profile, days } = flags;
 
 		global.profile = profile;
+		global.days = days || 30; // defaults to check last 30 days
 
 		checkVersion();
 
@@ -46,6 +47,11 @@ AnalyzeLambdaCostCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	days: flags.integer({
+		char: "d",
+		description: "analyze lambda cost for the last X days",
 		required: false
 	})
 };
@@ -86,8 +92,8 @@ const getCostSummary = async (region, functions) => {
 	const AWS = getAWSSDK();
 	const CloudWatch = new AWS.CloudWatch({ region });
 
-	const thirtyDaysAgo = new Date();
-	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+	const startTime = new Date();
+	startTime.setDate(startTime.getDate() - global.days);
 
 	const queries = _.flatMap(functions, ({ functionName }) => [
 		invocationCountMetric(functionName),
@@ -97,7 +103,7 @@ const getCostSummary = async (region, functions) => {
 	// CloudWatch only allows 100 queries per request
 	const promises = _.chunk(queries, 100).map(async chunk => {
 		const resp = await CloudWatch.getMetricData({
-			StartTime: thirtyDaysAgo,
+			StartTime: startTime,
 			EndTime: new Date(),
 			ScanBy: "TimestampDescending",
 			MetricDataQueries: chunk
@@ -144,7 +150,7 @@ const show = functions => {
 			"name",
 			"runtime",
 			"memory",
-			"30 day ($)",
+			`${global.days} day ($)`,
 			"invocations",
 			"avg ($)/invocation"
 		]

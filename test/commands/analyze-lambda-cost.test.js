@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 
@@ -67,6 +68,18 @@ describe("analyze-lambda-cost", () => {
 				expect(consoleLog.mock.calls).to.have.length.greaterThan(1);
 				expect(mockListFunctions.mock.calls).to.be.empty;
 				expect(mockGetFunctionConfiguration.mock.calls).to.have.lengthOf(1);
+			});
+      
+		test
+			.stdout()
+			.command([command, "-r", "us-east-1", "-n", "function-a", "-d", "6"])
+			.it("only checks the last 6 days", () => {
+				expect(mockGetMetricData.mock.calls).to.have.lengthOf(1);
+				const [req] = mockGetMetricData.mock.calls[0];
+				expect(req.EndTime.getDate() - req.StartTime.getDate()).to.equal(6);
+        
+				const logs = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
+				expect(logs).to.contain("6 day ($)");
 			});
 	});
   
