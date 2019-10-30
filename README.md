@@ -179,6 +179,7 @@ USAGE
 OPTIONS
   -c, --concurrency=concurrency    [default: 10] how many concurrent pollers to run
   -d, --dlqQueueName=dlqQueueName  (required) name of the SQS DLQ queue, e.g. task-queue-dlq-dev
+  -k, --keep                       whether to keep the replayed messages in the DLQ
   -n, --queueName=queueName        (required) name of the SQS queue, e.g. task-queue-dev
   -p, --profile=profile            AWS CLI profile name
   -r, --region=region              (required) AWS region, e.g. us-east-1
