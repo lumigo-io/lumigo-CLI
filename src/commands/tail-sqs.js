@@ -5,7 +5,7 @@ const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 require("colors");
 
-let seenMessageIds = [];
+let seenMessageIds = new Set();
 
 class TailSqsCommand extends Command {
 	async run() {
@@ -61,7 +61,7 @@ const pollSqs = async queueUrl => {
 	stdin.once("keypress", () => {
 		polling = false;
 		console.log("stopping...");
-		seenMessageIds = [];
+		seenMessageIds = new Set();
 	});
 
 	// eslint-disable-next-line no-constant-condition
@@ -78,18 +78,18 @@ const pollSqs = async queueUrl => {
 		}
 
 		resp.Messages.forEach(msg => {
-			if (!seenMessageIds.includes(msg.MessageId)) {
+			if (!seenMessageIds.has(msg.MessageId)) {
 				const timestamp = new Date().toJSON().grey.bold.bgWhite;
 				const message = {
 					Body: msg.Body,
 					MessageAttributes: msg.MessageAttributes
 				};
 				console.log(timestamp, "\n", JSON.stringify(message, undefined, 2));
-				seenMessageIds.push(msg.MessageId);
+				seenMessageIds.add(msg.MessageId);
 
-				// only remember 1000 messages
-				if (seenMessageIds.length > 1000) {
-					seenMessageIds.shift();
+				// only remember 100000 messages
+				if (seenMessageIds.length > 100000) {
+					seenMessageIds.delete(msg.MessageId);
 				}
 			}
 		});
