@@ -69,7 +69,8 @@ const pollSqs = async queueUrl => {
 		const resp = await SQS.receiveMessage({
 			QueueUrl: queueUrl,
 			MaxNumberOfMessages: 10,
-			WaitTimeSeconds: 5
+			WaitTimeSeconds: 5,
+			MessageAttributeNames: ["All"]
 		}).promise();
 
 		if (_.isEmpty(resp.Messages)) {
@@ -79,7 +80,11 @@ const pollSqs = async queueUrl => {
 		resp.Messages.forEach(msg => {
 			if (!seenMessageIds.includes(msg.MessageId)) {
 				const timestamp = new Date().toJSON().grey.bold.bgWhite;
-				console.log(timestamp, "\n", msg.Body);
+				const message = {
+					Body: msg.Body,
+					MessageAttributes: msg.MessageAttributes
+				};
+				console.log(timestamp, "\n", JSON.stringify(message, undefined, 2));
 				seenMessageIds.push(msg.MessageId);
 
 				// only remember 1000 messages
