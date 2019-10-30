@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const { getQueueUrl } = require("../lib/sqs");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
@@ -7,13 +7,11 @@ const { checkVersion } = require("../lib/version-check");
 class ReplaySqsDlqCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ReplaySqsDlqCommand);
-		const { dlqQueueName, queueName, region, concurrency, profile } = flags;
+		const { dlqQueueName, queueName, region, concurrency, profile, keep } = flags;
 
-		AWS.config.region = region;
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.region = region;
+		global.profile = profile;
+		global.keep = keep;
 
 		checkVersion();
 
@@ -60,6 +58,12 @@ ReplaySqsDlqCommand.flags = {
 		char: "p",
 		description: "AWS CLI profile name",
 		required: false
+	}),
+	keep: flags.boolean({
+		char: "k",
+		description: "whether to keep the replayed messages in the DLQ",
+		required: false,
+		default: false
 	})
 };
 
@@ -69,8 +73,10 @@ const replay = async (dlqQueueUrl, queueUrl, concurrency) => {
 };
 
 const runPoller = async (dlqQueueUrl, queueUrl) => {
+	const AWS = getAWSSDK();
 	const SQS = new AWS.SQS();
 	let emptyReceives = 0;
+	let seenMessageIds = new Set();
 
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
@@ -91,24 +97,32 @@ const runPoller = async (dlqQueueUrl, queueUrl) => {
 		}
 
 		emptyReceives = 0;
-		const sendEntries = resp.Messages.map(msg => ({
-			Id: msg.MessageId,
-			MessageBody: msg.Body,
-			MessageAttributes: msg.MessageAttributes
-		}));
+		const sendEntries = resp.Messages
+			.filter(msg => !seenMessageIds.has(msg.MessageId))
+			.map(msg => ({
+				Id: msg.MessageId,
+				MessageBody: msg.Body,
+				MessageAttributes: msg.MessageAttributes
+			}));
 		await SQS.sendMessageBatch({
 			QueueUrl: queueUrl,
 			Entries: sendEntries
 		}).promise();
-
-		const deleteEntries = resp.Messages.map(msg => ({
-			Id: msg.MessageId,
-			ReceiptHandle: msg.ReceiptHandle
-		}));
-		await SQS.deleteMessageBatch({
-			QueueUrl: dlqQueueUrl,
-			Entries: deleteEntries
-		}).promise();
+    
+		if (global.keep) {
+			resp.Messages.forEach(msg => {
+				seenMessageIds.add(msg.MessageId);
+			});
+		} else {
+			const deleteEntries = resp.Messages.map(msg => ({
+				Id: msg.MessageId,
+				ReceiptHandle: msg.ReceiptHandle
+			}));
+			await SQS.deleteMessageBatch({
+				QueueUrl: dlqQueueUrl,
+				Entries: deleteEntries
+			}).promise();
+		}
 	}
 };
 
