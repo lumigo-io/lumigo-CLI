@@ -15,7 +15,13 @@ const respond = onConfirmed => (req, res, next) => {
 		});
 	} else {
 		const timestamp = new Date().toJSON().grey.bold.bgWhite;
-		console.log(timestamp, "\n", body.Message);
+		const message = {
+			Subject: body.Subject,
+			Timestamp: body.Timestamp,
+			Message: body.Message,
+			MessageAttributes: body.MessageAttributes
+		};
+		console.log(timestamp, "\n", JSON.stringify(message, undefined, 2));
 
 		res.send(200);
 		next();
