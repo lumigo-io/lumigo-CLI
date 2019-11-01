@@ -1,25 +1,17 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 require("colors");
-
-let endpointOverride;
 
 class TailDynamodbCommand extends Command {
 	async run() {
 		const { flags } = this.parse(TailDynamodbCommand);
 		const { tableName, region, profile, endpoint } = flags;
 
-		AWS.config.region = region;
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
-
-		if (endpoint) {
-			endpointOverride = endpoint;
-		}
+		global.region = region;
+		global.profile = profile;
+		global.endpoint = endpoint;
 
 		checkVersion();
 
@@ -70,16 +62,18 @@ TailDynamodbCommand.flags = {
 };
 
 const getDynamoDBClient = () => {
-	if (endpointOverride) {
-		return new AWS.DynamoDB({ endpoint: endpointOverride });
+	const AWS = getAWSSDK();
+	if (global.endpoint) {
+		return new AWS.DynamoDB({ endpoint: global.endpoint });
 	} else {
 		return new AWS.DynamoDB();
 	}
 };
 
 const getDynamoDBStreamsClient = () => {
-	if (endpointOverride) {
-		return new AWS.DynamoDBStreams({ endpoint: endpointOverride });
+	const AWS = getAWSSDK();
+	if (global.endpoint) {
+		return new AWS.DynamoDBStreams({ endpoint: global.endpoint });
 	} else {
 		return new AWS.DynamoDBStreams();
 	}
