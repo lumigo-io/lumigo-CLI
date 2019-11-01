@@ -76,7 +76,10 @@ describe("analyze-lambda-cost", () => {
 			.it("only checks the last 6 days", () => {
 				expect(mockGetMetricData.mock.calls).to.have.lengthOf(1);
 				const [req] = mockGetMetricData.mock.calls[0];
-				expect(req.EndTime.getDate() - req.StartTime.getDate()).to.equal(6);
+        
+				const timeDiff = req.EndTime.getTime() - req.StartTime.getTime();
+				const oneDay = 1000*60*60*24;
+				expect(Math.round(timeDiff / oneDay)).to.equal(6);
         
 				const logs = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
 				expect(logs).to.contain("6 day ($)");
