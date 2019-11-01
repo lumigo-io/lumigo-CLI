@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const { getQueueUrl } = require("../lib/sqs");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
@@ -12,11 +12,8 @@ class TailSqsCommand extends Command {
 		const { flags } = this.parse(TailSqsCommand);
 		const { queueName, region, profile } = flags;
 
-		AWS.config.region = region;
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.region = region;
+		global.profile = profile;
 
 		checkVersion();
 
@@ -51,6 +48,7 @@ TailSqsCommand.flags = {
 };
 
 const pollSqs = async queueUrl => {
+	const AWS = getAWSSDK();
 	const SQS = new AWS.SQS();
 
 	let polling = true;
