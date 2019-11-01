@@ -1,22 +1,17 @@
 const _ = require("lodash");
 const zlib = require("zlib");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 require("colors");
-
-// let isZipped;
 
 class TailKinesisCommand extends Command {
 	async run() {
 		const { flags } = this.parse(TailKinesisCommand);
 		const { streamName, region, profile } = flags;
 
-		AWS.config.region = region;
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.region = region;
+		global.profile = profile;
 
 		checkVersion();
 
@@ -53,6 +48,7 @@ TailKinesisCommand.flags = {
 };
 
 const describeStream = async streamName => {
+	const AWS = getAWSSDK();
 	const Kinesis = new AWS.Kinesis();
 	const resp = await Kinesis.describeStream({
 		StreamName: streamName
@@ -66,6 +62,7 @@ const describeStream = async streamName => {
 };
 
 const pollKinesis = async (streamName, shardIds) => {
+	const AWS = getAWSSDK();
 	const Kinesis = new AWS.Kinesis({
 		maxRetries: 20,
 		// lots more retries, always 250ms apart so not to be retrying
