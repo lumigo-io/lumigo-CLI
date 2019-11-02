@@ -2,8 +2,6 @@ const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
-const ngrok = require("ngrok");
-const axios = require("axios");
 
 const mockListTopics = jest.fn();
 AWS.SNS.prototype.listTopics = mockListTopics;
@@ -11,12 +9,15 @@ const mockSubscribe = jest.fn();
 AWS.SNS.prototype.subscribe = mockSubscribe;
 const mockUnsubscribe = jest.fn();
 AWS.SNS.prototype.unsubscribe = mockUnsubscribe;
-const mockConnect = jest.fn();
-ngrok.connect = mockConnect;
-const mockKill = jest.fn();
-ngrok.kill = mockKill;
-const mockGet = jest.fn();
-axios.get = mockGet;
+const mockCreateQueue = jest.fn();
+AWS.SQS.prototype.createQueue = mockCreateQueue;
+const mockDeleteQueue = jest.fn();
+AWS.SQS.prototype.deleteQueue = mockDeleteQueue;
+const mockDeleteMessageBatch = jest.fn();
+AWS.SQS.prototype.deleteMessageBatch = mockDeleteMessageBatch;
+const mockReceiveMessage = jest.fn();
+AWS.SQS.prototype.receiveMessage = mockReceiveMessage;
+
 const mockOpenStdin = jest.fn();
 process.openStdin = mockOpenStdin;
 process.stdin.setRawMode = jest.fn();
@@ -30,13 +31,24 @@ beforeEach(() => {
 	mockSubscribe.mockReset();
 	mockUnsubscribe.mockReset();
 	consoleLog.mockReset();
-	mockConnect.mockReset();
-	mockGet.mockReset();
-	mockKill.mockReset();
 	mockOpenStdin.mockReset();
+	mockCreateQueue.mockReset();
+	mockDeleteQueue.mockReset();
+	mockDeleteMessageBatch.mockReset();
   
-	mockConnect.mockResolvedValue("https://lumigo.io");
-	mockGet.mockResolvedValue({});
+	mockCreateQueue.mockReturnValue({
+		promise: () => Promise.resolve({
+			QueueUrl: "https://sqs.us-east-1.amazonaws.com/12345/test"
+		})
+	});
+  
+	mockDeleteQueue.mockReturnValue({
+		promise: () => Promise.resolve()
+	});
+  
+	mockDeleteMessageBatch.mockReturnValue({
+		promise: () => Promise.resolve()
+	});
   
 	mockSubscribe.mockReturnValue({
 		promise: () => Promise.resolve({
@@ -74,50 +86,24 @@ describe("tail-sns", () => {
 	describe("when the SNS topic exists", () => {
 		beforeEach(() => {
 			givenListTopicsReturns(["my-topic-dev"]);
+			givenReceiveMessageReturns([{
+				MessageId: "1",
+				ReceiptHandle: "1",
+				Body: JSON.stringify({
+					Subject: "my test message",
+					Message: "message 1"          
+				})
+			}]);      
+			givenReceiveMessageAlwaysReturns([]);
 		});
     
 		test
 			.stdout()
 			.command(["tail-sns", "-n", "my-topic-dev", "-r", "us-east-1"])
-			.it("creates a new webserver and connects to ngrok", ctx => {
-				expect(ctx.stdout).to.contain("finding the topic [my-topic-dev] in [us-east-1]");
+			.it("fetches and prints the messages", () => {
 				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("listening at https://lumigo.io");
-				expect(mockConnect.mock.calls).to.have.length(1);
-			});
-    
-		test
-			.stdout()
-			.command(["tail-sns", "-n", "my-topic-dev", "-r", "us-east-1"])
-			.it("stops the webserver when disconnected", async () => {
-				await Promise.delay(1000); // wait for mockOpenStdin to trigger callback
-
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("stopping webserver...");
-				expect(logMessages).to.contain("terminating ngrok process...");        
-			});
-    
-		test
-			.stdout()
-			.command(["tail-sns", "-n", "my-topic-dev", "-r", "us-east-1"])
-			.do(async () => {
-				await givenSnsSends(JSON.stringify({
-					Type: "SubscriptionConfirmation",
-					SubscribeURL: "https://lumigo.io"
-				}));
-        
-				await givenSnsSends(JSON.stringify({
-					Type: "Notification",
-					Message: "serverless FTW"
-				}));
-			})
-			.it("handles SNS subscription flow", async () => {
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("listening at https://lumigo.io");
-				expect(logMessages).to.contain("confirmed SNS subscription");
-				expect(logMessages).to.contain("polling SNS topic [arn:aws:sns:us-east-1:12345:my-topic-dev]...");
-				expect(logMessages).to.contain("press <any key> to stop");
-				expect(logMessages).to.contain("serverless FTW");
+				expect(logMessages).to.contain("my test message");
+				expect(logMessages).to.contain("message 1");
 			});
 	});
 });
@@ -131,12 +117,18 @@ function givenListTopicsReturns(topicArns, hasMore = false) {
 	});
 }
 
-async function givenSnsSends(data) {
-	const [[port]] = mockConnect.mock.calls;
-	await axios({
-		method: "post",
-		url: `http://localhost:${port}`,
-		data,
-		headers: { "Content-Type": "text/plain" }
+function givenReceiveMessageReturns(messages) {
+	mockReceiveMessage.mockReturnValueOnce({
+		promise: () => Promise.resolve({
+			Messages: messages
+		})
 	});
-}
+};
+
+function givenReceiveMessageAlwaysReturns(messages) {
+	mockReceiveMessage.mockReturnValue({
+		promise: () => Promise.resolve({
+			Messages: messages
+		})
+	});
+};
