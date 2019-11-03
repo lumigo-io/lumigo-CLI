@@ -54,12 +54,12 @@ SendToSqsCommand.flags = {
 	}),
 	filePath: flags.string({
 		char: "f",
-		description: "relative to the file with the messages",
+		description: "path to the file",
 		required: true
 	})
 };
 
-const sendMessages = async (filePath, queueUrl) => {
+const sendMessages = (filePath, queueUrl) => {
 	const AWS = getAWSSDK();
 	const SQS = new AWS.SQS();
   
@@ -101,14 +101,14 @@ const sendMessages = async (filePath, queueUrl) => {
     
 		const totalPayload = _.sumBy(buffer, obj => obj.length) + input.length;
 		return totalPayload < MAX_PAYLOAD;			
-	};  
+	};
   
-	const printProgress = (count, end = false) => {
+	const printProgress = (count, last = false) => {
 		process.stdout.clearLine();
 		process.stdout.cursorTo(0);
 		process.stdout.write(`sent ${count} messages`);
     
-		if (end) {
+		if (last) {
 			process.stdout.write("\n");
 		}
 	};
@@ -127,7 +127,7 @@ const sendMessages = async (filePath, queueUrl) => {
 					printProgress(processedCount, true);
           
 					cb();
-					resolve();          
+					resolve();
 				});
 			} else {
 				flush(buffer).then(() => {
