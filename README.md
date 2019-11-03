@@ -36,6 +36,7 @@ USAGE
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
 * [`lumigo-cli powertune-lambda`](#lumigo-cli-powertune-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
+* [`lumigo-cli send-to-sns`](#lumigo-cli-send-to-sns)
 * [`lumigo-cli send-to-sqs`](#lumigo-cli-send-to-sqs)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 * [`lumigo-cli switch-profile`](#lumigo-cli-switch-profile)
@@ -188,6 +189,24 @@ OPTIONS
 
 _See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.24.0/src/commands/replay-sqs-dlq.js)_
 
+## `lumigo-cli send-to-sns`
+
+Sends each line in the specified file as a message to a SNS topic
+
+```
+USAGE
+  $ lumigo-cli send-to-sns
+
+OPTIONS
+  -c, --concurrency=concurrency  [default: 10] how many concurrent pollers to run
+  -f, --filePath=filePath        (required) path to the file
+  -n, --topicName=topicName      (required) name of the SNS topic, e.g. my-topic-dev
+  -p, --profile=profile          AWS CLI profile name
+  -r, --region=region            (required) AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/send-to-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.24.0/src/commands/send-to-sns.js)_
+
 ## `lumigo-cli send-to-sqs`
 
 Sends each line in the specified file as a message to a SQS queue
@@ -197,7 +216,7 @@ USAGE
   $ lumigo-cli send-to-sqs
 
 OPTIONS
-  -f, --filePath=filePath    (required) relative to the file with the messages
+  -f, --filePath=filePath    (required) path to the file
   -n, --queueName=queueName  (required) name of the SQS queue, e.g. task-queue-dev
   -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
