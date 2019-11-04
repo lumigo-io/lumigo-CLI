@@ -4,6 +4,7 @@ const { getTopicArn } = require("../lib/sns");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const uuid = require("uuid/v4");
+require("colors");
 
 class TailSnsCommand extends Command {
 	async run() {
@@ -44,7 +45,7 @@ TailSnsCommand.flags = {
 const createQueue = async topicArn => {
 	const AWS = getAWSSDK();
 	const SQS = new AWS.SQS();
-  
+
 	// eslint-disable-next-line no-unused-vars
 	const [_arn, _aws, _sns, region, accountId, _topicName] = topicArn.split(":");
 
@@ -74,10 +75,10 @@ const createQueue = async topicArn => {
 			})
 		}
 	}).promise();
-  
+
 	const queueUrl = resp.QueueUrl;
 	const queueArn = `arn:aws:sqs:${region}:${accountId}:${queueName}`;
-  
+
 	return {
 		queueUrl,
 		queueArn
@@ -87,7 +88,7 @@ const createQueue = async topicArn => {
 const deleteQueue = async (queueUrl) => {
 	const AWS = getAWSSDK();
 	const SQS = new AWS.SQS();
-  
+
 	await SQS.deleteQueue({
 		QueueUrl: queueUrl
 	}).promise();
@@ -96,10 +97,10 @@ const deleteQueue = async (queueUrl) => {
 const pollSns = async topicArn => {
 	const { queueUrl, queueArn } = await createQueue(topicArn);
 	const subscriptionArn = await subscribeToSNS(topicArn, queueArn);
-  
+
 	console.log(`polling SNS topic [${topicArn}]...`);
 	console.log("press <any key> to stop");
-  
+
 	let polling = true;
 	const readline = require("readline");
 	readline.emitKeypressEvents(process.stdin);
@@ -108,16 +109,16 @@ const pollSns = async topicArn => {
 	stdin.once("keypress", async () => {
 		polling = false;
 		console.log("stopping...");
-    
+
 		await unsubscribeFromSNS(subscriptionArn);
 		await deleteQueue(queueUrl);
-    
+
 		process.exit(0);
 	});
-  
+
 	const AWS = getAWSSDK();
 	const SQS = new AWS.SQS();
-  
+
 	// eslint-disable-next-line no-constant-condition
 	while (polling) {
 		const resp = await SQS.receiveMessage({
@@ -130,7 +131,7 @@ const pollSns = async topicArn => {
 		if (_.isEmpty(resp.Messages)) {
 			continue;
 		}
-    
+
 		resp.Messages.forEach(msg => {
 			const timestamp = new Date().toJSON().grey.bold.bgWhite;
 			const body = JSON.parse(msg.Body);
@@ -142,7 +143,7 @@ const pollSns = async topicArn => {
 			};
 			console.log(timestamp, "\n", JSON.stringify(message, undefined, 2));
 		});
-    
+
 		await SQS.deleteMessageBatch({
 			QueueUrl: queueUrl,
 			Entries: resp.Messages.map(m => ({
