@@ -1,7 +1,7 @@
 {
   "name": "lumigo-cli",
   "description": "A collection of helpful commands for working with AWS Lambda",
-  "version": "0.25.1",
+  "version": "0.25.2",
   "author": "Lumigo LTD (https://lumigo.io)",
   "bin": {
     "lumigo-cli": "./bin/run"
@@ -33,7 +33,7 @@
     "@commitlint/cli": "^8.1.0",
     "@commitlint/config-conventional": "^8.0.0",
     "@oclif/dev-cli": "^1.22.2",
-    "@oclif/test": "^1.2.5",    
+    "@oclif/test": "^1.2.5",
     "codecov": "^3.5.0",
     "eslint": "^5.16.0",
     "eslint-config-oclif": "^3.1.0",
