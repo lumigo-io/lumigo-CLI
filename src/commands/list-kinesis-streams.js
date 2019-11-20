@@ -5,6 +5,16 @@ const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const Lambda = require("../lib/lambda");
 require("colors");
+const uuid = require("uuid");
+
+const ONE_MIN_IN_SECONDS = 60;
+const MAX_RECORDS_PER_SHARD = 1000;
+const BYTES_INCOMING_PER_SHARD = 1024 * 1024;
+const BYTES_OUTGOING_PER_SHARD = 2048 * 1024;
+
+const formatFloat = num => {
+	return Number.parseFloat(num).toFixed(3);
+};
 
 class ListKinesisStreamsCommand extends Command {
 	async run() {
@@ -25,11 +35,6 @@ class ListKinesisStreamsCommand extends Command {
 			this.log("Checking Kinesis streams in all regions");
 			streamsDescription = await getStreamsDescriptionFromAllRegions();
 		}
-
-		//const metrics = await getUsageMetrics(streamName, shardIds);
-
-		//this.log(`arn: ${stream.arn}`);
-		//this.log("status:", stream.status.green.bold);
 		show(streamsDescription);
 	}
 }
@@ -59,7 +64,8 @@ const getStreamsDescriptionFromRegion = async region => {
 		}).promise();
 		streamNames = streamDetails.StreamNames;
 	}
-	return describeStreams(streamNames, region);
+	const usageStats = await getUsageMetrics(streamNames, region);
+	return describeStreams(streamNames, region, usageStats);
 };
 
 const getStreamsDescriptionFromAllRegions = async () => {
@@ -70,16 +76,16 @@ const getStreamsDescriptionFromAllRegions = async () => {
 	return _.flatMap(results);
 };
 
-const describeStreams = async (streams, region) => {
+const describeStreams = async (streams, region, usageStats) => {
 	const streamsDescription = [];
 	for (const stream of streams) {
-		streamsDescription.push(await describeStream(stream, region));
+		streamsDescription.push(await describeStream(stream, region, usageStats[stream]));
 	}
 
 	return streamsDescription;
 };
 
-const describeStream = async (streamName, region) => {
+const describeStream = async (streamName, region, streamStat) => {
 	const Kinesis = new AWS.Kinesis({ region });
 	const resp = await Kinesis.describeStream({
 		StreamName: streamName
@@ -89,18 +95,129 @@ const describeStream = async (streamName, region) => {
 		streamName: streamName,
 		arn: resp.StreamDescription.StreamARN,
 		status: resp.StreamDescription.StreamStatus,
-		shards: resp.StreamDescription.Shards
+		shards: resp.StreamDescription.Shards,
+		readMbPercentage: formatFloat(
+			(streamStat["GetRecords.BytesSum"] /
+				(resp.StreamDescription.Shards.length *
+					BYTES_OUTGOING_PER_SHARD *
+					ONE_MIN_IN_SECONDS)) *
+				100
+		),
+		readRecordPercentage: formatFloat(
+			(streamStat["GetRecords.RecordsSum"] /
+				(resp.StreamDescription.Shards.length *
+					MAX_RECORDS_PER_SHARD *
+					ONE_MIN_IN_SECONDS)) *
+				100
+		),
+		writeMbPercentage: formatFloat(
+			(streamStat.IncomingBytesSum /
+				(resp.StreamDescription.Shards.length *
+					BYTES_INCOMING_PER_SHARD *
+					ONE_MIN_IN_SECONDS)) *
+				100
+		),
+		writeRecordPercentage: formatFloat(
+			(streamStat.IncomingRecordsSum /
+				(resp.StreamDescription.Shards.length *
+					MAX_RECORDS_PER_SHARD *
+					ONE_MIN_IN_SECONDS)) *
+				100
+		)
 	};
 };
 
+const getUsageMetrics = async (streamNames, region) => {
+	const CloudWatch = new AWS.CloudWatch({ region });
+	const metricNames = [
+		["IncomingBytes", "Sum"],
+		["IncomingRecords", "Sum"],
+		["GetRecords.Bytes", "Sum"],
+		["GetRecords.Records", "Sum"]
+	];
+
+	const oneMinuteAgo = new Date();
+	oneMinuteAgo.setMinutes(oneMinuteAgo.getMinutes() - 1);
+
+	const queries = _.flatMap(streamNames, streamName =>
+		metricNames.map(([metricName, stat]) => ({
+			Id:
+				metricName.replace(".", "").toLowerCase() +
+				uuid()
+					.replace(/-/g, "")
+					.substr(0, 5),
+			Label: `${streamName}:${metricName}:${stat}`,
+			MetricStat: {
+				Metric: {
+					Dimensions: [
+						{
+							Name: "StreamName",
+							Value: streamName
+						}
+					],
+					MetricName: metricName,
+					Namespace: "AWS/Kinesis"
+				},
+				Period: ONE_MIN_IN_SECONDS,
+				Stat: stat
+			},
+			ReturnData: true
+		}))
+	);
+
+	// each GetMetricData request can send as many as 100 queries
+	const chunks = _.chunk(queries, 100);
+	const promises = chunks.map(async metricDataQueries => {
+		const resp = await CloudWatch.getMetricData({
+			StartTime: oneMinuteAgo,
+			EndTime: new Date(),
+			MetricDataQueries: metricDataQueries
+		}).promise();
+
+		return resp.MetricDataResults.map(res => {
+			const [name, metricName] = res.Label.split(":");
+			const dataPoint = res.Values[0] || 0;
+			return {
+				name,
+				metricName: metricName + "Sum",
+				dataPoint
+			};
+		});
+	});
+
+	// array of {shardId, metricName, dataPoint}
+	const results = _.flatMap(await Promise.all(promises));
+	const byShardId = _.groupBy(results, res => res.name);
+	return _.mapValues(byShardId, shardMetrics => {
+		const kvp = shardMetrics.map(({ metricName, dataPoint }) => [
+			metricName,
+			dataPoint
+		]);
+		return _.fromPairs(kvp);
+	});
+};
 
 const show = streamsDetails => {
 	const table = new Table({
-		head: ["Stream name", "ARN", "# of Shard", "Status"]
+		head: [
+			"Stream name",
+			"ARN",
+			"# of Shard",
+			"Avg Kinesis Read Capacity (MB/Records) %",
+			"Avg Kinesis Write Capacity (MB/Records) %",
+			"Status"
+		]
 	});
 
 	streamsDetails.forEach(x => {
-		table.push([x.streamName, x.arn, x.shards.length, x.status]);
+		table.push([
+			x.streamName,
+			x.arn,
+			x.shards.length,
+			`${x.readMbPercentage}/${x.readRecordPercentage}`,
+			`${x.writeMbPercentage}/${x.writeRecordPercentage}`,
+			x.status
+		]);
 	});
 
 	console.log(`Total [${streamsDetails.length}] streams`);
