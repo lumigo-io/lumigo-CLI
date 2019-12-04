@@ -2,25 +2,18 @@ const { expect, test } = require("@oclif/test");
 const AWS = require("aws-sdk");
 
 const mockGetMetricData = jest.fn();
-const originalGetMetricData = AWS.CloudWatch.prototype.getMetricData;
 AWS.CloudWatch.prototype.getMetricData = mockGetMetricData;
 
 const mockListStreams = jest.fn();
-const originalListStreams = AWS.Kinesis.prototype.listStreams;
 AWS.Kinesis.prototype.listStreams = mockListStreams;
 
 const mockDescribeStreams = jest.fn();
-const originalDescribeStream = AWS.Kinesis.prototype.describeStream;
 AWS.Kinesis.prototype.describeStream = mockDescribeStreams;
 
 const consoleLog = jest.fn();
 console.log = consoleLog;
 
-after(() => {
-	AWS.CloudWatch.prototype.getMetricData = originalGetMetricData;
-	AWS.Kinesis.prototype.listStreams = originalListStreams;
-	AWS.Kinesis.prototype.describeStream = originalDescribeStream;
-});
+
 
 afterEach(() => {
 	mockGetMetricData.mockReset();
@@ -65,7 +58,7 @@ describe("list-kinesis-streams", () => {
 	test.stdout()
 		.command(["list-kinesis-streams"])
 		.it("calls all regions", () => {
-			expect(mockListStreams.mock.calls).to.have.length(18);
+			expect(mockListStreams.mock.calls).to.have.length(16);
 		});
 
 	test.stdout()

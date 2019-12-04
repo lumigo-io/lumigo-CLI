@@ -10,7 +10,8 @@ const { getStreamsInRegion } = require("../lib/kinesis");
 const { getRegionFromARN } = require("../lib/aws");
 
 const FIVE_MIN_IN_SECONDS = 60 * 5;
-const MAX_RECORDS_PER_SHARD = 1000;
+const MAX_RECORDS_PER_SHARD_WRITE = 1000;
+const MAX_RECORDS_PER_SHARD_READ = 2000;
 const BYTES_INCOMING_PER_SHARD = 1024 * 1024;
 const BYTES_OUTGOING_PER_SHARD = 2048 * 1024;
 
@@ -89,13 +90,13 @@ const describeStream = async (streamName, region, streamStat) => {
 		numberOfShards * BYTES_OUTGOING_PER_SHARD * FIVE_MIN_IN_SECONDS;
 
 	const outgoingRecordsForAllShardPerFiveMinute =
-		numberOfShards * BYTES_OUTGOING_PER_SHARD * FIVE_MIN_IN_SECONDS;
+		numberOfShards * MAX_RECORDS_PER_SHARD_READ * FIVE_MIN_IN_SECONDS;
 
 	const incomingBytesForAllShardsPerFiveMinute =
 		numberOfShards * BYTES_INCOMING_PER_SHARD * FIVE_MIN_IN_SECONDS;
 
 	const incomingRecordsForAllShardsPerFiveMinute =
-		numberOfShards * MAX_RECORDS_PER_SHARD * FIVE_MIN_IN_SECONDS;
+		numberOfShards * MAX_RECORDS_PER_SHARD_WRITE * FIVE_MIN_IN_SECONDS;
 
 	return {
 		streamName: streamName,
@@ -103,17 +104,20 @@ const describeStream = async (streamName, region, streamStat) => {
 		status: resp.StreamDescription.StreamStatus,
 		shards: resp.StreamDescription.Shards,
 		outgoingMbPercentage: formatFloat(
-			(streamStat["GetRecords.BytesSum"] / outgoingBytesForAllShardPerFiveMinute) * 100
+			(streamStat["GetRecords.BytesSum"] / outgoingBytesForAllShardPerFiveMinute) *
+				100
 		),
 		outgoingRecordPercentage: formatFloat(
-			(streamStat["GetRecords.RecordsSum"] / outgoingRecordsForAllShardPerFiveMinute) *
+			(streamStat["GetRecords.RecordsSum"] /
+				outgoingRecordsForAllShardPerFiveMinute) *
 				100
 		),
 		incomingMbPercentage: formatFloat(
 			(streamStat.IncomingBytesSum / incomingBytesForAllShardsPerFiveMinute) * 100
 		),
 		incomingRecordPercentage: formatFloat(
-			(streamStat.IncomingRecordsSum / incomingRecordsForAllShardsPerFiveMinute) * 100
+			(streamStat.IncomingRecordsSum / incomingRecordsForAllShardsPerFiveMinute) *
+				100
 		)
 	};
 };
@@ -220,8 +224,11 @@ const show = streamsDetails => {
 	console.log(`Total [${streamsDetails.length}] streams`);
 	console.log(table.toString());
 	console.info(`
-	Each shard can at most input 1MB of data and up to 1000 records.
-	Each shard can at most output 2MB of data and up to 1000 records.
+Each shard can at most input ${BYTES_INCOMING_PER_SHARD /
+		1024} KB of data and up to ${MAX_RECORDS_PER_SHARD_WRITE} records per second.
+Each shard can at most output ${BYTES_OUTGOING_PER_SHARD /
+		1024} KB of data and up to ${MAX_RECORDS_PER_SHARD_READ} records per second.
+Read and write utilization are for the last ${FIVE_MIN_IN_SECONDS/60} minutes. 
 	`);
 };
 

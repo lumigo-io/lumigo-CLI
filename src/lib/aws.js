@@ -20,11 +20,11 @@ const getAWSSDK = () => {
 const getRegionFromARN = arn => {
 	const arnParts = arn.split(":");
 	// Something simple for now
-	if (arnParts.length < 3) {
+	if (arnParts.length < 4) {
 		throw Error(`Invalid ARN ${arn}`);
 	}
 
-	return arnParts[2];
+	return arnParts[3];
 };
 
 module.exports = {

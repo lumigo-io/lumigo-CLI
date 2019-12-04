@@ -16,10 +16,8 @@ const regions = [
 	"ap-northeast-2",
 	"ap-southeast-1",
 	"ap-southeast-2",
-	"ap-east-1",
 	"ap-south-1",
 	"sa-east-1",
-	"me-south-1"
 ];
 
 const getStreamsInRegion = async region => {
@@ -27,6 +25,7 @@ const getStreamsInRegion = async region => {
 	const Kinesis = new AWS.Kinesis({ region });
 	let streamDetails = await Retry(() => Kinesis.listStreams({ Limit: 100 }).promise());
 	let streamNames = streamDetails.StreamNames;
+
 	while (streamDetails.HasMoreStreams) {
 		streamDetails = await Retry(() =>
 			Kinesis.listStreams({
