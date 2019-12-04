@@ -14,7 +14,7 @@
     "@octokit/rest": "^16.33.1",
     "async-retry": "^1.2.3",
     "aws-profile-utils": "0.0.3",
-    "aws-sdk": "^2.528.0",
+    "aws-sdk": "^2.584.0",
     "axios": "^0.19.0",
     "bluebird": "^3.5.5",
     "cli-table": "^0.3.1",
