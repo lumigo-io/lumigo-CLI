@@ -17,17 +17,6 @@ const getAWSSDK = () => {
 	return AWS;
 };
 
-const getRegionFromARN = arn => {
-	const arnParts = arn.split(":");
-	// Something simple for now
-	if (arnParts.length < 4) {
-		throw Error(`Invalid ARN ${arn}`);
-	}
-
-	return arnParts[3];
-};
-
 module.exports = {
-	getAWSSDK,
-	getRegionFromARN
+	getAWSSDK
 };

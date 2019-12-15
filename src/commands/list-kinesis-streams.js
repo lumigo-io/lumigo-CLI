@@ -7,7 +7,6 @@ const Kinesis = require("../lib/kinesis");
 require("colors");
 const uuid = require("uuid");
 const { getStreamsInRegion } = require("../lib/kinesis");
-const { getRegionFromARN } = require("../lib/aws");
 
 const FIVE_MIN_IN_SECONDS = 60 * 5;
 const MAX_RECORDS_PER_SHARD_WRITE = 1000;
@@ -54,7 +53,7 @@ ListKinesisStreamsCommand.flags = {
 };
 
 const getStreamsDescriptionFromRegion = async region => {
-	let streamNames = await getStreamsInRegion(region);
+	const streamNames = await getStreamsInRegion(region);
 
 	const usageStats = await getUsageMetrics(streamNames, region);
 	return describeStreams(streamNames, region, usageStats);
@@ -100,7 +99,7 @@ const describeStream = async (streamName, region, streamStat) => {
 
 	return {
 		streamName: streamName,
-		region: getRegionFromARN(resp.StreamDescription.StreamARN),
+		region: region,
 		status: resp.StreamDescription.StreamStatus,
 		shards: resp.StreamDescription.Shards,
 		outgoingMbPercentage: formatFloat(
@@ -215,7 +214,7 @@ const show = streamsDetails => {
 			x.streamName,
 			x.region,
 			x.shards.length,
-			`${x.outgoingMbPercentage}% (MB) \n${x.outgoingRecordPercentage}% (Records)`,
+			`${x.outgoingMbPercentage}% (MB)\n${x.outgoingRecordPercentage}% (Records)`,
 			`${x.incomingMbPercentage}% (MB)\n${x.incomingRecordPercentage}% (Records)`,
 			x.status
 		]);
