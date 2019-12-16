@@ -1,6 +1,6 @@
 const Promise = require("bluebird");
 const _ = require("lodash");
-const {default: PQueue} = require("p-queue");
+const { default: PQueue } = require("p-queue");
 const lineReader = require("line-reader");
 const { getAWSSDK } = require("../lib/aws");
 const { getTopicArn } = require("../lib/sns");
@@ -15,23 +15,23 @@ class SendToSnsCommand extends Command {
 
 		global.region = region;
 		global.profile = profile;
-    
+
 		checkVersion();
-    
+
 		this.log(`finding the topic [${topicName}] in [${region}]`);
 		const topicArn = await getTopicArn(topicName);
-    
+
 		this.log("sending messages...");
 		console.time("execution time");
 		await sendMessages(filePath, topicArn, concurrency);
-    
+
 		this.log("all done!");
 		console.timeEnd("execution time");
 	}
 }
 
-SendToSnsCommand.description = 
-  "Sends each line in the specified file as a message to a SNS topic";
+SendToSnsCommand.description =
+	"Sends each line in the specified file as a message to a SNS topic";
 SendToSnsCommand.flags = {
 	topicName: flags.string({
 		char: "n",
@@ -65,20 +65,20 @@ const sendMessages = (filePath, topicArn, concurrency) => {
 	const AWS = getAWSSDK();
 	const SNS = new AWS.SNS();
 	const queue = new PQueue({ concurrency });
-  
+
 	let processedCount = 0;
-  
+
 	const printProgress = (count, last = false) => {
 		process.stdout.clearLine();
 		process.stdout.cursorTo(0);
 		process.stdout.write(`sent ${count} messages`);
-    
+
 		if (last) {
 			process.stdout.write("\n");
 		}
 	};
-  
-	const publish = async (line) => {
+
+	const publish = async line => {
 		try {
 			await SNS.publish({
 				Message: line,
@@ -89,14 +89,14 @@ const sendMessages = (filePath, topicArn, concurrency) => {
 			console.log(line);
 		}
 	};
-  
+
 	const add = (line, last = false) => {
 		queue.add(() => publish(line));
 		processedCount += 1;
 		printProgress(processedCount, last);
 	};
-  
-	return new Promise((resolve) => {
+
+	return new Promise(resolve => {
 		lineReader.eachLine(filePath, function(line, last, cb) {
 			if (_.isEmpty(line)) {
 				cb();
@@ -105,10 +105,10 @@ const sendMessages = (filePath, topicArn, concurrency) => {
 				queue.onEmpty().then(() => {
 					cb();
 					resolve();
-				});      
+				});
 			} else if (processedCount % 100 === 0) {
-				// to avoid overloading the queue and run of memory, 
-				// also, to avoid throttling as well, 
+				// to avoid overloading the queue and run of memory,
+				// also, to avoid throttling as well,
 				// wait for the queue to empty every after 100 messages
 				queue.onEmpty().then(() => {
 					add(line);
@@ -119,7 +119,7 @@ const sendMessages = (filePath, topicArn, concurrency) => {
 				cb();
 			}
 		});
-	});	
+	});
 };
 
 module.exports = SendToSnsCommand;

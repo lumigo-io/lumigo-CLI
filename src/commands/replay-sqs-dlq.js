@@ -97,18 +97,18 @@ const runPoller = async (dlqQueueUrl, queueUrl) => {
 		}
 
 		emptyReceives = 0;
-		const sendEntries = resp.Messages
-			.filter(msg => !seenMessageIds.has(msg.MessageId))
-			.map(msg => ({
-				Id: msg.MessageId,
-				MessageBody: msg.Body,
-				MessageAttributes: msg.MessageAttributes
-			}));
+		const sendEntries = resp.Messages.filter(
+			msg => !seenMessageIds.has(msg.MessageId)
+		).map(msg => ({
+			Id: msg.MessageId,
+			MessageBody: msg.Body,
+			MessageAttributes: msg.MessageAttributes
+		}));
 		await SQS.sendMessageBatch({
 			QueueUrl: queueUrl,
 			Entries: sendEntries
 		}).promise();
-    
+
 		if (global.keep) {
 			resp.Messages.forEach(msg => {
 				seenMessageIds.add(msg.MessageId);

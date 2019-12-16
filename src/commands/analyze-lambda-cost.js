@@ -99,7 +99,7 @@ const getCostSummary = async (region, functions) => {
 		invocationCountMetric(functionName),
 		durationMetric(functionName)
 	]);
-  
+
 	// CloudWatch only allows 100 queries per request
 	const promises = _.chunk(queries, 100).map(async chunk => {
 		const resp = await CloudWatch.getMetricData({
@@ -108,7 +108,7 @@ const getCostSummary = async (region, functions) => {
 			ScanBy: "TimestampDescending",
 			MetricDataQueries: chunk
 		}).promise();
-    
+
 		return resp.MetricDataResults;
 	});
 	const metricDataResults = _.flatMap(await Promise.all(promises));

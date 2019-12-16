@@ -85,7 +85,7 @@ const createQueue = async topicArn => {
 	};
 };
 
-const deleteQueue = async (queueUrl) => {
+const deleteQueue = async queueUrl => {
 	const AWS = getAWSSDK();
 	const SQS = new AWS.SQS();
 
@@ -175,7 +175,7 @@ const subscribeToSNS = async (topicArn, queueArn) => {
 	return resp.SubscriptionArn;
 };
 
-const unsubscribeFromSNS = async (subscriptionArn) => {
+const unsubscribeFromSNS = async subscriptionArn => {
 	const AWS = getAWSSDK();
 	const SNS = new AWS.SNS();
 

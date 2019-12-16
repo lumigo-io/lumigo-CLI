@@ -227,7 +227,7 @@ Each shard can at most input ${BYTES_INCOMING_PER_SHARD /
 		1024} KB of data and up to ${MAX_RECORDS_PER_SHARD_WRITE} records per second.
 Each shard can at most output ${BYTES_OUTGOING_PER_SHARD /
 		1024} KB of data and up to ${MAX_RECORDS_PER_SHARD_READ} records per second.
-Read and write utilization are for the last ${FIVE_MIN_IN_SECONDS/60} minutes. 
+Read and write utilization are for the last ${FIVE_MIN_IN_SECONDS / 60} minutes. 
 	`);
 };
 

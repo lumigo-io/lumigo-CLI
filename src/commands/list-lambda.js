@@ -51,17 +51,19 @@ const getFunctionsInRegion = async (region, inactive) => {
 	const functions = await Lambda.getFunctionsInRegion(region);
 	const functionNames = functions.map(x => x.functionName);
 	const lastInvokedOn = await getLastInvocationDates(region, functionNames);
-  
-	return functions.map(x => {
-		const lastUsed = lastInvokedOn[x.functionName];
-		return Object.assign({ lastUsed }, x);
-	}).filter(x => {
-		if (!inactive) {
-			return true;
-		} else {
-			return inactive && x.lastUsed.startsWith("inactive");
-		}
-	});
+
+	return functions
+		.map(x => {
+			const lastUsed = lastInvokedOn[x.functionName];
+			return Object.assign({ lastUsed }, x);
+		})
+		.filter(x => {
+			if (!inactive) {
+				return true;
+			} else {
+				return inactive && x.lastUsed.startsWith("inactive");
+			}
+		});
 };
 
 const getFunctionsinAllRegions = async inactive => {
@@ -91,7 +93,7 @@ const getLastInvocationDates = async (region, functionNames) => {
 		},
 		ReturnData: true
 	}));
-  
+
 	// CloudWatch only allows 100 queries per request
 	const promises = _.chunk(queries, 10).map(async chunk => {
 		const resp = await CloudWatch.getMetricData({
@@ -100,11 +102,11 @@ const getLastInvocationDates = async (region, functionNames) => {
 			ScanBy: "TimestampDescending",
 			MetricDataQueries: chunk
 		}).promise();
-    
+
 		return resp.MetricDataResults;
 	});
 	const metricDataResults = _.flatMap(await Promise.all(promises));
-	
+
 	const lastInvocationDates = functionNames.map(functionName => {
 		const metricData = metricDataResults.find(r => r.Label === functionName);
 		if (_.isEmpty(metricData.Timestamps)) {
@@ -128,7 +130,15 @@ const show = functions => {
 	};
 
 	const table = new Table({
-		head: [ "region", "name", "runtime", "memory", "code size", "last modified", "last used" ]
+		head: [
+			"region",
+			"name",
+			"runtime",
+			"memory",
+			"code size",
+			"last modified",
+			"last used"
+		]
 	});
 	functions.forEach(x => {
 		table.push([
@@ -143,7 +153,7 @@ const show = functions => {
 	});
 
 	console.log(table.toString());
-  
+
 	const node8Function = functions.find(x => x.runtime === "nodejs8.10");
 	if (node8Function) {
 		console.log(`

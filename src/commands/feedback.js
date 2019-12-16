@@ -58,19 +58,22 @@ const createAuthenticatedOctokit = async () => {
 			name: "password",
 			message: "Password",
 			type: "password"
-		}]);
+		}
+	]);
 	return new Octokit({
 		auth: {
 			username: answers.userName,
 			password: answers.password,
 			async on2fa() {
-				return inquirer.prompt([
-					{
-						name: "mfa",
-						message: "Enter your two-factor token",
-						type: "password"
-					} 
-				]).then(x => x.mfa);
+				return inquirer
+					.prompt([
+						{
+							name: "mfa",
+							message: "Enter your two-factor token",
+							type: "password"
+						}
+					])
+					.then(x => x.mfa);
 			}
 		}
 	});
