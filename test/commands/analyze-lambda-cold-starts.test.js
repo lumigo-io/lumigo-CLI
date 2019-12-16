@@ -10,6 +10,8 @@ const mockListFunctions = jest.fn();
 AWS.Lambda.prototype.listFunctions = mockListFunctions;
 const mockGetFunctionConfiguration = jest.fn();
 AWS.Lambda.prototype.getFunctionConfiguration = mockGetFunctionConfiguration;
+const mockListProvisionedConcurrencyConfigs = jest.fn();
+AWS.Lambda.prototype.listProvisionedConcurrencyConfigs = mockListProvisionedConcurrencyConfigs;
 
 const consoleLog = jest.fn();
 console.log = consoleLog;
@@ -20,6 +22,12 @@ beforeEach(() => {
 	mockStartQuery.mockReturnValue({
 		promise: () => Promise.resolve({ queryId: "foo" })
 	});
+  
+	mockListProvisionedConcurrencyConfigs.mockReturnValue({
+		promise: () => Promise.resolve({
+			ProvisionedConcurrencyConfigs: []
+		})
+	});
 });
 
 afterEach(() => {
@@ -27,6 +35,7 @@ afterEach(() => {
 	mockGetQueryResults.mockReset();
 	mockListFunctions.mockReset();
 	mockGetFunctionConfiguration.mockReset();
+	mockListProvisionedConcurrencyConfigs.mockReset();
 	consoleLog.mockReset();
 });
 
@@ -44,7 +53,12 @@ describe("analyze-lambda-cold-starts", () => {
 			.command([command])
 			.it("deems the function as no cold starts", () => {
 				const logs = collectLogMessages();
-				expect(logs).to.not.contain("function-a");
+				const rows = logs.split("\n").filter(row => row.startsWith("│") && !row.includes("region"));
+				rows.forEach(row => {
+					const fields = row.split("│").map(x => x.trim()).filter(x => !_.isEmpty(x));
+					// region, name, runtime, memory, count (5th column), ...
+					expect(fields[4]).to.equal("-");
+				});
 			});
     
 		test
@@ -145,7 +159,17 @@ describe("analyze-lambda-cold-starts", () => {
 				expect(logs).to.contain("us-east-1: running CloudWatch Insights query against 2 log groups");
 				expect(logs).to.contain("us-east-1: query returned 1 rows in total");
 				expect(logs).to.contain("function-a");
-				expect(logs).to.not.contain("function-b"); // function-b has no cold start results
+				expect(logs).to.contain("function-b");
+        
+				const rows = logs.split("\n").filter(row => row.startsWith("│") && !row.includes("region"));
+				const rowFuncA = rows.find(x => x.includes("function-a"));
+				const rowFuncB = rows.find(x => x.includes("function-b"));
+        
+				// region, name, runtime, memory, count (5th column), ...
+				const funcACount = rowFuncA.split("│").map(x => x.trim()).filter(x => !_.isEmpty(x))[4];
+				expect(funcACount).to.equal("1");
+				const funcBCount = rowFuncB.split("│").map(x => x.trim()).filter(x => !_.isEmpty(x))[4];
+				expect(funcBCount).to.equal("-");
 			});
 	});
   
