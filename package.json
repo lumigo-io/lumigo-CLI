@@ -1,7 +1,7 @@
 {
   "name": "lumigo-cli",
   "description": "A collection of helpful commands for working with AWS Lambda",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "author": "Lumigo LTD (https://lumigo.io)",
   "bin": {
     "lumigo-cli": "./bin/run"
@@ -14,8 +14,9 @@
     "@octokit/rest": "^16.33.1",
     "async-retry": "^1.2.3",
     "aws-profile-utils": "0.0.3",
-    "aws-sdk": "^2.528.0",
+    "aws-sdk": "^2.584.0",
     "axios": "^0.19.0",
+    "bluebird": "^3.5.5",
     "cli-table": "^0.3.1",
     "colors": "^1.3.3",
     "humanize": "0.0.9",
@@ -33,7 +34,6 @@
     "@commitlint/config-conventional": "^8.0.0",
     "@oclif/dev-cli": "^1.22.2",
     "@oclif/test": "^1.2.5",
-    "bluebird": "^3.5.5",
     "codecov": "^3.5.0",
     "eslint": "^5.16.0",
     "eslint-config-oclif": "^3.1.0",
