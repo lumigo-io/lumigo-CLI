@@ -66,7 +66,7 @@ describe("list-kinesis-streams", () => {
 		.it("calls only one region", () => {
 			expect(mockListStreams.mock.calls).to.have.length(1);
 
-			const [table] = consoleLog.mock.calls[2];
+			const [table] = consoleLog.mock.calls[1];
 
 			expect(table).to.contain("stream-a");
 			expect(table).to.contain("50.00% (MB)");
