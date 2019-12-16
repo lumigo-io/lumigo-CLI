@@ -5,5 +5,8 @@ module.exports = {
 		"html",
 		"lcov"
 	],
-	testEnvironment: "node"
+	testEnvironment: "node",
+	// setupTestFrameworkScriptFile has been deprecated in
+	// favor of setupFilesAfterEnv in jest 24
+	setupFilesAfterEnv: ["./jest.setup.js"]
 };
