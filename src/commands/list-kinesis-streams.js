@@ -222,7 +222,7 @@ const show = streamsDetails => {
 
 	console.log(`Total [${streamsDetails.length}] streams`);
 	console.log(table.toString());
-	console.info(`
+	console.log(`
 Each shard can at most input ${BYTES_INCOMING_PER_SHARD /
 		1024} KB of data and up to ${MAX_RECORDS_PER_SHARD_WRITE} records per second.
 Each shard can at most output ${BYTES_OUTGOING_PER_SHARD /

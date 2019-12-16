@@ -10,6 +10,8 @@ AWS.SQS.prototype.sendMessageBatch = mockSendMessageBatch;
 
 const consoleLog = jest.fn();
 console.log = consoleLog;
+console.time = consoleLog;
+console.timeEnd = consoleLog;
 process.stdout.clearLine = jest.fn();
 process.stdout.cursorTo = jest.fn();
 jest.mock("uuid/v4");
