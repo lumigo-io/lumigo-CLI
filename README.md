@@ -33,6 +33,7 @@ USAGE
 * [`lumigo-cli feedback`](#lumigo-cli-feedback)
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
 * [`lumigo-cli list-kinesis-shards`](#lumigo-cli-list-kinesis-shards)
+* [`lumigo-cli list-kinesis-streams`](#lumigo-cli-list-kinesis-streams)
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
 * [`lumigo-cli powertune-lambda`](#lumigo-cli-powertune-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
@@ -129,6 +130,21 @@ OPTIONS
 ```
 
 _See code: [src/commands/list-kinesis-shards.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/list-kinesis-shards.js)_
+
+## `lumigo-cli list-kinesis-streams`
+
+Lists all available kinesis streams
+
+```
+USAGE
+  $ lumigo-cli list-kinesis-streams
+
+OPTIONS
+  -p, --profile=profile        AWS CLI profile name
+  -r, --region=region          AWS region, e.g. us-east-1. Default is all regions
+```
+
+_See code: [src/commands/list-kinesis-streams.js](https://github.com/lumigo-io/lumigo-CLI/blob/master/src/commands/list-kinesis-streams.js)_
 
 ## `lumigo-cli list-lambda`
 
