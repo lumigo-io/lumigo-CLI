@@ -17,7 +17,7 @@ const regions = [
 	"ap-southeast-1",
 	"ap-southeast-2",
 	"ap-south-1",
-	"sa-east-1",
+	"sa-east-1"
 ];
 
 const getStreamsInRegion = async region => {

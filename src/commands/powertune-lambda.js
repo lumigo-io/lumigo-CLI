@@ -44,22 +44,22 @@ class PowertuneLambdaCommand extends Command {
 		let stateMachineArn;
 		const findCfnResult = await findCloudFormation(version);
 		switch (findCfnResult.result) {
-		case "not found":
-			this.log("stack is not found");
-			this.log(
-				`deploying the aws-lambda-power-tuning SAR [${version}] to [${region}]`
-			);
-			stateMachineArn = await deploySAR(version);
-			break;
-		case "outdated":
-			this.log(
-				`stack is deployed but is running an outdated version [${findCfnResult.version}]`
-			);
-			stateMachineArn = await deploySAR(version, true);
-			break;
-		default:
-			this.log("stack is deployed and up-to-date");
-			stateMachineArn = findCfnResult.stateMachineArn;
+			case "not found":
+				this.log("stack is not found");
+				this.log(
+					`deploying the aws-lambda-power-tuning SAR [${version}] to [${region}]`
+				);
+				stateMachineArn = await deploySAR(version);
+				break;
+			case "outdated":
+				this.log(
+					`stack is deployed but is running an outdated version [${findCfnResult.version}]`
+				);
+				stateMachineArn = await deploySAR(version, true);
+				break;
+			default:
+				this.log("stack is deployed and up-to-date");
+				stateMachineArn = findCfnResult.stateMachineArn;
 		}
 
 		this.log(`the State Machine is ${stateMachineArn}`);
@@ -92,7 +92,7 @@ class PowertuneLambdaCommand extends Command {
 
 		// since v2.1.1 the powertuning SFN returns a visualization URL as well
 		const visualizationUrl = _.get(result, "stateMachine.visualization");
-    
+
 		if (visualizationUrl) {
 			const { visualize } = await inquirer.prompt([
 				{
@@ -160,7 +160,8 @@ PowertuneLambdaCommand.flags = {
 	}),
 	powerValues: flags.string({
 		char: "v",
-		description: "comma-separated list of power values to be tested, e.g. 128,256,512,1024",
+		description:
+			"comma-separated list of power values to be tested, e.g. 128,256,512,1024",
 		required: false,
 		parse: x => {
 			if (x === "ALL") {
@@ -364,7 +365,7 @@ const startStateMachine = async (
 	payload,
 	strategy,
 	balancedWeight,
-	powerValues  
+	powerValues
 ) => {
 	const AWS = getAWSSDK();
 	const StepFunctions = new AWS.StepFunctions();

@@ -21,7 +21,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		if (days) {
 			hours = days * 24;
 		}
-    
+
 		global.hours = hours;
 
 		this.log(`analyzing cold starts over the last ${hours} hours`);
@@ -73,7 +73,7 @@ const getFunctionInRegion = async (functionName, region) => {
 	const functionDetail = await Lambda.getFunctionInRegion(functionName, region);
 	const rows = await getStats(region, [functionName]);
 	const pc = await getProvisionedConcurrency(region, [functionName]);
-  
+
 	if (_.isEmpty(rows)) {
 		return [Object.assign({}, functionDetail, pc[functionName])];
 	} else {
@@ -81,12 +81,12 @@ const getFunctionInRegion = async (functionName, region) => {
 	}
 };
 
-const getFunctionsInRegion = async (region) => {
+const getFunctionsInRegion = async region => {
 	const functionDetails = await Lambda.getFunctionsInRegion(region);
 	const functionNames = functionDetails.map(x => x.functionName);
 	const rows = await getStats(region, functionNames);
 	const pcs = await getProvisionedConcurrency(region, functionNames);
-  
+
 	return _.flatMap(functionDetails, func => {
 		const functionRows = rows.filter(x => x.functionName === func.functionName);
 		const pc = pcs[func.functionName];
@@ -111,30 +111,33 @@ const getProvisionedConcurrency = async (region, functionNames) => {
 
 	const AWS = getAWSSDK();
 	const Lambda = new AWS.Lambda({ region });
-  
-	console.log(`${region}: analyzing Provisioned Concurrency for ${functionNames.length} functions`);
+
+	console.log(
+		`${region}: analyzing Provisioned Concurrency for ${functionNames.length} functions`
+	);
 
 	const getPcForFunction = async (functionName, sum = 0, qualifiers = [], marker) => {
 		const resp = await Lambda.listProvisionedConcurrencyConfigs({
 			FunctionName: functionName,
-			Marker: marker   
+			Marker: marker
 		}).promise();
 
 		const pc = _.sumBy(
-			resp.ProvisionedConcurrencyConfigs, 
-			x => x.AllocatedProvisionedConcurrentExecutions);
-
-		const newQualifiers = _.map(
 			resp.ProvisionedConcurrencyConfigs,
-			x => _.last(x.FunctionArn.split(":"))
+			x => x.AllocatedProvisionedConcurrentExecutions
+		);
+
+		const newQualifiers = _.map(resp.ProvisionedConcurrencyConfigs, x =>
+			_.last(x.FunctionArn.split(":"))
 		);
 
 		if (resp.NextMarker) {
 			return getPcForFunction(
-				functionName, 
-				sum + pc, 
-				qualifiers.concat(newQualifiers), 
-				resp.NextMarker);
+				functionName,
+				sum + pc,
+				qualifiers.concat(newQualifiers),
+				resp.NextMarker
+			);
 		} else {
 			return {
 				functionName,
@@ -143,16 +146,19 @@ const getProvisionedConcurrency = async (region, functionNames) => {
 			};
 		}
 	};
-  
+
 	const promises = functionNames.map(fn => getPcForFunction(fn));
 	const results = await Promise.all(promises);
-  
+
 	const functionsWithPc = results.filter(x => !_.isEmpty(x.qualifiers));
-	const pcUtilizations = await getProvisionedConcurrencyUtilization(region, functionsWithPc);
-  
+	const pcUtilizations = await getProvisionedConcurrencyUtilization(
+		region,
+		functionsWithPc
+	);
+
 	const pairs = results.map(x => [
 		x.functionName,
-		{ 
+		{
 			provisionedConcurrency: x.sum,
 			provisionedConcurrencyUtilization: _.get(pcUtilizations, x.functionName, 0)
 		}
@@ -162,15 +168,22 @@ const getProvisionedConcurrency = async (region, functionNames) => {
 };
 
 const utilizationMetric = (functionName, qualifier) => ({
-	Id: functionName.toLowerCase().replace(/\W/g, "") + qualifier.toLowerCase().replace(/\W/g, ""),
+	Id:
+		functionName.toLowerCase().replace(/\W/g, "") +
+		qualifier.toLowerCase().replace(/\W/g, ""),
 	Label: functionName,
 	MetricStat: {
 		Metric: {
-			Dimensions: [{
-				Name: "FunctionName", Value: functionName 
-			}, {
-				Name: "Resource", Value: `${functionName}:${qualifier}`
-			}],
+			Dimensions: [
+				{
+					Name: "FunctionName",
+					Value: functionName
+				},
+				{
+					Name: "Resource",
+					Value: `${functionName}:${qualifier}`
+				}
+			],
 			MetricName: "ProvisionedConcurrencyUtilization",
 			Namespace: "AWS/Lambda"
 		},
@@ -183,16 +196,14 @@ const utilizationMetric = (functionName, qualifier) => ({
 const getProvisionedConcurrencyUtilization = async (region, functions) => {
 	const AWS = getAWSSDK();
 	const CloudWatch = new AWS.CloudWatch({ region });
-  
+
 	const startTime = new Date();
 	startTime.setHours(startTime.getHours() - global.hours);
-  
-	const queries = _.flatMap(
-		functions, 
-		({ functionName, qualifiers }) => qualifiers.map(
-			qualifier => utilizationMetric(functionName, qualifier))
+
+	const queries = _.flatMap(functions, ({ functionName, qualifiers }) =>
+		qualifiers.map(qualifier => utilizationMetric(functionName, qualifier))
 	);
-  
+
 	// CloudWatch only allows 100 queries per request
 	const promises = _.chunk(queries, 100).map(async chunk => {
 		const resp = await CloudWatch.getMetricData({
@@ -201,10 +212,10 @@ const getProvisionedConcurrencyUtilization = async (region, functions) => {
 			ScanBy: "TimestampDescending",
 			MetricDataQueries: chunk
 		}).promise();
-    
+
 		return resp.MetricDataResults;
 	});
-  
+
 	const metricDataResults = _.flatMap(await Promise.all(promises));
 	const summaries = functions.map(({ functionName }) => {
 		const maxUtilization = _.chain(metricDataResults)
@@ -212,7 +223,7 @@ const getProvisionedConcurrencyUtilization = async (region, functions) => {
 			.flatMap(r => r.Values)
 			.max()
 			.value();
-      
+
 		return [functionName, maxUtilization];
 	});
 
@@ -317,7 +328,17 @@ const formatPcUtilization = n => {
 
 const show = functions => {
 	const table = new Table({
-		head: ["region", "name", "runtime", "memory", "count", "median init", "max init", "provisioned concurrency (PC)", "PC utilization"]
+		head: [
+			"region",
+			"name",
+			"runtime",
+			"memory",
+			"count",
+			"median init",
+			"max init",
+			"provisioned concurrency (PC)",
+			"PC utilization"
+		]
 	});
 	_.sortBy(functions, ["coldStarts", "avgInitDuration"])
 		.reverse()

@@ -1,0 +1,43 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10.16.0
+    working_directory: ~/lumigo-cli
+    steps:
+      - checkout
+      - run: npm ci
+      - run: ./scripts/checks.sh
+      - run: npm run codecov
+
+  deploy:
+    docker:
+      - image: circleci/node:10.16.0
+    working_directory: ~/lumigo-cli
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run semantic-release
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: master
+
+  build_and_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
