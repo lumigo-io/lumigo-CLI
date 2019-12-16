@@ -2,6 +2,10 @@ const childProcess = require("child_process");
 const semver = require("semver");
 
 const checkVersion = () => {
+	if (process.env.SKIP_VERSION_CHECK) {
+		return;
+	}
+
 	const packageJson = require("../../package.json");
 	const version = packageJson.version;
 	try {
