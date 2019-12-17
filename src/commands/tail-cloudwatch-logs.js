@@ -17,36 +17,42 @@ class TailCloudwatchLogsCommand extends Command {
 		global.interval = interval || 1000;
 
 		checkVersion();
-    
+
 		const AWS = getAWSSDK();
 		this.Logs = new AWS.CloudWatchLogs();
-    
-		this.log(`looking for CloudWatch log groups with prefix [${namePrefix}] in [${region}]`);
+
+		this.log(
+			`looking for CloudWatch log groups with prefix [${namePrefix}] in [${region}]`
+		);
 		const logGroupName = await this.getLogGroupName(namePrefix);
-    
+
 		this.log(`looking for log streams for [${logGroupName}]...`);
 		const logStreamNames = await this.getLogStreamNames(logGroupName);
-    
+
 		this.log(`polling CLoudWatch log group [${logGroupName}]...`);
 		this.log("press <any key> to stop");
 		await this.pollLogGroup(logGroupName, logStreamNames);
 
 		this.exit(0);
 	}
-  
-	async getLogGroupName (namePrefix) {
+
+	async getLogGroupName(namePrefix) {
 		const resp = await this.Logs.describeLogGroups({
 			logGroupNamePrefix: namePrefix
 		}).promise();
-  
+
 		if (resp.logGroups.length === 1) {
 			this.log("only 1 match found");
 			return resp.logGroups[0].logGroupName;
 		} else if (_.isEmpty(resp.logGroups)) {
-			this.log("no matching log groups, please double check the prefix and region and try again");
+			this.log(
+				"no matching log groups, please double check the prefix and region and try again"
+			);
 			this.exit(1);
 		} else if (resp.nextToken) {
-			this.log("too many log groups with matching prefix, please provide the full log group name and try again");
+			this.log(
+				"too many log groups with matching prefix, please provide the full log group name and try again"
+			);
 			this.exit(1);
 		} else {
 			const logGroupChoices = resp.logGroups.map(x => x.logGroupName);
@@ -58,28 +64,28 @@ class TailCloudwatchLogsCommand extends Command {
 					choices: logGroupChoices
 				}
 			]);
-      
+
 			return logGroupName;
 		}
-	};
-  
-	async getLogStreamNames (logGroupName) {
+	}
+
+	async getLogStreamNames(logGroupName) {
 		const resp = await this.Logs.describeLogStreams({
 			logGroupName,
 			descending: true,
 			limit: 50,
 			orderBy: "LastEventTime"
 		}).promise();
-    
+
 		if (_.isEmpty(resp.logStreams)) {
 			this.log("there are no log streams right now, please try again later");
 			this.exit(1);
 		} else {
 			return resp.logStreams.map(x => x.logStreamName);
 		}
-	};
-  
-	async pollLogGroup (logGroupName, logStreamNames) {
+	}
+
+	async pollLogGroup(logGroupName, logStreamNames) {
 		let polling = true;
 		const readline = require("readline");
 		readline.emitKeypressEvents(process.stdin);
@@ -89,7 +95,7 @@ class TailCloudwatchLogsCommand extends Command {
 			polling = false;
 			console.log("stopping...");
 		});
-    
+
 		const fetch = async (startTime, endTime, nextToken, acc = []) => {
 			const resp = await this.Logs.filterLogEvents({
 				logGroupName,
@@ -100,7 +106,7 @@ class TailCloudwatchLogsCommand extends Command {
 				endTime,
 				nextToken
 			}).promise();
-      
+
 			const logMessages = resp.events.map(x => x.message);
 			if (resp.nextToken) {
 				return fetch(startTime, endTime, resp.nextToken, acc.concat(logMessages));
@@ -108,7 +114,7 @@ class TailCloudwatchLogsCommand extends Command {
 				return acc.concat(logMessages);
 			}
 		};
-    
+
 		// start from 5s ago
 		let startTime = moment.utc(moment.now()).valueOf() - 5000;
 		let endTime = moment.utc(moment.now()).valueOf();
@@ -116,11 +122,11 @@ class TailCloudwatchLogsCommand extends Command {
 			const logMessages = await fetch(startTime, endTime);
 			logMessages.forEach(this.log);
 			await Promise.delay(global.interval);
-      
+
 			startTime = endTime;
 			endTime = moment.utc(moment.now()).valueOf();
 		}
-	};
+	}
 }
 
 TailCloudwatchLogsCommand.description = "Tail a CloudWatch Log Group";
@@ -142,7 +148,8 @@ TailCloudwatchLogsCommand.flags = {
 	}),
 	filterPattern: flags.string({
 		char: "f",
-		description: "filter pattern for the logs, see https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html",
+		description:
+			"filter pattern for the logs, see https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html",
 		required: false
 	}),
 	interval: flags.integer({
