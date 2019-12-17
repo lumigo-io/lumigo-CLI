@@ -272,18 +272,24 @@ _See code: [src/commands/switch-profile.js](https://github.com/lumigo-io/lumigo-
 
 ## `lumigo-cli tail-cloudwatch-logs`
 
-Describe the command here
+Tail a CloudWatch Log Group
 
 ```
 USAGE
   $ lumigo-cli tail-cloudwatch-logs
 
 OPTIONS
-  -n, --name=name  name to print
+  -f, --filterPattern=filterPattern  filter pattern for the logs, see
+                                     https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.htm
+                                     l
 
-DESCRIPTION
-  ...
-  Extra documentation goes here
+  -i, --interval=interval            [default: 1000] interval for polling CloudWatch Logs
+
+  -n, --namePrefix=namePrefix        (required) name prefix of the log group, e.g. /aws/lambda/workshop-dev-
+
+  -p, --profile=profile              AWS CLI profile name
+
+  -r, --region=region                (required) AWS region, e.g. us-east-1
 ```
 
 _See code: [src/commands/tail-cloudwatch-logs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/tail-cloudwatch-logs.js)_
