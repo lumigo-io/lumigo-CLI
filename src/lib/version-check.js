@@ -18,7 +18,7 @@ const checkVersion = () => {
 			console.log(`
   ===============================================================
        v${npmVersion} of this CLI is now available on NPM.
-         Please run "npm i -g lumigo-cli" to update :-)
+      Please run "npm i -g lumigo-cli" to update :-)
   ===============================================================
       `);
 		}

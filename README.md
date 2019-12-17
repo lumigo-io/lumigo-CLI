@@ -42,6 +42,7 @@ USAGE
 * [`lumigo-cli send-to-sqs`](#lumigo-cli-send-to-sqs)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 * [`lumigo-cli switch-profile`](#lumigo-cli-switch-profile)
+* [`lumigo-cli tail-cloudwatch-logs`](#lumigo-cli-tail-cloudwatch-logs)
 * [`lumigo-cli tail-dynamodb`](#lumigo-cli-tail-dynamodb)
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
@@ -134,18 +135,18 @@ _See code: [src/commands/list-kinesis-shards.js](https://github.com/lumigo-io/lu
 
 ## `lumigo-cli list-kinesis-streams`
 
-Lists all available kinesis streams
+Lists the Kinesis streams
 
 ```
 USAGE
   $ lumigo-cli list-kinesis-streams
 
 OPTIONS
-  -p, --profile=profile        AWS CLI profile name
-  -r, --region=region          AWS region, e.g. us-east-1. Default is all regions
+  -p, --profile=profile  AWS CLI profile name
+  -r, --region=region    AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/list-kinesis-streams.js](https://github.com/lumigo-io/lumigo-CLI/blob/master/src/commands/list-kinesis-streams.js)_
+_See code: [src/commands/list-kinesis-streams.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/list-kinesis-streams.js)_
 
 ## `lumigo-cli list-lambda`
 
@@ -268,6 +269,24 @@ USAGE
 ```
 
 _See code: [src/commands/switch-profile.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/switch-profile.js)_
+
+## `lumigo-cli tail-cloudwatch-logs`
+
+Describe the command here
+
+```
+USAGE
+  $ lumigo-cli tail-cloudwatch-logs
+
+OPTIONS
+  -n, --name=name  name to print
+
+DESCRIPTION
+  ...
+  Extra documentation goes here
+```
+
+_See code: [src/commands/tail-cloudwatch-logs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/tail-cloudwatch-logs.js)_
 
 ## `lumigo-cli tail-dynamodb`
 
