@@ -45,7 +45,7 @@ class ReplaySqsDlqCommand extends Command {
 		this.log(
 			`replaying events from [${dlqQueueUrl}] to [${targetType}:${targetName}] with ${concurrency} concurrent pollers`
 		);
-		this.replay(dlqQueueUrl, concurrency, sendToTarget);
+		await this.replay(dlqQueueUrl, concurrency, sendToTarget);
 
 		this.log("all done!");
 	}
@@ -79,13 +79,22 @@ class ReplaySqsDlqCommand extends Command {
 		const SNS = new AWS.SNS();
 
 		return async messages => {
-			const promises = messages.map(msg =>
-				SNS.publish({
+			const promises = messages.map(async msg => {
+				const msgAttrPairs = _.toPairs(msg.MessageAttributes);
+				const supportedAttrs = msgAttrPairs
+				  // eslint-disable-next-line no-unused-vars
+					.filter(([key, value]) => value.DataType === "String")
+					.map(([key, { DataType, StringValue }]) => [
+						key, { DataType, StringValue }
+					]);
+				const messageAttributes = _.fromPairs(supportedAttrs);
+				await SNS.publish({
 					Message: msg.Body,
-					MessageAttributes: msg.MessageAttributes,
+					MessageAttributes: messageAttributes,
 					TopicArn: topicArn
-				}).promise()
-			);
+				}).promise();
+			});
+      
 			await Promise.all(promises);
 		};
 	}
@@ -116,7 +125,8 @@ class ReplaySqsDlqCommand extends Command {
 		while (true) {
 			const resp = await SQS.receiveMessage({
 				QueueUrl: dlqQueueUrl,
-				MaxNumberOfMessages: 10
+				MaxNumberOfMessages: 10,
+				MessageAttributeNames: ["All"]
 			}).promise();
 
 			if (_.isEmpty(resp.Messages)) {
