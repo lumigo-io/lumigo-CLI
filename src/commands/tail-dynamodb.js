@@ -32,7 +32,7 @@ class TailDynamodbCommand extends Command {
 		);
 		this.log("press <any key> to stop");
 		await this.pollDynamoDBStreams(streamArn, stream.shardIds);
-    
+
 		this.exit(0);
 	}
 

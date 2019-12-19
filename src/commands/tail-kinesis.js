@@ -91,7 +91,7 @@ class TailKinesisCommand extends Command {
 		await Promise.all(promises);
 
 		this.log("stopped");
-    
+
 		this.exit(0);
 	}
 

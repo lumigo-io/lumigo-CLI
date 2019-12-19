@@ -20,7 +20,7 @@ class TailSnsCommand extends Command {
 		const topicArn = await getTopicArn(topicName);
 
 		await this.pollSns(topicArn);
-    
+
 		this.exit(0);
 	}
 
