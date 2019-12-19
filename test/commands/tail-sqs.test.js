@@ -36,6 +36,7 @@ describe("tail-sqs", () => {
 		test
 			.stdout()
 			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("finds the right one", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");
@@ -61,6 +62,7 @@ describe("tail-sqs", () => {
 		test
 			.stdout()
 			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("displays them in the console", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");      
@@ -92,6 +94,7 @@ describe("tail-sqs", () => {
 		test
 			.stdout()
 			.command(["tail-sqs", "-n", "queue-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("do not show them again", ctx => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");      

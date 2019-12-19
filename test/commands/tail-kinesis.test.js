@@ -43,6 +43,7 @@ describe("tail-kinesis", () => {
 		test
 			.stdout()
 			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("displays messages in the console", async (ctx) => {
 				expect(ctx.stdout).to.contain("checking Kinesis stream [stream-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling Kinesis stream [stream-dev] (1 shards)...");
@@ -63,6 +64,7 @@ describe("tail-kinesis", () => {
 		test
 			.stdout()
 			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("displays messages in the console", ctx => {
 				expect(ctx.stdout).to.contain("checking Kinesis stream [stream-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling Kinesis stream [stream-dev] (2 shards)...");
@@ -83,6 +85,7 @@ describe("tail-kinesis", () => {
 		test
 			.stdout()
 			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("displays unzipped messages in the console", (ctx) => {
 				expect(ctx.stdout).to.contain("message 1");
 				expect(ctx.stdout).to.contain("message 2");
@@ -102,6 +105,7 @@ describe("tail-kinesis", () => {
 		test
 			.stdout()
 			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("displays prettified JSON messages in the console", (ctx) => {
 				expect(ctx.stdout).to.contain(JSON.stringify(data1, undefined, 2));
 				expect(ctx.stdout).to.contain(JSON.stringify(data2, undefined, 2));

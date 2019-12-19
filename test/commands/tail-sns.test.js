@@ -94,6 +94,7 @@ describe("tail-sns", () => {
 		test
 			.stdout()
 			.command(["tail-sns", "-n", "my-topic-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("fetches and prints the messages", (ctx) => {
 				expect(ctx.stdout).to.contain("my test message");
 				expect(ctx.stdout).to.contain("message 1");
