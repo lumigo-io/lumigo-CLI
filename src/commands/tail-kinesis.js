@@ -24,21 +24,21 @@ class TailKinesisCommand extends Command {
 		this.log("press <any key> to stop");
 		await this.pollKinesis(streamName, stream.shardIds);
 	}
-  
+
 	async describeStream(streamName) {
 		const AWS = getAWSSDK();
 		const Kinesis = new AWS.Kinesis();
 		const resp = await Kinesis.describeStream({
 			StreamName: streamName
 		}).promise();
-  
+
 		return {
 			arn: resp.StreamDescription.StreamARN,
 			status: resp.StreamDescription.StreamStatus,
 			shardIds: resp.StreamDescription.Shards.map(x => x.ShardId)
 		};
 	}
-  
+
 	async pollKinesis(streamName, shardIds) {
 		const AWS = getAWSSDK();
 		const Kinesis = new AWS.Kinesis({
@@ -53,7 +53,7 @@ class TailKinesisCommand extends Command {
 				customBackoff: () => 250
 			}
 		});
-  
+
 		let polling = true;
 		const readline = require("readline");
 		readline.emitKeypressEvents(process.stdin);
@@ -63,49 +63,49 @@ class TailKinesisCommand extends Command {
 			polling = false;
 			this.log("stopping...");
 		});
-  
+
 		const promises = shardIds.map(async shardId => {
 			const iteratorResp = await Kinesis.getShardIterator({
 				ShardId: shardId,
 				StreamName: streamName,
 				ShardIteratorType: "LATEST"
 			}).promise();
-  
+
 			let shardIterator = iteratorResp.ShardIterator;
-  
+
 			// eslint-disable-next-line no-constant-condition
 			while (polling) {
 				const resp = await Kinesis.getRecords({
 					ShardIterator: shardIterator,
 					Limit: 10
 				}).promise();
-  
+
 				if (!_.isEmpty(resp.Records)) {
 					resp.Records.forEach(x => this.show(x));
 				}
-  
+
 				shardIterator = resp.NextShardIterator;
 			}
 		});
-  
+
 		await Promise.all(promises);
-  
+
 		this.log("stopped");
 	}
-  
+
 	show(record) {
 		const timestamp = new Date().toJSON().grey.bold.bgWhite;
 		this.log(timestamp);
-  
+
 		const buffer = Buffer.from(record.Data, "base64");
-  
+
 		let data;
 		try {
 			data = zlib.gunzipSync(buffer).toString("utf8");
 		} catch (_error) {
 			data = buffer.toString("utf8");
 		}
-  
+
 		try {
 			const obj = JSON.parse(data);
 			this.log(JSON.stringify(obj, undefined, 2));

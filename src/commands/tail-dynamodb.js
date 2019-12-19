@@ -33,7 +33,7 @@ class TailDynamodbCommand extends Command {
 		this.log("press <any key> to stop");
 		await this.pollDynamoDBStreams(streamArn, stream.shardIds);
 	}
-  
+
 	getDynamoDBClient() {
 		const AWS = getAWSSDK();
 		if (global.endpoint) {
@@ -42,7 +42,7 @@ class TailDynamodbCommand extends Command {
 			return new AWS.DynamoDB();
 		}
 	}
-  
+
 	getDynamoDBStreamsClient() {
 		const AWS = getAWSSDK();
 		if (global.endpoint) {
@@ -51,24 +51,24 @@ class TailDynamodbCommand extends Command {
 			return new AWS.DynamoDBStreams();
 		}
 	}
-  
+
 	async getStreamArn(tableName) {
 		const DynamoDB = this.getDynamoDBClient();
-  
+
 		const resp = await DynamoDB.describeTable({
 			TableName: tableName
 		}).promise();
-  
+
 		return resp.Table.LatestStreamArn;
 	}
-  
+
 	async describeStream(streamArn) {
 		const DynamoDBStreams = this.getDynamoDBStreamsClient();
-  
+
 		const resp = await DynamoDBStreams.describeStream({
 			StreamArn: streamArn
 		}).promise();
-  
+
 		return {
 			arn: resp.StreamDescription.StreamArn,
 			status: resp.StreamDescription.StreamStatus,
@@ -76,10 +76,10 @@ class TailDynamodbCommand extends Command {
 			shardIds: resp.StreamDescription.Shards.map(x => x.ShardId)
 		};
 	}
-  
+
 	async pollDynamoDBStreams(streamArn, shardIds) {
 		const DynamoDBStreams = this.getDynamoDBStreamsClient();
-  
+
 		let polling = true;
 		const readline = require("readline");
 		readline.emitKeypressEvents(process.stdin);
@@ -89,24 +89,24 @@ class TailDynamodbCommand extends Command {
 			polling = false;
 			this.log("stopping...");
 		});
-  
+
 		const promises = shardIds.map(async shardId => {
 			const iteratorResp = await DynamoDBStreams.getShardIterator({
 				ShardId: shardId,
 				StreamArn: streamArn,
 				ShardIteratorType: "LATEST"
 			}).promise();
-  
+
 			let shardIterator = iteratorResp.ShardIterator;
-  
+
 			// eslint-disable-next-line no-constant-condition
 			while (polling) {
 				let resp;
-  
+
 				if (!shardIterator) {
 					break;
 				}
-  
+
 				try {
 					resp = await DynamoDBStreams.getRecords({
 						ShardIterator: shardIterator,
@@ -116,23 +116,23 @@ class TailDynamodbCommand extends Command {
 					this.error(
 						`Error while getting records for shard (${shardIterator.yellow}): ${e.message.red}`
 					);
-  
+
 					break;
 				}
-  
+
 				if (resp && !_.isEmpty(resp.Records)) {
 					resp.Records.forEach(record => {
 						const timestamp = new Date().toJSON().grey.bold.bgWhite;
 						this.log(timestamp, "\n", JSON.stringify(record, undefined, 2));
 					});
 				}
-  
+
 				shardIterator = resp.NextShardIterator;
 			}
 		});
-  
+
 		await Promise.all(promises);
-  
+
 		this.log("stopped");
 	}
 }

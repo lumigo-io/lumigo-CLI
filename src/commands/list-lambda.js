@@ -25,12 +25,12 @@ class ListLambdaCommand extends Command {
 			this.show(await this.getFunctionsinAllRegions(inactive));
 		}
 	}
-  
+
 	async getFunctionsInRegion(region, inactive) {
 		const functions = await Lambda.getFunctionsInRegion(region);
 		const functionNames = functions.map(x => x.functionName);
 		const lastInvokedOn = await this.getLastInvocationDates(region, functionNames);
-  
+
 		return functions
 			.map(x => {
 				const lastUsed = lastInvokedOn[x.functionName];
@@ -44,20 +44,22 @@ class ListLambdaCommand extends Command {
 				}
 			});
 	}
-  
+
 	async getFunctionsinAllRegions(inactive) {
-		const promises = Lambda.regions.map(region => this.getFunctionsInRegion(region, inactive));
+		const promises = Lambda.regions.map(region =>
+			this.getFunctionsInRegion(region, inactive)
+		);
 		const results = await Promise.all(promises);
 		return _.flatMap(results);
 	}
-  
+
 	async getLastInvocationDates(region, functionNames) {
 		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch({ region });
-  
+
 		const thirtyDaysAgo = new Date();
 		thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
+
 		const queries = functionNames.map(functionName => ({
 			Id: functionName.toLowerCase().replace(/\W/g, ""),
 			Label: functionName,
@@ -72,7 +74,7 @@ class ListLambdaCommand extends Command {
 			},
 			ReturnData: true
 		}));
-  
+
 		// CloudWatch only allows 100 queries per request
 		const promises = _.chunk(queries, 10).map(async chunk => {
 			const resp = await CloudWatch.getMetricData({
@@ -81,24 +83,24 @@ class ListLambdaCommand extends Command {
 				ScanBy: "TimestampDescending",
 				MetricDataQueries: chunk
 			}).promise();
-  
+
 			return resp.MetricDataResults;
 		});
 		const metricDataResults = _.flatMap(await Promise.all(promises));
-  
+
 		const lastInvocationDates = functionNames.map(functionName => {
 			const metricData = metricDataResults.find(r => r.Label === functionName);
 			if (_.isEmpty(metricData.Timestamps)) {
 				return [functionName, "inactive for 30 days"];
 			}
-  
+
 			const lastInvokedOn = _.max(metricData.Timestamps);
 			return [functionName, moment(lastInvokedOn).fromNow()];
 		});
-  
+
 		return _.fromPairs(lastInvocationDates);
 	}
-  
+
 	show(functions) {
 		const displayRuntime = runtime => {
 			if (runtime === "nodejs8.10") {
@@ -107,7 +109,7 @@ class ListLambdaCommand extends Command {
 				return runtime;
 			}
 		};
-  
+
 		const table = new Table({
 			head: [
 				"region",
@@ -130,9 +132,9 @@ class ListLambdaCommand extends Command {
 				x.lastUsed
 			]);
 		});
-  
+
 		this.log(table.toString());
-  
+
 		const node8Function = functions.find(x => x.runtime === "nodejs8.10");
 		if (node8Function) {
 			this.log(`

@@ -40,25 +40,27 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 			this.show(await this.getFunctionsinAllRegions());
 		}
 	}
-  
+
 	async getFunctionInRegion(functionName, region) {
 		const functionDetail = await Lambda.getFunctionInRegion(functionName, region);
 		const rows = await this.getStats(region, [functionName]);
 		const pc = await this.getProvisionedConcurrency(region, [functionName]);
-  
+
 		if (_.isEmpty(rows)) {
 			return [Object.assign({}, functionDetail, pc[functionName])];
 		} else {
-			return rows.map(row => Object.assign({}, functionDetail, row, pc[functionName]));
+			return rows.map(row =>
+				Object.assign({}, functionDetail, row, pc[functionName])
+			);
 		}
 	}
-  
+
 	async getFunctionsInRegion(region) {
 		const functionDetails = await Lambda.getFunctionsInRegion(region);
 		const functionNames = functionDetails.map(x => x.functionName);
 		const rows = await this.getStats(region, functionNames);
 		const pcs = await this.getProvisionedConcurrency(region, functionNames);
-  
+
 		return _.flatMap(functionDetails, func => {
 			const functionRows = rows.filter(x => x.functionName === func.functionName);
 			const pc = pcs[func.functionName];
@@ -69,40 +71,45 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 			}
 		});
 	}
-  
+
 	async getFunctionsinAllRegions() {
 		const promises = Lambda.regions.map(region => this.getFunctionsInRegion(region));
 		const results = await Promise.all(promises);
 		return _.flatMap(results);
 	}
-  
+
 	async getProvisionedConcurrency(region, functionNames) {
 		if (_.isEmpty(functionNames)) {
 			return {};
 		}
-  
+
 		const AWS = getAWSSDK();
 		const Lambda = new AWS.Lambda({ region });
-  
+
 		this.log(
 			`${region}: analyzing Provisioned Concurrency for ${functionNames.length} functions`
 		);
-  
-		const getPcForFunction = async (functionName, sum = 0, qualifiers = [], marker) => {
+
+		const getPcForFunction = async (
+			functionName,
+			sum = 0,
+			qualifiers = [],
+			marker
+		) => {
 			const resp = await Lambda.listProvisionedConcurrencyConfigs({
 				FunctionName: functionName,
 				Marker: marker
 			}).promise();
-  
+
 			const pc = _.sumBy(
 				resp.ProvisionedConcurrencyConfigs,
 				x => x.AllocatedProvisionedConcurrentExecutions
 			);
-  
+
 			const newQualifiers = _.map(resp.ProvisionedConcurrencyConfigs, x =>
 				_.last(x.FunctionArn.split(":"))
 			);
-  
+
 			if (resp.NextMarker) {
 				return getPcForFunction(
 					functionName,
@@ -118,32 +125,36 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 				};
 			}
 		};
-  
+
 		const promises = functionNames.map(fn => getPcForFunction(fn));
 		const results = await Promise.all(promises);
-  
+
 		const functionsWithPc = results.filter(x => !_.isEmpty(x.qualifiers));
 		const pcUtilizations = await this.getProvisionedConcurrencyUtilization(
 			region,
 			functionsWithPc
 		);
-  
+
 		const pairs = results.map(x => [
 			x.functionName,
 			{
 				provisionedConcurrency: x.sum,
-				provisionedConcurrencyUtilization: _.get(pcUtilizations, x.functionName, 0)
+				provisionedConcurrencyUtilization: _.get(
+					pcUtilizations,
+					x.functionName,
+					0
+				)
 			}
 		]);
-  
+
 		return _.fromPairs(pairs);
 	}
-  
+
 	async utilizationMetric(functionName, qualifier) {
 		return {
 			Id:
-        functionName.toLowerCase().replace(/\W/g, "") +
-        qualifier.toLowerCase().replace(/\W/g, ""),
+				functionName.toLowerCase().replace(/\W/g, "") +
+				qualifier.toLowerCase().replace(/\W/g, ""),
 			Label: functionName,
 			MetricStat: {
 				Metric: {
@@ -166,18 +177,18 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 			ReturnData: true
 		};
 	}
-  
+
 	async getProvisionedConcurrencyUtilization(region, functions) {
 		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch({ region });
-  
+
 		const startTime = new Date();
 		startTime.setHours(startTime.getHours() - global.hours);
-  
+
 		const queries = _.flatMap(functions, ({ functionName, qualifiers }) =>
 			qualifiers.map(qualifier => this.utilizationMetric(functionName, qualifier))
 		);
-  
+
 		// CloudWatch only allows 100 queries per request
 		const promises = _.chunk(queries, 100).map(async chunk => {
 			const resp = await CloudWatch.getMetricData({
@@ -186,10 +197,10 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 				ScanBy: "TimestampDescending",
 				MetricDataQueries: chunk
 			}).promise();
-  
+
 			return resp.MetricDataResults;
 		});
-  
+
 		const metricDataResults = _.flatMap(await Promise.all(promises));
 		const summaries = functions.map(({ functionName }) => {
 			const maxUtilization = _.chain(metricDataResults)
@@ -197,53 +208,53 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 				.flatMap(r => r.Values)
 				.max()
 				.value();
-  
+
 			return [functionName, maxUtilization];
 		});
-  
+
 		return _.fromPairs(summaries);
 	}
-  
+
 	async getStats(region, functionNames) {
 		if (_.isEmpty(functionNames)) {
 			return [];
 		}
-  
+
 		const AWS = getAWSSDK();
 		const CloudWatchLogs = new AWS.CloudWatchLogs({ region });
-  
+
 		const endTime = new Date();
 		const startTime = new Date();
 		startTime.setHours(startTime.getHours() - global.hours);
-  
+
 		this.log(
 			`${region}: running CloudWatch Insights query against ${functionNames.length} log groups`
 		);
 		this.log(`${region}: query start time is ${startTime.toJSON()}`);
 		this.log(`${region}: end time is ${endTime.toJSON()}`);
-  
+
 		// CW Insights only allows up to 20 log groups at a time
 		const promises = _.chunk(functionNames, 20).map(async chunk => {
 			const logGroupNames = chunk.map(x => `/aws/lambda/${x}`);
-  
+
 			const startResp = await CloudWatchLogs.startQuery({
 				logGroupNames,
 				startTime: startTime.getTime() / 1000,
 				endTime: endTime.getTime() / 1000,
 				queryString
 			}).promise();
-  
+
 			const queryId = startResp.queryId;
 			const results = await Retry(
 				async () => {
 					const resp = await CloudWatchLogs.getQueryResults({
 						queryId
 					}).promise();
-  
+
 					if (resp.status !== "Complete") {
 						throw new Error("query result not ready yet...");
 					}
-  
+
 					return resp.results;
 				},
 				{
@@ -252,13 +263,13 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 					maxTimeout: 3000
 				}
 			);
-  
+
 			return results;
 		});
-  
+
 		const rows = _.flatMap(await Promise.all(promises));
 		this.log(`${region}: query returned ${rows.length} rows in total`);
-  
+
 		return rows.map(fields => {
 			return _.reduce(
 				fields,
@@ -270,7 +281,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 			);
 		});
 	}
-  
+
 	formatInitDuration(n) {
 		if (n < 100) {
 			return n.toString().green;
@@ -282,7 +293,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 			return n.toString().bold.red.bgWhite;
 		}
 	}
-  
+
 	formatPcUtilization(n) {
 		if (n > 0.3 && n < 0.8) {
 			return ((n * 100).toString() + "%").green;
@@ -297,7 +308,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		const n = parseFloat(str);
 		return _.isNaN(n) ? str : n;
 	}
-  
+
 	show(functions) {
 		const table = new Table({
 			head: [
@@ -327,9 +338,9 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 					this.formatPcUtilization(x.provisionedConcurrencyUtilization)
 				]);
 			});
-  
+
 		this.log(table.toString());
-  
+
 		this.log(
 			`
   Hint: the "init" times quoted about are the time it takes to execute "function's initialization 

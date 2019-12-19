@@ -29,7 +29,7 @@ class AnalyzeLambdaCostCommand extends Command {
 			this.show(await this.getFunctionsinAllRegions());
 		}
 	}
-  
+
 	async getFunctionInRegion(functionName, region) {
 		const functionDetail = await Lambda.getFunctionInRegion(functionName, region);
 		const summary = await this.getCostSummary(region, [functionDetail]);
@@ -45,35 +45,35 @@ class AnalyzeLambdaCostCommand extends Command {
 			)
 		];
 	}
-  
+
 	async getFunctionsInRegion(region) {
 		const functions = await Lambda.getFunctionsInRegion(region);
 		const summaries = await this.getCostSummary(region, functions);
-  
+
 		return functions.map(x => {
 			const summary = summaries[x.functionName];
 			return Object.assign({}, x, summary);
 		});
 	}
-  
+
 	async getFunctionsinAllRegions() {
 		const promises = Lambda.regions.map(region => this.getFunctionsInRegion(region));
 		const results = await Promise.all(promises);
 		return _.flatMap(results);
-	};
-  
+	}
+
 	async getCostSummary(region, functions) {
 		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch({ region });
-  
+
 		const startTime = new Date();
 		startTime.setDate(startTime.getDate() - global.days);
-  
+
 		const queries = _.flatMap(functions, ({ functionName }) => [
 			this.invocationCountMetric(functionName),
 			this.durationMetric(functionName)
 		]);
-  
+
 		// CloudWatch only allows 100 queries per request
 		const promises = _.chunk(queries, 100).map(async chunk => {
 			const resp = await CloudWatch.getMetricData({
@@ -82,40 +82,40 @@ class AnalyzeLambdaCostCommand extends Command {
 				ScanBy: "TimestampDescending",
 				MetricDataQueries: chunk
 			}).promise();
-  
+
 			return resp.MetricDataResults;
 		});
 		const metricDataResults = _.flatMap(await Promise.all(promises));
-  
+
 		const summaries = functions.map(({ functionName, memorySize }) => {
 			const invocationCount = _.chain(metricDataResults)
 				.filter(r => r.Label === functionName + "InvocationCount")
 				.flatMap(r => r.Values)
 				.sum()
 				.value();
-  
+
 			if (invocationCount === 0) {
 				return [functionName, { totalCost: 0, averageCost: 0, invocationCount }];
 			}
-  
+
 			const totalDuration = _.chain(metricDataResults)
 				.filter(r => r.Label === functionName + "Duration")
 				.flatMap(r => r.Values)
 				.sum()
 				.value();
-  
+
 			const avgDuration = totalDuration / invocationCount;
 			const averageCost =
-        Math.ceil(avgDuration / 100) * (memorySize / 128) * COST_PER_100MS +
-        COST_PER_REQ;
+				Math.ceil(avgDuration / 100) * (memorySize / 128) * COST_PER_100MS +
+				COST_PER_REQ;
 			const totalCost = averageCost * invocationCount;
-  
+
 			return [functionName, { totalCost, averageCost, invocationCount }];
 		});
-  
+
 		return _.fromPairs(summaries);
 	}
-  
+
 	show(functions) {
 		const displayCost = x => (x === 0 ? "-" : x.toFixed(10));
 		const table = new Table({
@@ -142,9 +142,9 @@ class AnalyzeLambdaCostCommand extends Command {
 					displayCost(x.averageCost)
 				]);
 			});
-  
+
 		this.log(table.toString());
-  
+
 		this.log("DISCLAIMER: the above are estimated costs.".bold.red.bgWhite);
 		this.log("Actual cost can vary due to a number of factors such as free tier.");
 		this.log(
@@ -155,7 +155,7 @@ class AnalyzeLambdaCostCommand extends Command {
 				.underline.bold.blue
 		);
 	}
-  
+
 	invocationCountMetric(functionName) {
 		return {
 			Id: functionName.toLowerCase().replace(/\W/g, "") + "InvocationCount",
@@ -172,7 +172,7 @@ class AnalyzeLambdaCostCommand extends Command {
 			ReturnData: true
 		};
 	}
-  
+
 	durationMetric(functionName) {
 		return {
 			Id: functionName.toLowerCase().replace(/\W/g, "") + "Duration",

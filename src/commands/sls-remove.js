@@ -52,17 +52,19 @@ class SlsRemoveCommand extends Command {
 
 		this.log("stack has been deleted!");
 	}
-  
+
 	async getDeploymentBucketName(stackName) {
 		const CloudFormation = new AWS.CloudFormation();
-		const resp = await CloudFormation.describeStacks({ StackName: stackName }).promise();
+		const resp = await CloudFormation.describeStacks({
+			StackName: stackName
+		}).promise();
 		const stack = resp.Stacks[0];
 		const bucketNameOutput = stack.Outputs.find(
 			x => x.OutputKey === "ServerlessDeploymentBucketName"
 		);
 		return _.get(bucketNameOutput, "OutputValue");
 	}
-  
+
 	async getBucketNames(stackName) {
 		const CloudFormation = new AWS.CloudFormation();
 		const resp = await CloudFormation.describeStackResources({
@@ -73,13 +75,13 @@ class SlsRemoveCommand extends Command {
 		);
 		return s3Buckets.map(x => x.PhysicalResourceId);
 	}
-  
+
 	async emptyBucket(bucketName) {
 		const S3 = new AWS.S3();
 		const listResp = await S3.listObjectsV2({
 			Bucket: bucketName
 		}).promise();
-  
+
 		const keys = listResp.Contents.map(x => ({ Key: x.Key }));
 		await S3.deleteObjects({
 			Bucket: bucketName,
@@ -88,13 +90,13 @@ class SlsRemoveCommand extends Command {
 			}
 		}).promise();
 	}
-  
+
 	async deleteStack(stackName) {
 		const CloudFormation = new AWS.CloudFormation();
 		await CloudFormation.deleteStack({
 			StackName: stackName
 		}).promise();
-  
+
 		await CloudFormation.waitFor("stackDeleteComplete", {
 			StackName: stackName
 		}).promise();

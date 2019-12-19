@@ -28,28 +28,30 @@ class ReplaySqsDlqCommand extends Command {
 
 		this.log("all done!");
 	}
-  
+
 	async replay(dlqQueueUrl, queueUrl, concurrency) {
-		const promises = _.range(0, concurrency).map(() => this.runPoller(dlqQueueUrl, queueUrl));
+		const promises = _.range(0, concurrency).map(() =>
+			this.runPoller(dlqQueueUrl, queueUrl)
+		);
 		await Promise.all(promises);
 	}
-  
+
 	async runPoller(dlqQueueUrl, queueUrl) {
 		const AWS = getAWSSDK();
 		const SQS = new AWS.SQS();
 		let emptyReceives = 0;
 		let seenMessageIds = new Set();
-  
+
 		// eslint-disable-next-line no-constant-condition
 		while (true) {
 			const resp = await SQS.receiveMessage({
 				QueueUrl: dlqQueueUrl,
 				MaxNumberOfMessages: 10
 			}).promise();
-  
+
 			if (_.isEmpty(resp.Messages)) {
 				emptyReceives += 1;
-  
+
 				// if we don't receive anything 10 times in a row, assume the queue is empty
 				if (emptyReceives >= 10) {
 					break;
@@ -57,7 +59,7 @@ class ReplaySqsDlqCommand extends Command {
 					continue;
 				}
 			}
-  
+
 			emptyReceives = 0;
 			const sendEntries = resp.Messages.filter(
 				msg => !seenMessageIds.has(msg.MessageId)
@@ -70,7 +72,7 @@ class ReplaySqsDlqCommand extends Command {
 				QueueUrl: queueUrl,
 				Entries: sendEntries
 			}).promise();
-  
+
 			if (global.keep) {
 				resp.Messages.forEach(msg => {
 					seenMessageIds.add(msg.MessageId);

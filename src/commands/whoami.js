@@ -30,12 +30,12 @@ class WhoamiCommand extends Command {
 
 		this.log(`You are logged in as [${currentProfile[0]}]`);
 	}
-  
+
 	// Check if default === other profiles found
 	areEqual(profile, secondProfile) {
 		return (
 			profile.aws_access_key_id === secondProfile.aws_access_key_id &&
-      profile.aws_secret_access_key === secondProfile.aws_secret_access_key
+			profile.aws_secret_access_key === secondProfile.aws_secret_access_key
 		);
 	}
 }

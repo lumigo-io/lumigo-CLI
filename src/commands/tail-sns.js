@@ -21,14 +21,14 @@ class TailSnsCommand extends Command {
 
 		await this.pollSns(topicArn);
 	}
-  
+
 	async createQueue(topicArn) {
 		const AWS = getAWSSDK();
 		const SQS = new AWS.SQS();
-  
+
 		// eslint-disable-next-line no-unused-vars
 		const [_arn, _aws, _sns, region, accountId, _topicName] = topicArn.split(":");
-  
+
 		const queueName = `lumigo-cli-${new Date().getTime()}`;
 		const resp = await SQS.createQueue({
 			QueueName: queueName,
@@ -55,32 +55,32 @@ class TailSnsCommand extends Command {
 				})
 			}
 		}).promise();
-  
+
 		const queueUrl = resp.QueueUrl;
 		const queueArn = `arn:aws:sqs:${region}:${accountId}:${queueName}`;
-  
+
 		return {
 			queueUrl,
 			queueArn
 		};
 	}
-  
+
 	async deleteQueue(queueUrl) {
 		const AWS = getAWSSDK();
 		const SQS = new AWS.SQS();
-  
+
 		await SQS.deleteQueue({
 			QueueUrl: queueUrl
 		}).promise();
 	}
-  
+
 	async pollSns(topicArn) {
 		const { queueUrl, queueArn } = await this.createQueue(topicArn);
 		const subscriptionArn = await this.subscribeToSNS(topicArn, queueArn);
-  
+
 		this.log(`polling SNS topic [${topicArn}]...`);
 		this.log("press <any key> to stop");
-  
+
 		let polling = true;
 		const readline = require("readline");
 		readline.emitKeypressEvents(process.stdin);
@@ -89,14 +89,14 @@ class TailSnsCommand extends Command {
 		stdin.once("keypress", async () => {
 			polling = false;
 			this.log("stopping...");
-  
+
 			await this.unsubscribeFromSNS(subscriptionArn);
 			await this.deleteQueue(queueUrl);
 		});
-  
+
 		const AWS = getAWSSDK();
 		const SQS = new AWS.SQS();
-  
+
 		// eslint-disable-next-line no-constant-condition
 		while (polling) {
 			const resp = await SQS.receiveMessage({
@@ -105,11 +105,11 @@ class TailSnsCommand extends Command {
 				WaitTimeSeconds: 5,
 				MessageAttributeNames: ["All"]
 			}).promise();
-  
+
 			if (_.isEmpty(resp.Messages)) {
 				continue;
 			}
-  
+
 			resp.Messages.forEach(msg => {
 				const timestamp = new Date().toJSON().grey.bold.bgWhite;
 				const body = JSON.parse(msg.Body);
@@ -121,7 +121,7 @@ class TailSnsCommand extends Command {
 				};
 				this.log(timestamp, "\n", JSON.stringify(message, undefined, 2));
 			});
-  
+
 			await SQS.deleteMessageBatch({
 				QueueUrl: queueUrl,
 				Entries: resp.Messages.map(m => ({
@@ -130,14 +130,14 @@ class TailSnsCommand extends Command {
 				}))
 			}).promise();
 		}
-  
+
 		this.log("stopped");
 	}
-  
+
 	async subscribeToSNS(topicArn, queueArn) {
 		const AWS = getAWSSDK();
 		const SNS = new AWS.SNS();
-  
+
 		const resp = await SNS.subscribe({
 			TopicArn: topicArn,
 			Protocol: "sqs",
@@ -147,20 +147,20 @@ class TailSnsCommand extends Command {
 				RawMessageDelivery: "false"
 			}
 		}).promise();
-  
+
 		this.log("subscribed to SNS");
-  
+
 		return resp.SubscriptionArn;
 	}
-  
+
 	async unsubscribeFromSNS(subscriptionArn) {
 		const AWS = getAWSSDK();
 		const SNS = new AWS.SNS();
-  
+
 		await SNS.unsubscribe({
 			SubscriptionArn: subscriptionArn
 		}).promise();
-  
+
 		this.log("unsubscribed from SNS");
 	}
 }

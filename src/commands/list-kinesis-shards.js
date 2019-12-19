@@ -42,21 +42,22 @@ class ListKinesisShardsCommand extends Command {
 		this.log("status:", stream.status.green.bold);
 		this.show(stream.shards);
 	}
-  
+
 	async describeStream(streamName) {
 		const Kinesis = new AWS.Kinesis();
 		const resp = await Kinesis.describeStream({
 			StreamName: streamName
 		}).promise();
-  
+
 		return {
 			arn: resp.StreamDescription.StreamARN,
 			status: resp.StreamDescription.StreamStatus,
 			shards: resp.StreamDescription.Shards,
-			enhancedMonitoring: resp.StreamDescription.EnhancedMonitoring[0].ShardLevelMetrics
+			enhancedMonitoring:
+				resp.StreamDescription.EnhancedMonitoring[0].ShardLevelMetrics
 		};
 	}
-  
+
 	async getUsageMetrics(streamName, shardsIds) {
 		const CloudWatch = new AWS.CloudWatch();
 		const metricNames = [
@@ -68,17 +69,17 @@ class ListKinesisShardsCommand extends Command {
 			["WriteProvisionedThroughputExceeded", "Sum"],
 			["IteratorAgeMilliseconds", "Average"]
 		];
-  
+
 		const oneHourAgo = new Date();
 		oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-  
+
 		const queries = _.flatMap(shardsIds, shardId =>
 			metricNames.map(([metricName, stat]) => ({
 				Id:
-          metricName.toLowerCase() +
-          uuid()
-          	.replace(/-/g, "")
-          	.substr(0, 5),
+					metricName.toLowerCase() +
+					uuid()
+						.replace(/-/g, "")
+						.substr(0, 5),
 				Label: `${shardId}:${metricName}:${stat}`,
 				MetricStat: {
 					Metric: {
@@ -101,7 +102,7 @@ class ListKinesisShardsCommand extends Command {
 				ReturnData: true
 			}))
 		);
-  
+
 		// each GetMetricData request can send as many as 100 queries
 		const chunks = _.chunk(queries, 100);
 		const promises = chunks.map(async metricDataQueries => {
@@ -110,7 +111,7 @@ class ListKinesisShardsCommand extends Command {
 				EndTime: new Date(),
 				MetricDataQueries: metricDataQueries
 			}).promise();
-  
+
 			return resp.MetricDataResults.map(res => {
 				const [shardId, metricName, stat] = res.Label.split(":");
 				const dataPoint = res.Values[0] || 0;
@@ -131,7 +132,7 @@ class ListKinesisShardsCommand extends Command {
 				}
 			});
 		});
-  
+
 		// array of {shardId, metricName, dataPoint}
 		const results = _.flatMap(await Promise.all(promises));
 		const byShardId = _.groupBy(results, res => res.shardId);
@@ -143,12 +144,12 @@ class ListKinesisShardsCommand extends Command {
 			return _.fromPairs(kvp);
 		});
 	}
-  
+
 	show(shards) {
 		const table = new Table({
 			head: ["ShardId", "Details"]
 		});
-  
+
 		shards.forEach(x => {
 			const details = _.clone(x);
 			delete details.ShardId;
@@ -157,7 +158,7 @@ class ListKinesisShardsCommand extends Command {
 				JSON.stringify(details, undefined, 2)
 			]);
 		});
-  
+
 		this.log(table.toString());
 	}
 }

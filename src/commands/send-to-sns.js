@@ -28,24 +28,24 @@ class SendToSnsCommand extends Command {
 		this.log("all done!");
 		console.timeEnd("execution time");
 	}
-  
+
 	async sendMessages(filePath, topicArn, concurrency) {
 		const AWS = getAWSSDK();
 		const SNS = new AWS.SNS();
 		const queue = new PQueue({ concurrency });
-  
+
 		let processedCount = 0;
-  
+
 		const printProgress = (count, last = false) => {
 			process.stdout.clearLine();
 			process.stdout.cursorTo(0);
 			process.stdout.write(`sent ${count} messages`);
-  
+
 			if (last) {
 				process.stdout.write("\n");
 			}
 		};
-  
+
 		const publish = async line => {
 			try {
 				await SNS.publish({
@@ -57,13 +57,13 @@ class SendToSnsCommand extends Command {
 				this.log(line);
 			}
 		};
-  
+
 		const add = (line, last = false) => {
 			queue.add(() => publish(line));
 			processedCount += 1;
 			printProgress(processedCount, last);
 		};
-  
+
 		return new Promise(resolve => {
 			lineReader.eachLine(filePath, function(line, last, cb) {
 				if (_.isEmpty(line)) {

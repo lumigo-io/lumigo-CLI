@@ -32,23 +32,23 @@ class SendToSqsCommand extends Command {
 		this.log("all done!");
 		console.timeEnd("execution time");
 	}
-  
+
 	sendMessages(filePath, queueUrl) {
 		const AWS = getAWSSDK();
 		const SQS = new AWS.SQS();
-  
+
 		const flush = async batch => {
 			const entries = batch.map(x => ({
 				Id: uuid(),
 				MessageBody: x
 			}));
-  
+
 			try {
 				const resp = await SQS.sendMessageBatch({
 					QueueUrl: queueUrl,
 					Entries: entries
 				}).promise();
-  
+
 				if (!_.isEmpty(resp.Failed)) {
 					resp.Failed.forEach(m => {
 						this.log(`\n${m.Message.bold.bgWhite.red}`);
@@ -61,29 +61,29 @@ class SendToSqsCommand extends Command {
 				entries.forEach(x => this.log(x.MessageBody));
 			}
 		};
-  
+
 		let buffer = [];
 		let processedCount = 0;
-  
+
 		const canFitIntoBuffer = input => {
 			if (buffer.length >= MAX_LENGTH) {
 				return false;
 			}
-  
+
 			const totalPayload = _.sumBy(buffer, obj => obj.length) + input.length;
 			return totalPayload < MAX_PAYLOAD;
 		};
-  
+
 		const printProgress = (count, last = false) => {
 			process.stdout.clearLine();
 			process.stdout.cursorTo(0);
 			process.stdout.write(`sent ${count} messages`);
-  
+
 			if (last) {
 				process.stdout.write("\n");
 			}
 		};
-  
+
 		return new Promise(resolve => {
 			lineReader.eachLine(filePath, function(line, last, cb) {
 				if (_.isEmpty(line)) {
@@ -96,7 +96,7 @@ class SendToSqsCommand extends Command {
 					flush(buffer).then(() => {
 						processedCount += buffer.length;
 						printProgress(processedCount, true);
-  
+
 						cb();
 						resolve();
 					});
@@ -105,7 +105,7 @@ class SendToSqsCommand extends Command {
 						processedCount += buffer.length;
 						printProgress(processedCount);
 						buffer = [line];
-  
+
 						cb();
 					});
 				}

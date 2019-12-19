@@ -25,7 +25,7 @@ class FeedbackCommand extends Command {
 			.then(() => console.log("Command executed successfully"))
 			.catch(error => console.log(`Command failed with error: ${error}`));
 	}
-  
+
 	async createAuthenticatedOctokit() {
 		const answers = await inquirer.prompt([
 			{
