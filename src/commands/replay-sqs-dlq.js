@@ -8,7 +8,15 @@ const { checkVersion } = require("../lib/version-check");
 class ReplaySqsDlqCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ReplaySqsDlqCommand);
-		const { dlqQueueName, targetName, targetType, region, concurrency, profile, keep } = flags;
+		const {
+			dlqQueueName,
+			targetName,
+			targetType,
+			region,
+			concurrency,
+			profile,
+			keep
+		} = flags;
 
 		global.region = region;
 		global.profile = profile;
@@ -18,7 +26,7 @@ class ReplaySqsDlqCommand extends Command {
 
 		this.log(`finding the SQS DLQ [${dlqQueueName}] in [${region}]`);
 		const dlqQueueUrl = await getQueueUrl(dlqQueueName);
-    
+
 		let sendToTarget;
 		switch (targetType) {
 			case "SNS":
@@ -52,8 +60,8 @@ class ReplaySqsDlqCommand extends Command {
 	sendToSQS(queueUrl) {
 		const AWS = getAWSSDK();
 		const SQS = new AWS.SQS();
-    
-		return async (messages) => {
+
+		return async messages => {
 			const sendEntries = messages.map(msg => ({
 				Id: msg.MessageId,
 				MessageBody: msg.Body,
@@ -69,23 +77,24 @@ class ReplaySqsDlqCommand extends Command {
 	sendToSNS(topicArn) {
 		const AWS = getAWSSDK();
 		const SNS = new AWS.SNS();
-    
-		return async (messages) => {
-			const promises = messages.map(msg => 
+
+		return async messages => {
+			const promises = messages.map(msg =>
 				SNS.publish({
 					Message: msg.Body,
 					MessageAttributes: msg.MessageAttributes,
 					TopicArn: topicArn
-				}).promise());      
+				}).promise()
+			);
 			await Promise.all(promises);
 		};
 	}
-  
+
 	sendToKinesis(streamName) {
 		const AWS = getAWSSDK();
 		const Kinesis = new AWS.Kinesis();
-    
-		return async (messages) => {
+
+		return async messages => {
 			const records = messages.map(msg => ({
 				Data: msg.Body,
 				PartitionKey: msg.MessageId
@@ -181,7 +190,7 @@ ReplaySqsDlqCommand.flags = {
 		description: "whether to keep the replayed messages in the DLQ",
 		required: false,
 		default: false
-	}),
+	})
 };
 
 module.exports = ReplaySqsDlqCommand;
