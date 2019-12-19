@@ -1,13 +1,14 @@
 const _ = require("lodash");
 const { getAWSSDK } = require("../lib/aws");
 const { getQueueUrl } = require("../lib/sqs");
+const { getTopicArn } = require("../lib/sns");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 
 class ReplaySqsDlqCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ReplaySqsDlqCommand);
-		const { dlqQueueName, queueName, region, concurrency, profile, keep } = flags;
+		const { dlqQueueName, targetName, targetType, region, concurrency, profile, keep } = flags;
 
 		global.region = region;
 		global.profile = profile;
@@ -15,28 +16,69 @@ class ReplaySqsDlqCommand extends Command {
 
 		checkVersion();
 
-		this.log(`finding the queue [${dlqQueueName}] in [${region}]`);
+		this.log(`finding the SQS DLQ [${dlqQueueName}] in [${region}]`);
 		const dlqQueueUrl = await getQueueUrl(dlqQueueName);
-
-		this.log(`finding the queue [${queueName}] in [${region}]`);
-		const queueUrl = await getQueueUrl(queueName);
+    
+		let sendToTarget;
+		switch (targetType) {
+			case "SNS":
+				this.log(`finding the SNS topic [${targetName}] in [${region}]`);
+				sendToTarget = this.sendToSNS(await getTopicArn(targetName));
+				break;
+			default:
+				this.log(`finding the SQS queue [${targetName}] in [${region}]`);
+				sendToTarget = this.sendToSQS(await getQueueUrl(targetName));
+				break;
+		}
 
 		this.log(
-			`replaying events from [${dlqQueueUrl}] to [${queueUrl}] with ${concurrency} concurrent pollers`
+			`replaying events from [${dlqQueueUrl}] to [${targetType}:${targetName}] with ${concurrency} concurrent pollers`
 		);
-		this.replay(dlqQueueUrl, queueUrl, concurrency);
+		this.replay(dlqQueueUrl, concurrency, sendToTarget);
 
 		this.log("all done!");
 	}
 
-	async replay(dlqQueueUrl, queueUrl, concurrency) {
+	async replay(dlqQueueUrl, concurrency, sendToTarget) {
 		const promises = _.range(0, concurrency).map(() =>
-			this.runPoller(dlqQueueUrl, queueUrl)
+			this.runPoller(dlqQueueUrl, sendToTarget)
 		);
 		await Promise.all(promises);
 	}
 
-	async runPoller(dlqQueueUrl, queueUrl) {
+	sendToSQS(queueUrl) {
+		const AWS = getAWSSDK();
+		const SQS = new AWS.SQS();
+    
+		return async (messages) => {
+			const sendEntries = messages.map(msg => ({
+				Id: msg.MessageId,
+				MessageBody: msg.Body,
+				MessageAttributes: msg.MessageAttributes
+			}));
+			await SQS.sendMessageBatch({
+				QueueUrl: queueUrl,
+				Entries: sendEntries
+			}).promise();
+		};
+	}
+
+	sendToSNS(topicArn) {
+		const AWS = getAWSSDK();
+		const SNS = new AWS.SNS();
+    
+		return async (messages) => {
+			const promises = messages.map(msg => 
+				SNS.publish({
+					Message: msg.Body,
+					MessageAttributes: msg.MessageAttributes,
+					TopicArn: topicArn
+				}).promise());      
+			await Promise.all(promises);
+		};
+	}
+
+	async runPoller(dlqQueueUrl, sendToTarget) {
 		const AWS = getAWSSDK();
 		const SQS = new AWS.SQS();
 		let emptyReceives = 0;
@@ -61,22 +103,10 @@ class ReplaySqsDlqCommand extends Command {
 			}
 
 			emptyReceives = 0;
-			const sendEntries = resp.Messages.filter(
-				msg => !seenMessageIds.has(msg.MessageId)
-			).map(msg => ({
-				Id: msg.MessageId,
-				MessageBody: msg.Body,
-				MessageAttributes: msg.MessageAttributes
-			}));
-			await SQS.sendMessageBatch({
-				QueueUrl: queueUrl,
-				Entries: sendEntries
-			}).promise();
+			await sendToTarget(resp.Messages);
 
 			if (global.keep) {
-				resp.Messages.forEach(msg => {
-					seenMessageIds.add(msg.MessageId);
-				});
+				resp.Messages.forEach(msg => seenMessageIds.add(msg.MessageId));
 			} else {
 				const deleteEntries = resp.Messages.map(msg => ({
 					Id: msg.MessageId,
@@ -99,10 +129,17 @@ ReplaySqsDlqCommand.flags = {
 		description: "name of the SQS DLQ queue, e.g. task-queue-dlq-dev",
 		required: true
 	}),
-	queueName: flags.string({
+	targetName: flags.string({
 		char: "n",
-		description: "name of the SQS queue, e.g. task-queue-dev",
+		description: "name of the target SQS queue/SNS topic, e.g. task-queue-dev",
 		required: true
+	}),
+	targetType: flags.string({
+		char: "t",
+		description: "available values are SQS [default] and SNS",
+		required: false,
+		options: ["SQS", "SNS"],
+		default: "SQS"
 	}),
 	region: flags.string({
 		char: "r",
@@ -125,7 +162,7 @@ ReplaySqsDlqCommand.flags = {
 		description: "whether to keep the replayed messages in the DLQ",
 		required: false,
 		default: false
-	})
+	}),
 };
 
 module.exports = ReplaySqsDlqCommand;
