@@ -25,6 +25,9 @@ class ReplaySqsDlqCommand extends Command {
 				this.log(`finding the SNS topic [${targetName}] in [${region}]`);
 				sendToTarget = this.sendToSNS(await getTopicArn(targetName));
 				break;
+			case "Kinesis":
+				sendToTarget = this.sendToKinesis(targetName);
+				break;
 			default:
 				this.log(`finding the SQS queue [${targetName}] in [${region}]`);
 				sendToTarget = this.sendToSQS(await getQueueUrl(targetName));
@@ -75,6 +78,22 @@ class ReplaySqsDlqCommand extends Command {
 					TopicArn: topicArn
 				}).promise());      
 			await Promise.all(promises);
+		};
+	}
+  
+	sendToKinesis(streamName) {
+		const AWS = getAWSSDK();
+		const Kinesis = new AWS.Kinesis();
+    
+		return async (messages) => {
+			const records = messages.map(msg => ({
+				Data: msg.Body,
+				PartitionKey: msg.MessageId
+			}));
+			await Kinesis.putRecords({
+				StreamName: streamName,
+				Records: records
+			}).promise();
 		};
 	}
 
@@ -136,9 +155,9 @@ ReplaySqsDlqCommand.flags = {
 	}),
 	targetType: flags.string({
 		char: "t",
-		description: "available values are SQS [default] and SNS",
+		description: "valid values are SQS [default], SNS, and Kinesis",
 		required: false,
-		options: ["SQS", "SNS"],
+		options: ["SQS", "SNS", "Kinesis"],
 		default: "SQS"
 	}),
 	region: flags.string({

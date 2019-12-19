@@ -13,6 +13,8 @@ const mockPublish = jest.fn();
 AWS.SNS.prototype.publish = mockPublish;
 const mockListTopics = jest.fn();
 AWS.SNS.prototype.listTopics = mockListTopics;
+const mockPutRecords = jest.fn();
+AWS.Kinesis.prototype.putRecords = mockPutRecords;
 
 beforeEach(() => {
 	mockListQueues.mockReset();
@@ -20,6 +22,7 @@ beforeEach(() => {
 	mockSendMessageBatch.mockReset();
 	mockDeleteMessageBatch.mockReset();
 	mockPublish.mockReset();
+	mockPutRecords.mockReset();
   
 	mockSendMessageBatch.mockReturnValue({
 		promise: () => Promise.resolve()
@@ -30,6 +33,10 @@ beforeEach(() => {
 	});
   
 	mockPublish.mockReturnValue({
+		promise: () => Promise.resolve()
+	});
+  
+	mockPutRecords.mockReturnValue({
 		promise: () => Promise.resolve()
 	});
 });
@@ -113,6 +120,28 @@ describe("replay-sqs-dlq", () => {
 					expect(req.TopicArn).to.equal(topicArn);
 					expect(req.Message).to.match("message ");
 				});
+        
+				expect(mockDeleteMessageBatch.mock.calls).to.have.lengthOf(1);
+				const [delReq] = mockDeleteMessageBatch.mock.calls[0];
+				expect(delReq.QueueUrl).to.equal(dlqUrl);
+				expect(delReq.Entries).to.have.lengthOf(2);
+        
+				// 10 poller * 10 empty receives + 1 non-empty receive = 101 calls
+				expect(mockReceiveMessage.mock.calls).to.have.lengthOf(101);
+			});
+      
+		test
+			.stdout()
+			.command([...commandArgs, "-t", "Kinesis"])
+			.it("replays them to a Kinesis stream", ctx => {
+				expect(ctx.stdout).to.contain("finding the SQS DLQ [queue-dlq-dev] in [us-east-1]");
+				expect(ctx.stdout).to.contain(`replaying events from [${dlqUrl}] to [Kinesis:queue-dev] with 10 concurrent pollers`);
+				expect(ctx.stdout).to.contain("all done!");
+
+				expect(mockPutRecords.mock.calls).to.have.lengthOf(1);
+				const [req] = mockPutRecords.mock.calls[0];
+				expect(req.StreamName).to.equal("queue-dev");
+				expect(req.Records).to.have.length(2);
         
 				expect(mockDeleteMessageBatch.mock.calls).to.have.lengthOf(1);
 				const [delReq] = mockDeleteMessageBatch.mock.calls[0];
