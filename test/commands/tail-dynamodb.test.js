@@ -42,7 +42,7 @@ describe("tail-dynamodb", () => {
 		test
 			.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
-			.exit()
+			.exit(0)
 			.it("reports the table has no stream", async (ctx) => {
 				expect(ctx.stdout).to.contain("table doesn't have a stream, exiting...");
 			});
@@ -61,6 +61,7 @@ describe("tail-dynamodb", () => {
 		test
 			.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("displays messages in the console", async (ctx) => {
 				expect(ctx.stdout).to.contain(`checking DynamoDB stream [${streamArn}] in [us-east-1]`);
 				expect(ctx.stdout).to.contain("polling DynamoDB stream for table [users-dev] (1 shards)...");
@@ -84,6 +85,7 @@ describe("tail-dynamodb", () => {
 		test
 			.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
+			.exit(0)
 			.it("displays messages in the console", ctx => {
 				expect(ctx.stdout).to.contain("polling DynamoDB stream for table [users-dev] (2 shards)...");
 				expect(ctx.stdout).to.contain("message 1");

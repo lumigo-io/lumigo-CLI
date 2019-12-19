@@ -23,6 +23,8 @@ class TailSqsCommand extends Command {
 		this.log(`polling SQS queue [${queueUrl}]...`);
 		this.log("press <any key> to stop");
 		await this.pollSqs(queueUrl);
+    
+		this.exit(0);
 	}
 
 	async pollSqs(queueUrl) {
