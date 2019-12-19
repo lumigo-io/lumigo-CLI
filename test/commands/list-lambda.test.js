@@ -6,13 +6,9 @@ AWS.CloudWatch.prototype.getMetricData = mockGetMetricData;
 const mockListFunctions = jest.fn();
 AWS.Lambda.prototype.listFunctions = mockListFunctions;
 
-const consoleLog = jest.fn();
-console.log = consoleLog;
-
 afterEach(() => {
 	mockGetMetricData.mockReset();
 	mockListFunctions.mockReset();
-	consoleLog.mockReset();
 });
 
 describe("list-lambda", () => {
@@ -29,25 +25,18 @@ describe("list-lambda", () => {
 		test
 			.stdout()
 			.command(["list-lambda"])
-			.it("deems the function as inactive", () => {
-				const calls = consoleLog.mock.calls;
-				expect(calls).to.have.length(1);
-        
-				const [[table]] = calls;
-				expect(table).to.contain("function-a");
-				expect(table).to.contain("128"); // memory
-				expect(table).to.contain("1.00 KB"); // code size
-				expect(table).to.contain("a few seconds ago"); // last modified
-				expect(table).to.contain("inactive for 30 days"); // last used since there are no timestamp
+			.it("deems the function as inactive", (ctx) => {
+				expect(ctx.stdout).to.contain("function-a");
+				expect(ctx.stdout).to.contain("128"); // memory
+				expect(ctx.stdout).to.contain("1.00 KB"); // code size
+				expect(ctx.stdout).to.contain("a few seconds ago"); // last modified
+				expect(ctx.stdout).to.contain("inactive for 30 days"); // last used since there are no timestamp
 			});
     
 		test
 			.stdout()
 			.command(["list-lambda"])
 			.it("calls all regions", () => {
-				const calls = consoleLog.mock.calls;
-				expect(calls).to.have.length(1);
-        
 				expect(mockListFunctions.mock.calls).to.have.length(16);				
 			});
     
@@ -55,20 +44,14 @@ describe("list-lambda", () => {
 			.stdout()
 			.command(["list-lambda", "-r", "us-east-1"])
 			.it("calls only one region", () => {
-				const calls = consoleLog.mock.calls;
-				expect(calls).to.have.length(1);
-        
 				expect(mockListFunctions.mock.calls).to.have.length(1);
 			});
     
 		test
 			.stdout()
 			.command(["list-lambda", "-r", "us-east-1", "-i"])
-			.it("includes the inactive function", () => {
-				expect(consoleLog.mock.calls).to.have.length(1);
-				const [[table]] = consoleLog.mock.calls;
-        
-				expect(table).to.contain("function-a");
+			.it("includes the inactive function", (ctx) => {
+				expect(ctx.stdout).to.contain("function-a");
 			});
 	});
   
@@ -85,26 +68,19 @@ describe("list-lambda", () => {
 		test
 			.stdout()
 			.command(["list-lambda"])
-			.it("does not deem the function as inactive", () => {
-				const calls = consoleLog.mock.calls;
-				expect(calls).to.have.length(1);
-        
-				const [[table]] = calls;
-				expect(table).to.contain("function-a");
-				expect(table).to.contain("128"); // memory
-				expect(table).to.contain("1.00 KB"); // code size
-				expect(table).to.contain("a few seconds ago"); // last modified
-				expect(table).to.not.contain("inactive for 30 days");
+			.it("does not deem the function as inactive", (ctx) => {
+				expect(ctx.stdout).to.contain("function-a");
+				expect(ctx.stdout).to.contain("128"); // memory
+				expect(ctx.stdout).to.contain("1.00 KB"); // code size
+				expect(ctx.stdout).to.contain("a few seconds ago"); // last modified
+				expect(ctx.stdout).to.not.contain("inactive for 30 days");
 			});
       
 		test
 			.stdout()
 			.command(["list-lambda", "-r", "us-east-1", "-i"])
-			.it("does not include the inactive function", () => {
-				expect(consoleLog.mock.calls).to.have.length(1);
-				const [[table]] = consoleLog.mock.calls;
-        
-				expect(table).to.not.contain("function-a");
+			.it("does not include the inactive function", (ctx) => {
+				expect(ctx.stdout).to.not.contain("function-a");
 			});
 	});
   
@@ -122,14 +98,11 @@ describe("list-lambda", () => {
 		test
 			.stdout()
 			.command(["list-lambda", "-r", "us-east-1"])
-			.it("recurses and fetches all functions", () => {
+			.it("recurses and fetches all functions", (ctx) => {
 				expect(mockListFunctions.mock.calls).to.have.length(2);
 
-				expect(consoleLog.mock.calls).to.have.length(1);
-				const [[table]] = consoleLog.mock.calls;
-        
-				expect(table).to.contain("function-a");
-				expect(table).to.contain("function-b");
+				expect(ctx.stdout).to.contain("function-a");
+				expect(ctx.stdout).to.contain("function-b");
 			});
 	});
 });

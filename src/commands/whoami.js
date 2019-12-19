@@ -20,7 +20,7 @@ class WhoamiCommand extends Command {
 
 		const currentProfile = Object.keys(profiles)
 			.filter(name => name !== "default")
-			.filter(name => areEqual(profiles[name], profiles["default"]));
+			.filter(name => this.areEqual(profiles[name], profiles["default"]));
 
 		if (!currentProfile || !currentProfile.length) {
 			this.log("It appears you are not using any of the named profiles");
@@ -30,16 +30,16 @@ class WhoamiCommand extends Command {
 
 		this.log(`You are logged in as [${currentProfile[0]}]`);
 	}
+
+	// Check if default === other profiles found
+	areEqual(profile, secondProfile) {
+		return (
+			profile.aws_access_key_id === secondProfile.aws_access_key_id &&
+			profile.aws_secret_access_key === secondProfile.aws_secret_access_key
+		);
+	}
 }
 
 WhoamiCommand.description = "See your current AWS profile name";
-
-// Check if default === other profiles found
-function areEqual(profile, secondProfile) {
-	return (
-		profile.aws_access_key_id === secondProfile.aws_access_key_id &&
-		profile.aws_secret_access_key === secondProfile.aws_secret_access_key
-	);
-}
 
 module.exports = WhoamiCommand;

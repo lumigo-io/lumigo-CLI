@@ -1,4 +1,3 @@
-const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
@@ -21,16 +20,11 @@ AWS.SQS.prototype.receiveMessage = mockReceiveMessage;
 const mockOpenStdin = jest.fn();
 process.openStdin = mockOpenStdin;
 process.stdin.setRawMode = jest.fn();
-process.exit = jest.fn();
-
-const consoleLog = jest.fn();
-console.log = consoleLog;
 
 beforeEach(() => {
 	mockListTopics.mockReset();
 	mockSubscribe.mockReset();
 	mockUnsubscribe.mockReset();
-	consoleLog.mockReset();
 	mockOpenStdin.mockReset();
 	mockCreateQueue.mockReset();
 	mockDeleteQueue.mockReset();
@@ -100,10 +94,9 @@ describe("tail-sns", () => {
 		test
 			.stdout()
 			.command(["tail-sns", "-n", "my-topic-dev", "-r", "us-east-1"])
-			.it("fetches and prints the messages", () => {
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("my test message");
-				expect(logMessages).to.contain("message 1");
+			.it("fetches and prints the messages", (ctx) => {
+				expect(ctx.stdout).to.contain("my test message");
+				expect(ctx.stdout).to.contain("message 1");
 			});
 	});
 });

@@ -10,16 +10,10 @@ AWS.Kinesis.prototype.listStreams = mockListStreams;
 const mockDescribeStreams = jest.fn();
 AWS.Kinesis.prototype.describeStream = mockDescribeStreams;
 
-const consoleLog = jest.fn();
-console.log = consoleLog;
-
-
-
 afterEach(() => {
 	mockGetMetricData.mockReset();
 	mockListStreams.mockReset();
 	mockDescribeStreams.mockReset();
-	consoleLog.mockReset();
 });
 
 describe("list-kinesis-streams", () => {
@@ -63,13 +57,11 @@ describe("list-kinesis-streams", () => {
 
 	test.stdout()
 		.command(["list-kinesis-streams", "-r", "us-east-1"])
-		.it("calls only one region", () => {
+		.it("calls only one region", (ctx) => {
 			expect(mockListStreams.mock.calls).to.have.length(1);
 
-			const [table] = consoleLog.mock.calls[1];
-
-			expect(table).to.contain("stream-a");
-			expect(table).to.contain("50.00% (MB)");
+			expect(ctx.stdout).to.contain("stream-a");
+			expect(ctx.stdout).to.contain("50.00% (MB)");
 		});
 });
 

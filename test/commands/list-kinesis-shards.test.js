@@ -6,13 +6,9 @@ AWS.Kinesis.prototype.describeStream = mockDescribeStream;
 const mockGetMetricData = jest.fn();
 AWS.CloudWatch.prototype.getMetricData = mockGetMetricData;
 
-const consoleLog = jest.fn();
-console.log = consoleLog;
-
 afterEach(() => {
 	mockDescribeStream.mockReset();
 	mockGetMetricData.mockReset();
-	consoleLog.mockReset();
 });
 
 describe("list-kinesis-shards", () => {

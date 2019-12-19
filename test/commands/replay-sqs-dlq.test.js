@@ -10,8 +10,6 @@ AWS.SQS.prototype.sendMessageBatch = mockSendMessageBatch;
 const mockDeleteMessageBatch = jest.fn();
 AWS.SQS.prototype.deleteMessageBatch = mockDeleteMessageBatch;
 
-console.log = jest.fn();
-
 beforeEach(() => {
 	mockListQueues.mockReset();
 	mockReceiveMessage.mockReset();

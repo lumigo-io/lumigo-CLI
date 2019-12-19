@@ -22,7 +22,7 @@ class SwitchProfileCommand extends Command {
 		const profileChoices = Object.keys(profiles)
 			.filter(name => name !== "default")
 			.map(name =>
-				areEqual(profiles[name], profiles["default"])
+				this.areEqual(profiles[name], profiles["default"])
 					? `${name} (current default profile)`
 					: name
 			);
@@ -49,16 +49,16 @@ class SwitchProfileCommand extends Command {
 			}
 		}
 	}
+
+	// Check if default === other profiles found
+	areEqual(profile, secondProfile) {
+		return (
+			profile.aws_access_key_id === secondProfile.aws_access_key_id &&
+			profile.aws_secret_access_key === secondProfile.aws_secret_access_key
+		);
+	}
 }
 
 SwitchProfileCommand.description = "Switch AWS profiles";
-
-// Check if default === other profiles found
-function areEqual(profile, secondProfile) {
-	return (
-		profile.aws_access_key_id === secondProfile.aws_access_key_id &&
-		profile.aws_secret_access_key === secondProfile.aws_secret_access_key
-	);
-}
 
 module.exports = SwitchProfileCommand;
