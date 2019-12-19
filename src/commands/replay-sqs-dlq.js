@@ -82,10 +82,11 @@ class ReplaySqsDlqCommand extends Command {
 			const promises = messages.map(async msg => {
 				const msgAttrPairs = _.toPairs(msg.MessageAttributes);
 				const supportedAttrs = msgAttrPairs
-				  // eslint-disable-next-line no-unused-vars
+					// eslint-disable-next-line no-unused-vars
 					.filter(([key, value]) => value.DataType === "String")
 					.map(([key, { DataType, StringValue }]) => [
-						key, { DataType, StringValue }
+						key,
+						{ DataType, StringValue }
 					]);
 				const messageAttributes = _.fromPairs(supportedAttrs);
 				await SNS.publish({
@@ -94,7 +95,7 @@ class ReplaySqsDlqCommand extends Command {
 					TopicArn: topicArn
 				}).promise();
 			});
-      
+
 			await Promise.all(promises);
 		};
 	}
