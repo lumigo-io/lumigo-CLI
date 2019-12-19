@@ -13,9 +13,6 @@ AWS.Lambda.prototype.getFunctionConfiguration = mockGetFunctionConfiguration;
 const mockListProvisionedConcurrencyConfigs = jest.fn();
 AWS.Lambda.prototype.listProvisionedConcurrencyConfigs = mockListProvisionedConcurrencyConfigs;
 
-const consoleLog = jest.fn();
-console.log = consoleLog;
-
 const command = "analyze-lambda-cold-starts";
 
 beforeEach(() => {
@@ -36,7 +33,6 @@ afterEach(() => {
 	mockListFunctions.mockReset();
 	mockGetFunctionConfiguration.mockReset();
 	mockListProvisionedConcurrencyConfigs.mockReset();
-	consoleLog.mockReset();
 });
 
 describe("analyze-lambda-cold-starts", () => {
@@ -51,9 +47,8 @@ describe("analyze-lambda-cold-starts", () => {
 		test
 			.stdout()
 			.command([command])
-			.it("deems the function as no cold starts", () => {
-				const logs = collectLogMessages();
-				const rows = logs.split("\n").filter(row => row.startsWith("│") && !row.includes("region"));
+			.it("deems the function as no cold starts", (ctx) => {
+				const rows = ctx.stdout.split("\n").filter(row => row.startsWith("│") && !row.includes("region"));
 				rows.forEach(row => {
 					const fields = row.split("│").map(x => x.trim()).filter(x => !_.isEmpty(x));
 					// region, name, runtime, memory, count (5th column), ...
@@ -109,29 +104,27 @@ describe("analyze-lambda-cold-starts", () => {
 		test
 			.stdout()
 			.command([command, "-r", "us-east-1"])
-			.it("calculates the function cold start stats for a region", () => {
-				const logs = collectLogMessages();
-				expect(logs).to.contain("us-east-1: running CloudWatch Insights query against 1 log groups");
-				expect(logs).to.contain("us-east-1: query returned 1 rows in total");
-				expect(logs).to.contain("function");
-				expect(logs).to.contain("128"); // memory
-				expect(logs).to.contain("2");   // cold starts
-				expect(logs).to.contain("142"); // avg init
-				expect(logs).to.contain("251"); // max init
+			.it("calculates the function cold start stats for a region", (ctx) => {
+				expect(ctx.stdout).to.contain("us-east-1: running CloudWatch Insights query against 1 log groups");
+				expect(ctx.stdout).to.contain("us-east-1: query returned 1 rows in total");
+				expect(ctx.stdout).to.contain("function");
+				expect(ctx.stdout).to.contain("128"); // memory
+				expect(ctx.stdout).to.contain("2");   // cold starts
+				expect(ctx.stdout).to.contain("142"); // avg init
+				expect(ctx.stdout).to.contain("251"); // max init
 			});
     
 		test
 			.stdout()
 			.command([command, "-r", "us-east-1", "-n", "function"])
-			.it("calculates the function cold start stats for a single function", () => {
-				const logs = collectLogMessages();
-				expect(logs).to.contain("us-east-1: running CloudWatch Insights query against 1 log groups");
-				expect(logs).to.contain("us-east-1: query returned 1 rows in total");
-				expect(logs).to.contain("function");
-				expect(logs).to.contain("128"); // memory
-				expect(logs).to.contain("2");   // cold starts
-				expect(logs).to.contain("142"); // avg init
-				expect(logs).to.contain("251"); // max init
+			.it("calculates the function cold start stats for a single function", (ctx) => {				
+				expect(ctx.stdout).to.contain("us-east-1: running CloudWatch Insights query against 1 log groups");
+				expect(ctx.stdout).to.contain("us-east-1: query returned 1 rows in total");
+				expect(ctx.stdout).to.contain("function");
+				expect(ctx.stdout).to.contain("128"); // memory
+				expect(ctx.stdout).to.contain("2");   // cold starts
+				expect(ctx.stdout).to.contain("142"); // avg init
+				expect(ctx.stdout).to.contain("251"); // max init
 			});
 	});
   
@@ -152,16 +145,15 @@ describe("analyze-lambda-cold-starts", () => {
 		test
 			.stdout()
 			.command([command, "-r", "us-east-1"])
-			.it("recurses and fetches all functions", () => {
+			.it("recurses and fetches all functions", (ctx) => {
 				expect(mockListFunctions.mock.calls).to.have.length(2);
 
-				const logs = collectLogMessages();
-				expect(logs).to.contain("us-east-1: running CloudWatch Insights query against 2 log groups");
-				expect(logs).to.contain("us-east-1: query returned 1 rows in total");
-				expect(logs).to.contain("function-a");
-				expect(logs).to.contain("function-b");
+				expect(ctx.stdout).to.contain("us-east-1: running CloudWatch Insights query against 2 log groups");
+				expect(ctx.stdout).to.contain("us-east-1: query returned 1 rows in total");
+				expect(ctx.stdout).to.contain("function-a");
+				expect(ctx.stdout).to.contain("function-b");
         
-				const rows = logs.split("\n").filter(row => row.startsWith("│") && !row.includes("region"));
+				const rows = ctx.stdout.split("\n").filter(row => row.startsWith("│") && !row.includes("region"));
 				const rowFuncA = rows.find(x => x.includes("function-a"));
 				const rowFuncB = rows.find(x => x.includes("function-b"));
         
@@ -203,11 +195,9 @@ describe("analyze-lambda-cold-starts", () => {
 		test
 			.stdout()
 			.command([command, "-r", "us-east-1"])
-			.it("retries after delay", () => {
-				expect(mockGetQueryResults.mock.calls).to.have.lengthOf(2);
-        
-				const logs = collectLogMessages();
-				expect(logs).to.contain("function-a");
+			.it("retries after delay", (ctx) => {
+				expect(mockGetQueryResults.mock.calls).to.have.lengthOf(2);    
+				expect(ctx.stdout).to.contain("function-a");
 			});
 	});
   
@@ -224,10 +214,6 @@ describe("analyze-lambda-cold-starts", () => {
 			});
 	});
 });
-
-function collectLogMessages () {
-	return _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-}
 
 function givenGetQueryResultsReturns (status, results) {
 	mockGetQueryResults.mockReturnValueOnce({

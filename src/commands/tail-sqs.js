@@ -22,9 +22,56 @@ class TailSqsCommand extends Command {
 
 		this.log(`polling SQS queue [${queueUrl}]...`);
 		this.log("press <any key> to stop");
-		await pollSqs(queueUrl);
-
-		process.exit(0);
+		await this.pollSqs(queueUrl);
+	}
+  
+	async pollSqs(queueUrl) {
+		const AWS = getAWSSDK();
+		const SQS = new AWS.SQS();
+  
+		let polling = true;
+		const readline = require("readline");
+		readline.emitKeypressEvents(process.stdin);
+		process.stdin.setRawMode(true);
+		const stdin = process.openStdin();
+		stdin.once("keypress", () => {
+			polling = false;
+			this.log("stopping...");
+			seenMessageIds = new Set();
+		});
+  
+		// eslint-disable-next-line no-constant-condition
+		while (polling) {
+			const resp = await SQS.receiveMessage({
+				QueueUrl: queueUrl,
+				MaxNumberOfMessages: 10,
+				WaitTimeSeconds: 5,
+				MessageAttributeNames: ["All"]
+			}).promise();
+  
+			if (_.isEmpty(resp.Messages)) {
+				continue;
+			}
+  
+			resp.Messages.forEach(msg => {
+				if (!seenMessageIds.has(msg.MessageId)) {
+					const timestamp = new Date().toJSON().grey.bold.bgWhite;
+					const message = {
+						Body: msg.Body,
+						MessageAttributes: msg.MessageAttributes
+					};
+					this.log(timestamp, "\n", JSON.stringify(message, undefined, 2));
+					seenMessageIds.add(msg.MessageId);
+  
+					// only remember 100000 messages
+					if (seenMessageIds.length > 100000) {
+						seenMessageIds.delete(msg.MessageId);
+					}
+				}
+			});
+		}
+  
+		this.log("stopped");
 	}
 }
 
@@ -45,55 +92,6 @@ TailSqsCommand.flags = {
 		description: "AWS CLI profile name",
 		required: false
 	})
-};
-
-const pollSqs = async queueUrl => {
-	const AWS = getAWSSDK();
-	const SQS = new AWS.SQS();
-
-	let polling = true;
-	const readline = require("readline");
-	readline.emitKeypressEvents(process.stdin);
-	process.stdin.setRawMode(true);
-	const stdin = process.openStdin();
-	stdin.once("keypress", () => {
-		polling = false;
-		console.log("stopping...");
-		seenMessageIds = new Set();
-	});
-
-	// eslint-disable-next-line no-constant-condition
-	while (polling) {
-		const resp = await SQS.receiveMessage({
-			QueueUrl: queueUrl,
-			MaxNumberOfMessages: 10,
-			WaitTimeSeconds: 5,
-			MessageAttributeNames: ["All"]
-		}).promise();
-
-		if (_.isEmpty(resp.Messages)) {
-			continue;
-		}
-
-		resp.Messages.forEach(msg => {
-			if (!seenMessageIds.has(msg.MessageId)) {
-				const timestamp = new Date().toJSON().grey.bold.bgWhite;
-				const message = {
-					Body: msg.Body,
-					MessageAttributes: msg.MessageAttributes
-				};
-				console.log(timestamp, "\n", JSON.stringify(message, undefined, 2));
-				seenMessageIds.add(msg.MessageId);
-
-				// only remember 100000 messages
-				if (seenMessageIds.length > 100000) {
-					seenMessageIds.delete(msg.MessageId);
-				}
-			}
-		});
-	}
-
-	console.log("stopped");
 };
 
 module.exports = TailSqsCommand;

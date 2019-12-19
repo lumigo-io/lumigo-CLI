@@ -7,17 +7,14 @@ AWS.SNS.prototype.listTopics = mockListTopics;
 const mockPublish = jest.fn();
 AWS.SNS.prototype.publish = mockPublish;
 
-const consoleLog = jest.fn();
-console.log = consoleLog;
-console.time = consoleLog;
-console.timeEnd = consoleLog;
+console.time = jest.fn();
+console.timeEnd = jest.fn();
 process.stdout.clearLine = jest.fn();
 process.stdout.cursorTo = jest.fn();
 
 beforeEach(() => {
 	mockListTopics.mockReset();
 	mockPublish.mockReset();
-	consoleLog.mockReset();
   
 	mockListTopics.mockReturnValue({
 		promise: () => Promise.resolve({
@@ -69,8 +66,7 @@ describe("send-to-sns", () => {
 					.map(x => x.Message);
 				expect(messages).to.have.lengthOf(5);
         
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("boom!");
+				expect(ctx.stdout).to.contain("boom!");
 			});
 	});
 });

@@ -1,4 +1,3 @@
-const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 
@@ -9,16 +8,12 @@ AWS.Lambda.prototype.listFunctions = mockListFunctions;
 const mockGetFunctionConfiguration = jest.fn();
 AWS.Lambda.prototype.getFunctionConfiguration = mockGetFunctionConfiguration;
 
-const consoleLog = jest.fn();
-console.log = consoleLog;
-
 const command = "analyze-lambda-cost";
 
 afterEach(() => {
 	mockGetMetricData.mockReset();
 	mockListFunctions.mockReset();
 	mockGetFunctionConfiguration.mockReset();
-	consoleLog.mockReset();
 });
 
 describe("analyze-lambda-cost", () => {
@@ -36,20 +31,17 @@ describe("analyze-lambda-cost", () => {
 		test
 			.stdout()
 			.command([command])
-			.it("deems the function as no cost", () => {
-				const calls = consoleLog.mock.calls;
-				const [table] = calls[0];
-				expect(table).to.contain("function-a");
-				expect(table).to.contain("128"); // memory
-				expect(table).to.contain("-"); // cost
-				expect(table).to.contain("0"); // invocation count
+			.it("deems the function as no cost", (ctx) => {
+				expect(ctx.stdout).to.contain("function-a");
+				expect(ctx.stdout).to.contain("128"); // memory
+				expect(ctx.stdout).to.contain("-"); // cost
+				expect(ctx.stdout).to.contain("0"); // invocation count
 			});
     
 		test
 			.stdout()
 			.command([command])
 			.it("calls all regions", () => {
-				expect(consoleLog.mock.calls).to.have.length.greaterThan(1);
 				expect(mockListFunctions.mock.calls).to.have.length(16);
 			});
     
@@ -57,7 +49,6 @@ describe("analyze-lambda-cost", () => {
 			.stdout()
 			.command([command, "-r", "us-east-1"])
 			.it("calls only one region", () => {
-				expect(consoleLog.mock.calls).to.have.length.greaterThan(1);
 				expect(mockListFunctions.mock.calls).to.have.length(1);
 			});
     
@@ -65,7 +56,6 @@ describe("analyze-lambda-cost", () => {
 			.stdout()
 			.command([command, "-r", "us-east-1", "-n", "function-a"])
 			.it("calls only one function", () => {
-				expect(consoleLog.mock.calls).to.have.length.greaterThan(1);
 				expect(mockListFunctions.mock.calls).to.be.empty;
 				expect(mockGetFunctionConfiguration.mock.calls).to.have.lengthOf(1);
 			});
@@ -73,7 +63,7 @@ describe("analyze-lambda-cost", () => {
 		test
 			.stdout()
 			.command([command, "-r", "us-east-1", "-n", "function-a", "-d", "6"])
-			.it("only checks the last 6 days", () => {
+			.it("only checks the last 6 days", (ctx) => {
 				expect(mockGetMetricData.mock.calls).to.have.lengthOf(1);
 				const [req] = mockGetMetricData.mock.calls[0];
         
@@ -81,8 +71,7 @@ describe("analyze-lambda-cost", () => {
 				const oneDay = 1000*60*60*24;
 				expect(Math.round(timeDiff / oneDay)).to.equal(6);
         
-				const logs = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logs).to.contain("6 day ($)");
+				expect(ctx.stdout).to.contain("6 day ($)");
 			});
 	});
   
@@ -100,13 +89,12 @@ describe("analyze-lambda-cost", () => {
 		test
 			.stdout()
 			.command([command])
-			.it("calculates the function's cost", () => {
-				const [table] = consoleLog.mock.calls[0];
-				expect(table).to.contain("function");
-				expect(table).to.contain("128"); // memory
-				expect(table).to.contain("1000000"); // invocation
-				expect(table).to.contain("0.0000004080"); // cost per invocation
-				expect(table).to.contain("0.4080000000"); // total cost
+			.it("calculates the function's cost", (ctx) => {
+				expect(ctx.stdout).to.contain("function");
+				expect(ctx.stdout).to.contain("128"); // memory
+				expect(ctx.stdout).to.contain("1000000"); // invocation
+				expect(ctx.stdout).to.contain("0.0000004080"); // cost per invocation
+				expect(ctx.stdout).to.contain("0.4080000000"); // total cost
 			});
 	});
   
@@ -124,13 +112,11 @@ describe("analyze-lambda-cost", () => {
 		test
 			.stdout()
 			.command([command, "-r", "us-east-1"])
-			.it("recurses and fetches all functions", () => {
+			.it("recurses and fetches all functions", (ctx) => {
 				expect(mockListFunctions.mock.calls).to.have.length(2);
 
-				const [table] = consoleLog.mock.calls[0];
-        
-				expect(table).to.contain("function-a");
-				expect(table).to.contain("function-b");
+				expect(ctx.stdout).to.contain("function-a");
+				expect(ctx.stdout).to.contain("function-b");
 			});
 	});
 });

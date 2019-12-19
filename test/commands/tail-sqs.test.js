@@ -1,4 +1,3 @@
-const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
@@ -10,10 +9,6 @@ AWS.SQS.prototype.receiveMessage = mockReceiveMessage;
 const mockOpenStdin = jest.fn();
 process.openStdin = mockOpenStdin;
 process.stdin.setRawMode = jest.fn();
-process.exit = jest.fn();
-
-const consoleLog = jest.fn();
-console.log = consoleLog;
 
 beforeEach(() => {
 	mockOpenStdin.mockReturnValue({
@@ -24,7 +19,6 @@ beforeEach(() => {
 afterEach(() => {
 	mockListQueues.mockReset();
 	mockReceiveMessage.mockReset();
-	consoleLog.mockReset();
 	mockOpenStdin.mockReset();
 });
 
@@ -71,11 +65,8 @@ describe("tail-sqs", () => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");      
 
-				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
-				// hence this workaround...
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("message 1");
-				expect(logMessages).to.contain("message 2");
+				expect(ctx.stdout).to.contain("message 1");
+				expect(ctx.stdout).to.contain("message 2");
 			});
 	});
   
@@ -105,11 +96,8 @@ describe("tail-sqs", () => {
 				expect(ctx.stdout).to.contain("finding the queue [queue-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling SQS queue [https://sqs.us-east-1.amazonaws.com/12345/queue-dev]...");      
 
-				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
-				// hence this workaround...
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("message 3");
-				expect(logMessages).to.contain("message 4");
+				expect(ctx.stdout).to.contain("message 3");
+				expect(ctx.stdout).to.contain("message 4");
 			});
 	});
 });

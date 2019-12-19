@@ -23,10 +23,71 @@ class SendToSnsCommand extends Command {
 
 		this.log("sending messages...");
 		console.time("execution time");
-		await sendMessages(filePath, topicArn, concurrency);
+		await this.sendMessages(filePath, topicArn, concurrency);
 
 		this.log("all done!");
 		console.timeEnd("execution time");
+	}
+  
+	async sendMessages(filePath, topicArn, concurrency) {
+		const AWS = getAWSSDK();
+		const SNS = new AWS.SNS();
+		const queue = new PQueue({ concurrency });
+  
+		let processedCount = 0;
+  
+		const printProgress = (count, last = false) => {
+			process.stdout.clearLine();
+			process.stdout.cursorTo(0);
+			process.stdout.write(`sent ${count} messages`);
+  
+			if (last) {
+				process.stdout.write("\n");
+			}
+		};
+  
+		const publish = async line => {
+			try {
+				await SNS.publish({
+					Message: line,
+					TopicArn: topicArn
+				}).promise();
+			} catch (err) {
+				this.log(`\n${err.message.bold.bgWhite.red}`);
+				this.log(line);
+			}
+		};
+  
+		const add = (line, last = false) => {
+			queue.add(() => publish(line));
+			processedCount += 1;
+			printProgress(processedCount, last);
+		};
+  
+		return new Promise(resolve => {
+			lineReader.eachLine(filePath, function(line, last, cb) {
+				if (_.isEmpty(line)) {
+					cb();
+				} else if (last) {
+					add(line, true);
+					queue.onEmpty().then(() => {
+						cb();
+						resolve();
+					});
+				} else if (processedCount % 100 === 0) {
+					// to avoid overloading the queue and run of memory,
+					// also, to avoid throttling as well,
+					// wait for the queue to empty every after 100 messages
+					queue.onEmpty().then(() => {
+						add(line);
+						cb();
+					});
+				} else {
+					add(line);
+					cb();
+				}
+			});
+		});
 	}
 }
 
@@ -59,67 +120,6 @@ SendToSnsCommand.flags = {
 		required: false,
 		default: 10
 	})
-};
-
-const sendMessages = (filePath, topicArn, concurrency) => {
-	const AWS = getAWSSDK();
-	const SNS = new AWS.SNS();
-	const queue = new PQueue({ concurrency });
-
-	let processedCount = 0;
-
-	const printProgress = (count, last = false) => {
-		process.stdout.clearLine();
-		process.stdout.cursorTo(0);
-		process.stdout.write(`sent ${count} messages`);
-
-		if (last) {
-			process.stdout.write("\n");
-		}
-	};
-
-	const publish = async line => {
-		try {
-			await SNS.publish({
-				Message: line,
-				TopicArn: topicArn
-			}).promise();
-		} catch (err) {
-			console.log(`\n${err.message.bold.bgWhite.red}`);
-			console.log(line);
-		}
-	};
-
-	const add = (line, last = false) => {
-		queue.add(() => publish(line));
-		processedCount += 1;
-		printProgress(processedCount, last);
-	};
-
-	return new Promise(resolve => {
-		lineReader.eachLine(filePath, function(line, last, cb) {
-			if (_.isEmpty(line)) {
-				cb();
-			} else if (last) {
-				add(line, true);
-				queue.onEmpty().then(() => {
-					cb();
-					resolve();
-				});
-			} else if (processedCount % 100 === 0) {
-				// to avoid overloading the queue and run of memory,
-				// also, to avoid throttling as well,
-				// wait for the queue to empty every after 100 messages
-				queue.onEmpty().then(() => {
-					add(line);
-					cb();
-				});
-			} else {
-				add(line);
-				cb();
-			}
-		});
-	});
 };
 
 module.exports = SendToSnsCommand;

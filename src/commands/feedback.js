@@ -13,7 +13,7 @@ class FeedbackCommand extends Command {
 
 		checkVersion();
 
-		const octokit = await createAuthenticatedOctokit();
+		const octokit = await this.createAuthenticatedOctokit();
 
 		octokit.issues
 			.create({
@@ -24,6 +24,37 @@ class FeedbackCommand extends Command {
 			})
 			.then(() => console.log("Command executed successfully"))
 			.catch(error => console.log(`Command failed with error: ${error}`));
+	}
+  
+	async createAuthenticatedOctokit() {
+		const answers = await inquirer.prompt([
+			{
+				name: "userName",
+				message: "Enter your GitHub user name"
+			},
+			{
+				name: "password",
+				message: "Password",
+				type: "password"
+			}
+		]);
+		return new Octokit({
+			auth: {
+				username: answers.userName,
+				password: answers.password,
+				async on2fa() {
+					return inquirer
+						.prompt([
+							{
+								name: "mfa",
+								message: "Enter your two-factor token",
+								type: "password"
+							}
+						])
+						.then(x => x.mfa);
+				}
+			}
+		});
 	}
 }
 
@@ -46,37 +77,6 @@ FeedbackCommand.flags = {
 		required: false,
 		default: ""
 	})
-};
-
-const createAuthenticatedOctokit = async () => {
-	const answers = await inquirer.prompt([
-		{
-			name: "userName",
-			message: "Enter your GitHub user name"
-		},
-		{
-			name: "password",
-			message: "Password",
-			type: "password"
-		}
-	]);
-	return new Octokit({
-		auth: {
-			username: answers.userName,
-			password: answers.password,
-			async on2fa() {
-				return inquirer
-					.prompt([
-						{
-							name: "mfa",
-							message: "Enter your two-factor token",
-							type: "password"
-						}
-					])
-					.then(x => x.mfa);
-			}
-		}
-	});
 };
 
 module.exports = FeedbackCommand;

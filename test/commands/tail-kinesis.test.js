@@ -1,4 +1,3 @@
-const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const zlib = require("zlib");
 const AWS = require("aws-sdk");
@@ -13,10 +12,6 @@ AWS.Kinesis.prototype.getRecords = mockGetRecords;
 const mockOpenStdin = jest.fn();
 process.openStdin = mockOpenStdin;
 process.stdin.setRawMode = jest.fn();
-process.exit = jest.fn();
-
-const consoleLog = jest.fn();
-console.log = consoleLog;
 
 beforeEach(() => {
 	mockGetShardIterator.mockReturnValue({
@@ -34,7 +29,6 @@ afterEach(() => {
 	mockDescribeStream.mockReset();
 	mockGetShardIterator.mockReset();
 	mockGetRecords.mockReset();
-	consoleLog.mockReset();
 	mockOpenStdin.mockReset();
 });
 
@@ -52,9 +46,8 @@ describe("tail-kinesis", () => {
 			.it("displays messages in the console", async (ctx) => {
 				expect(ctx.stdout).to.contain("checking Kinesis stream [stream-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling Kinesis stream [stream-dev] (1 shards)...");
-
-				thenMessageIsLogged("message 1");
-				thenMessageIsLogged("message 2");
+				expect(ctx.stdout).to.contain("message 1");
+				expect(ctx.stdout).to.contain("message 2");
 			});
 	});
   
@@ -74,9 +67,9 @@ describe("tail-kinesis", () => {
 				expect(ctx.stdout).to.contain("checking Kinesis stream [stream-dev] in [us-east-1]");
 				expect(ctx.stdout).to.contain("polling Kinesis stream [stream-dev] (2 shards)...");
 
-				thenMessageIsLogged("message 1");
-				thenMessageIsLogged("message 2");
-				thenMessageIsLogged("message 3");
+				expect(ctx.stdout).to.contain("message 1");
+				expect(ctx.stdout).to.contain("message 2");
+				expect(ctx.stdout).to.contain("message 3");
 			});
 	});
   
@@ -90,9 +83,9 @@ describe("tail-kinesis", () => {
 		test
 			.stdout()
 			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
-			.it("displays unzipped messages in the console", () => {
-				thenMessageIsLogged("message 1");
-				thenMessageIsLogged("message 2");
+			.it("displays unzipped messages in the console", (ctx) => {
+				expect(ctx.stdout).to.contain("message 1");
+				expect(ctx.stdout).to.contain("message 2");
 			});
 	});
   
@@ -109,19 +102,12 @@ describe("tail-kinesis", () => {
 		test
 			.stdout()
 			.command(["tail-kinesis", "-n", "stream-dev", "-r", "us-east-1"])
-			.it("displays prettified JSON messages in the console", () => {
-				thenMessageIsLogged(JSON.stringify(data1, undefined, 2));
-				thenMessageIsLogged(JSON.stringify(data2, undefined, 2));
+			.it("displays prettified JSON messages in the console", (ctx) => {
+				expect(ctx.stdout).to.contain(JSON.stringify(data1, undefined, 2));
+				expect(ctx.stdout).to.contain(JSON.stringify(data2, undefined, 2));
 			});
 	});
 });
-
-function thenMessageIsLogged(message) {
-	// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
-	// hence this workaround...
-	const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-	expect(logMessages).to.contain(message);
-}
 
 function givenDescribeStreamsReturns(shardIds) {
 	mockDescribeStream.mockReturnValueOnce({

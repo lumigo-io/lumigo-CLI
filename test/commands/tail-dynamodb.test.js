@@ -1,4 +1,3 @@
-const _ = require("lodash");
 const {expect, test} = require("@oclif/test");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
@@ -15,17 +14,12 @@ AWS.DynamoDBStreams.prototype.getRecords = mockGetRecords;
 const mockOpenStdin = jest.fn();
 process.openStdin = mockOpenStdin;
 process.stdin.setRawMode = jest.fn();
-process.exit = jest.fn();
-
-const consoleLog = jest.fn();
-console.log = consoleLog;
 
 beforeEach(() => {
 	mockDescribeTable.mockReset();
 	mockDescribeStream.mockReset();
 	mockGetShardIterator.mockReset();
 	mockGetRecords.mockReset();
-	consoleLog.mockReset();
 	mockOpenStdin.mockReset();
 
 	mockGetShardIterator.mockReturnValue({
@@ -70,12 +64,8 @@ describe("tail-dynamodb", () => {
 			.it("displays messages in the console", async (ctx) => {
 				expect(ctx.stdout).to.contain(`checking DynamoDB stream [${streamArn}] in [us-east-1]`);
 				expect(ctx.stdout).to.contain("polling DynamoDB stream for table [users-dev] (1 shards)...");
-
-				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
-				// hence this workaround...
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("message 1");
-				expect(logMessages).to.contain("message 2");
+				expect(ctx.stdout).to.contain("message 1");
+				expect(ctx.stdout).to.contain("message 2");
 			});
 	});
 
@@ -96,14 +86,10 @@ describe("tail-dynamodb", () => {
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
 			.it("displays messages in the console", ctx => {
 				expect(ctx.stdout).to.contain("polling DynamoDB stream for table [users-dev] (2 shards)...");
-
-				// unfortunately, ctx.stdout doesn't seem to capture the messages published by console.log
-				// hence this workaround...
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("message 1");
-				expect(logMessages).to.contain("message 2");
+				expect(ctx.stdout).to.contain("message 1");
+				expect(ctx.stdout).to.contain("message 2");
 				// because each shard return the first event and since there is no shard03, the message 3 won't be fetched
-				expect(logMessages).to.not.contain("message 3");
+				expect(ctx.stdout).to.not.contain("message 3");
 			});
 	});
 });

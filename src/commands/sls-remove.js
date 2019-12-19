@@ -17,7 +17,7 @@ class SlsRemoveCommand extends Command {
 		checkVersion();
 
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);
-		const deploymentBucketName = await getDeploymentBucketName(stackName);
+		const deploymentBucketName = await this.getDeploymentBucketName(stackName);
 
 		if (!deploymentBucketName) {
 			throw new Error(
@@ -26,11 +26,11 @@ class SlsRemoveCommand extends Command {
 		}
 
 		this.log(`emptying deployment bucket [${deploymentBucketName}]...`);
-		await emptyBucket(deploymentBucketName);
+		await this.emptyBucket(deploymentBucketName);
 
 		if (emptyS3Buckets) {
 			this.log("finding other S3 buckets...");
-			const bucketNames = (await getBucketNames(stackName)).filter(
+			const bucketNames = (await this.getBucketNames(stackName)).filter(
 				x => x !== deploymentBucketName
 			);
 
@@ -40,7 +40,7 @@ class SlsRemoveCommand extends Command {
 				);
 				for (const bucketName of bucketNames) {
 					this.log(`emptying bucket [${bucketName}]...`);
-					await emptyBucket(bucketName);
+					await this.emptyBucket(bucketName);
 				}
 			} else {
 				this.log("no other S3 buckets are found besides the deployment bucket");
@@ -48,9 +48,56 @@ class SlsRemoveCommand extends Command {
 		}
 
 		this.log(`removing the stack [${stackName}] in [${region}]...`);
-		await deleteStack(stackName);
+		await this.deleteStack(stackName);
 
 		this.log("stack has been deleted!");
+	}
+  
+	async getDeploymentBucketName(stackName) {
+		const CloudFormation = new AWS.CloudFormation();
+		const resp = await CloudFormation.describeStacks({ StackName: stackName }).promise();
+		const stack = resp.Stacks[0];
+		const bucketNameOutput = stack.Outputs.find(
+			x => x.OutputKey === "ServerlessDeploymentBucketName"
+		);
+		return _.get(bucketNameOutput, "OutputValue");
+	}
+  
+	async getBucketNames(stackName) {
+		const CloudFormation = new AWS.CloudFormation();
+		const resp = await CloudFormation.describeStackResources({
+			StackName: stackName
+		}).promise();
+		const s3Buckets = resp.StackResources.filter(
+			x => x.ResourceType === "AWS::S3::Bucket"
+		);
+		return s3Buckets.map(x => x.PhysicalResourceId);
+	}
+  
+	async emptyBucket(bucketName) {
+		const S3 = new AWS.S3();
+		const listResp = await S3.listObjectsV2({
+			Bucket: bucketName
+		}).promise();
+  
+		const keys = listResp.Contents.map(x => ({ Key: x.Key }));
+		await S3.deleteObjects({
+			Bucket: bucketName,
+			Delete: {
+				Objects: keys
+			}
+		}).promise();
+	}
+  
+	async deleteStack(stackName) {
+		const CloudFormation = new AWS.CloudFormation();
+		await CloudFormation.deleteStack({
+			StackName: stackName
+		}).promise();
+  
+		await CloudFormation.waitFor("stackDeleteComplete", {
+			StackName: stackName
+		}).promise();
 	}
 }
 
@@ -78,53 +125,6 @@ SlsRemoveCommand.flags = {
 		description: "AWS CLI profile name",
 		required: false
 	})
-};
-
-const getDeploymentBucketName = async stackName => {
-	const CloudFormation = new AWS.CloudFormation();
-	const resp = await CloudFormation.describeStacks({ StackName: stackName }).promise();
-	const stack = resp.Stacks[0];
-	const bucketNameOutput = stack.Outputs.find(
-		x => x.OutputKey === "ServerlessDeploymentBucketName"
-	);
-	return _.get(bucketNameOutput, "OutputValue");
-};
-
-const getBucketNames = async stackName => {
-	const CloudFormation = new AWS.CloudFormation();
-	const resp = await CloudFormation.describeStackResources({
-		StackName: stackName
-	}).promise();
-	const s3Buckets = resp.StackResources.filter(
-		x => x.ResourceType === "AWS::S3::Bucket"
-	);
-	return s3Buckets.map(x => x.PhysicalResourceId);
-};
-
-const emptyBucket = async bucketName => {
-	const S3 = new AWS.S3();
-	const listResp = await S3.listObjectsV2({
-		Bucket: bucketName
-	}).promise();
-
-	const keys = listResp.Contents.map(x => ({ Key: x.Key }));
-	await S3.deleteObjects({
-		Bucket: bucketName,
-		Delete: {
-			Objects: keys
-		}
-	}).promise();
-};
-
-const deleteStack = async stackName => {
-	const CloudFormation = new AWS.CloudFormation();
-	await CloudFormation.deleteStack({
-		StackName: stackName
-	}).promise();
-
-	await CloudFormation.waitFor("stackDeleteComplete", {
-		StackName: stackName
-	}).promise();
 };
 
 module.exports = SlsRemoveCommand;

@@ -8,10 +8,8 @@ AWS.SQS.prototype.listQueues = mockListQueues;
 const mockSendMessageBatch = jest.fn();
 AWS.SQS.prototype.sendMessageBatch = mockSendMessageBatch;
 
-const consoleLog = jest.fn();
-console.log = consoleLog;
-console.time = consoleLog;
-console.timeEnd = consoleLog;
+console.time = jest.fn();
+console.timeEnd = jest.fn();
 process.stdout.clearLine = jest.fn();
 process.stdout.cursorTo = jest.fn();
 jest.mock("uuid/v4");
@@ -21,7 +19,6 @@ const queueUrl = "https://sqs.us-east-1.amazonaws.com/12345/queue-dev";
 beforeEach(() => {
 	mockListQueues.mockReset();
 	mockSendMessageBatch.mockReset();
-	consoleLog.mockReset();
   
 	uuid.mockImplementation(() => "testid");
   
@@ -79,8 +76,7 @@ describe("send-to-sqs", () => {
 					.map(x => x.MessageBody);
 				expect(messages).to.have.lengthOf(15);
         
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("boom!");
+				expect(ctx.stdout).to.contain("boom!");
 			});
 	});
 
@@ -103,8 +99,7 @@ describe("send-to-sqs", () => {
 					.map(x => x.MessageBody);
 				expect(messages).to.have.lengthOf(15);
         
-				const logMessages = _.flatMap(consoleLog.mock.calls, call => call).join("\n");
-				expect(logMessages).to.contain("boom!");
+				expect(ctx.stdout).to.contain("boom!");
 			});
 	});
 });

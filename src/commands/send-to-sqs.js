@@ -27,10 +27,90 @@ class SendToSqsCommand extends Command {
 
 		this.log("sending messages...");
 		console.time("execution time");
-		await sendMessages(filePath, queueUrl);
+		await this.sendMessages(filePath, queueUrl);
 
 		this.log("all done!");
 		console.timeEnd("execution time");
+	}
+  
+	sendMessages(filePath, queueUrl) {
+		const AWS = getAWSSDK();
+		const SQS = new AWS.SQS();
+  
+		const flush = async batch => {
+			const entries = batch.map(x => ({
+				Id: uuid(),
+				MessageBody: x
+			}));
+  
+			try {
+				const resp = await SQS.sendMessageBatch({
+					QueueUrl: queueUrl,
+					Entries: entries
+				}).promise();
+  
+				if (!_.isEmpty(resp.Failed)) {
+					resp.Failed.forEach(m => {
+						this.log(`\n${m.Message.bold.bgWhite.red}`);
+						const entry = entries.find(x => x.Id === m.Id);
+						this.log(entry.MessageBody);
+					});
+				}
+			} catch (err) {
+				this.log(`\n${err.message.bold.bgWhite.red}`);
+				entries.forEach(x => this.log(x.MessageBody));
+			}
+		};
+  
+		let buffer = [];
+		let processedCount = 0;
+  
+		const canFitIntoBuffer = input => {
+			if (buffer.length >= MAX_LENGTH) {
+				return false;
+			}
+  
+			const totalPayload = _.sumBy(buffer, obj => obj.length) + input.length;
+			return totalPayload < MAX_PAYLOAD;
+		};
+  
+		const printProgress = (count, last = false) => {
+			process.stdout.clearLine();
+			process.stdout.cursorTo(0);
+			process.stdout.write(`sent ${count} messages`);
+  
+			if (last) {
+				process.stdout.write("\n");
+			}
+		};
+  
+		return new Promise(resolve => {
+			lineReader.eachLine(filePath, function(line, last, cb) {
+				if (_.isEmpty(line)) {
+					cb();
+				} else if (canFitIntoBuffer(buffer) && !last) {
+					buffer.push(line);
+					cb();
+				} else if (last) {
+					buffer.push(line);
+					flush(buffer).then(() => {
+						processedCount += buffer.length;
+						printProgress(processedCount, true);
+  
+						cb();
+						resolve();
+					});
+				} else {
+					flush(buffer).then(() => {
+						processedCount += buffer.length;
+						printProgress(processedCount);
+						buffer = [line];
+  
+						cb();
+					});
+				}
+			});
+		});
 	}
 }
 
@@ -57,88 +137,6 @@ SendToSqsCommand.flags = {
 		description: "path to the file",
 		required: true
 	})
-};
-
-const sendMessages = (filePath, queueUrl) => {
-	const AWS = getAWSSDK();
-	const SQS = new AWS.SQS();
-
-	const flush = async batch => {
-		const entries = batch.map(x => ({
-			Id: uuid(),
-			MessageBody: x
-		}));
-
-		try {
-			const resp = await SQS.sendMessageBatch({
-				QueueUrl: queueUrl,
-				Entries: entries
-			}).promise();
-
-			if (!_.isEmpty(resp.Failed)) {
-				resp.Failed.forEach(m => {
-					console.log(`\n${m.Message.bold.bgWhite.red}`);
-					const entry = entries.find(x => x.Id === m.Id);
-					console.log(entry.MessageBody);
-				});
-			}
-		} catch (err) {
-			console.log(`\n${err.message.bold.bgWhite.red}`);
-			entries.forEach(x => {
-				console.log(x.MessageBody);
-			});
-		}
-	};
-
-	let buffer = [];
-	let processedCount = 0;
-
-	const canFitIntoBuffer = input => {
-		if (buffer.length >= MAX_LENGTH) {
-			return false;
-		}
-
-		const totalPayload = _.sumBy(buffer, obj => obj.length) + input.length;
-		return totalPayload < MAX_PAYLOAD;
-	};
-
-	const printProgress = (count, last = false) => {
-		process.stdout.clearLine();
-		process.stdout.cursorTo(0);
-		process.stdout.write(`sent ${count} messages`);
-
-		if (last) {
-			process.stdout.write("\n");
-		}
-	};
-
-	return new Promise(resolve => {
-		lineReader.eachLine(filePath, function(line, last, cb) {
-			if (_.isEmpty(line)) {
-				cb();
-			} else if (canFitIntoBuffer(buffer) && !last) {
-				buffer.push(line);
-				cb();
-			} else if (last) {
-				buffer.push(line);
-				flush(buffer).then(() => {
-					processedCount += buffer.length;
-					printProgress(processedCount, true);
-
-					cb();
-					resolve();
-				});
-			} else {
-				flush(buffer).then(() => {
-					processedCount += buffer.length;
-					printProgress(processedCount);
-					buffer = [line];
-
-					cb();
-				});
-			}
-		});
-	});
 };
 
 module.exports = SendToSqsCommand;
