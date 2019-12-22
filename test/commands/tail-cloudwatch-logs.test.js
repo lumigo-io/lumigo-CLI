@@ -56,14 +56,15 @@ describe("tail-cloudwatch-logs", () => {
 			.command(commandArgs)
 			.exit(1)
 			.it("reports too many matches", async (ctx) => {
-				expect(ctx.stdout).to.contain("too many log groups with matching prefix, please provide the full log group name and try again");
+				expect(ctx.stdout).to.contain("found more than 50 log groups with matching prefix, please provide the full log group name and try again");
 			});
 	});
   
 	describe("when there are more than one matching log groups", () => {
 		beforeEach(() => {
 			givenDescribeLogGroupsReturns(["/aws/lambda/function-a", "/aws/lambda/function-b"]);
-			givenDescribeLogStreamsReturns(0);
+			givenDescribeLogStreamsReturns(1);
+			givenFilterLogEventsAlwaysReturns(["foo bar"]);
       
 			mockPrompt.mockResolvedValueOnce({
 				logGroupName: "/aws/lambda/function-b"
@@ -73,10 +74,9 @@ describe("tail-cloudwatch-logs", () => {
 		test
 			.stdout()
 			.command(commandArgs)
-			.exit(1)
-			.it("lets user choose the log group", async (ctx) => {
+			.exit(0)
+			.it("lets user choose the log group", async () => {
 				expect(mockPrompt.mock.calls).to.have.length(1);
-				expect(ctx.stdout).to.contain("looking for log streams for [/aws/lambda/function-b]...");
 			});
 	});
   
@@ -88,15 +88,16 @@ describe("tail-cloudwatch-logs", () => {
 		describe("when there are no log streams", () => {
 			beforeEach(() => {
 				givenDescribeLogStreamsReturns(0);
+				givenDescribeLogStreamsReturns(1);
+				givenFilterLogEventsAlwaysReturns(["foo bar"]);
 			});
       
 			test
 				.stdout()
 				.command(commandArgs)
-				.exit(1)
-				.it("reports there are no log streams", async (ctx) => {
-					expect(ctx.stdout).to.contain("only 1 match found");
-					expect(ctx.stdout).to.contain("there are no log streams right now, please try again later");
+				.exit(0)
+				.it("request is retried", async () => {
+					expect(mockDescribeLogStreams.mock.calls).to.have.length(2);
 				});
 		});
     

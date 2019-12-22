@@ -51,7 +51,7 @@ class TailCloudwatchLogsCommand extends Command {
 			this.exit(1);
 		} else if (resp.nextToken) {
 			this.log(
-				"too many log groups with matching prefix, please provide the full log group name and try again"
+				"found more than 50 log groups with matching prefix, please provide the full log group name and try again"
 			);
 			this.exit(1);
 		} else {
@@ -78,8 +78,9 @@ class TailCloudwatchLogsCommand extends Command {
 		}).promise();
 
 		if (_.isEmpty(resp.logStreams)) {
-			this.log("there are no log streams right now, please try again later");
-			this.exit(1);
+			this.log("there are no log streams right now, retrying after 5s...");
+			await Promise.delay(5000);
+			return this.getLogStreamNames(logGroupName);
 		} else {
 			return resp.logStreams.map(x => x.logStreamName);
 		}
@@ -93,7 +94,7 @@ class TailCloudwatchLogsCommand extends Command {
 		const stdin = process.openStdin();
 		stdin.once("keypress", () => {
 			polling = false;
-			console.log("stopping...");
+			this.log("stopping...");
 		});
 
 		const fetch = async (startTime, endTime, nextToken, acc = []) => {
@@ -154,7 +155,7 @@ TailCloudwatchLogsCommand.flags = {
 	}),
 	interval: flags.integer({
 		char: "i",
-		description: "interval for polling CloudWatch Logs",
+		description: "interval (ms) for polling CloudWatch Logs",
 		required: false,
 		default: 1000
 	})
