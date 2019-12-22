@@ -283,7 +283,7 @@ OPTIONS
                                      https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.htm
                                      l
 
-  -i, --interval=interval            [default: 1000] interval for polling CloudWatch Logs
+  -i, --interval=interval            [default: 1000] interval (ms) for polling CloudWatch Logs
 
   -n, --namePrefix=namePrefix        (required) name prefix of the log group, e.g. /aws/lambda/workshop-dev-
 
