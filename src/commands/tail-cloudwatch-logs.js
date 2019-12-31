@@ -5,6 +5,7 @@ const { checkVersion } = require("../lib/version-check");
 const Promise = require("bluebird");
 const moment = require("moment");
 const inquirer = require("inquirer");
+require("colors");
 
 class TailCloudwatchLogsCommand extends Command {
 	async run() {
@@ -26,12 +27,9 @@ class TailCloudwatchLogsCommand extends Command {
 		);
 		const logGroupName = await this.getLogGroupName(namePrefix);
 
-		this.log(`looking for log streams for [${logGroupName}]...`);
-		const logStreamNames = await this.getLogStreamNames(logGroupName);
-
 		this.log(`polling CLoudWatch log group [${logGroupName}]...`);
 		this.log("press <any key> to stop");
-		await this.pollLogGroup(logGroupName, logStreamNames);
+		await this.pollLogGroup(logGroupName);
 
 		this.exit(0);
 	}
@@ -86,7 +84,7 @@ class TailCloudwatchLogsCommand extends Command {
 		}
 	}
 
-	async pollLogGroup(logGroupName, logStreamNames) {
+	async pollLogGroup(logGroupName) {
 		let polling = true;
 		const readline = require("readline");
 		readline.emitKeypressEvents(process.stdin);
@@ -98,6 +96,10 @@ class TailCloudwatchLogsCommand extends Command {
 		});
 
 		const fetch = async (startTime, endTime, nextToken, acc = []) => {
+			// this.log(`fetching logs from ${startTime} - ${endTime}`);			
+			const logStreamNames = await this.getLogStreamNames(logGroupName);
+			// this.log(`found ${logStreamNames.length} log streams...`);
+    
 			const resp = await this.Logs.filterLogEvents({
 				logGroupName,
 				logStreamNames,
@@ -106,9 +108,12 @@ class TailCloudwatchLogsCommand extends Command {
 				startTime,
 				endTime,
 				nextToken
-			}).promise();
+			}).promise();      
 
-			const logMessages = resp.events.map(x => x.message);
+			const logMessages = resp.events.map(x => ({
+				timestamp: x.timestamp,
+				message: x.message
+			}));			
 			if (resp.nextToken) {
 				return fetch(startTime, endTime, resp.nextToken, acc.concat(logMessages));
 			} else {
@@ -121,11 +126,18 @@ class TailCloudwatchLogsCommand extends Command {
 		let endTime = moment.utc(moment.now()).valueOf();
 		while (polling) {
 			const logMessages = await fetch(startTime, endTime);
-			logMessages.forEach(this.log);
-			await Promise.delay(global.interval);
-
-			startTime = endTime;
+			logMessages.forEach(x => 
+				this.log(`${new Date(x.timestamp).toJSON().grey.bold.bgWhite}\n${x.message}`));
+      
+			// only move the startime forward if we received another load of messages
+			// otherwise we'd move the startime forward before messages become available
+			// due to delay, and would simply miss those messages
+			if (!_.isEmpty(logMessages)) {        
+				startTime = _.maxBy(logMessages, x => x.timestamp).timestamp + 1;
+			}
 			endTime = moment.utc(moment.now()).valueOf();
+      
+			await Promise.delay(global.interval);
 		}
 	}
 }
