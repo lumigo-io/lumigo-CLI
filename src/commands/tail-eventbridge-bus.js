@@ -18,17 +18,14 @@ class TailEventbridgeBusCommand extends Command {
 		);
 
 		try {
-			const tailRuleCommandArgs = [
-				"-n",
-				ruleName,
-				"-b",
-				eventBusName,
-				"-r",
-				region
-			];
+			const tailRuleCommandArgs = ["-n", ruleName, "-r", region];
 			if (profile) {
 				tailRuleCommandArgs.push("-p");
 				tailRuleCommandArgs.push(profile);
+			}
+			if (eventBusName) {
+				tailRuleCommandArgs.push("-b");
+				tailRuleCommandArgs.push(eventBusName);
 			}
 
 			const tailRuleCommand = new TailEventBridgeRuleCommand(tailRuleCommandArgs);
