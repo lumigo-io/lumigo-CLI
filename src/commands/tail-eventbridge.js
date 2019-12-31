@@ -17,7 +17,7 @@ class TailEventbridgeCommand extends Command {
 
 		checkVersion();
     
-		this.log(`finding the rule [${ruleName}] (bus [${eventBusName}]) in [${region}]`);
+		this.log(`finding the rule [${ruleName}] (bus [${eventBusName || "default"}]) in [${region}]`);
 		const ruleArn = await this.getEventBridgeRule(ruleName, eventBusName);
    
 		await this.pollEventBridge(ruleArn);
