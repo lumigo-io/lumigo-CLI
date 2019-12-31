@@ -44,6 +44,7 @@ USAGE
 * [`lumigo-cli switch-profile`](#lumigo-cli-switch-profile)
 * [`lumigo-cli tail-cloudwatch-logs`](#lumigo-cli-tail-cloudwatch-logs)
 * [`lumigo-cli tail-dynamodb`](#lumigo-cli-tail-dynamodb)
+* [`lumigo-cli tail-eventbridge`](#lumigo-cli-tail-eventbridge)
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
@@ -197,12 +198,13 @@ USAGE
   $ lumigo-cli replay-sqs-dlq
 
 OPTIONS
-  -c, --concurrency=concurrency    [default: 10] how many concurrent pollers to run
-  -d, --dlqQueueName=dlqQueueName  (required) name of the SQS DLQ queue, e.g. task-queue-dlq-dev
-  -k, --keep                       whether to keep the replayed messages in the DLQ
-  -n, --queueName=queueName        (required) name of the SQS queue, e.g. task-queue-dev
-  -p, --profile=profile            AWS CLI profile name
-  -r, --region=region              (required) AWS region, e.g. us-east-1
+  -c, --concurrency=concurrency     [default: 10] how many concurrent pollers to run
+  -d, --dlqQueueName=dlqQueueName   (required) name of the SQS DLQ queue, e.g. task-queue-dlq-dev
+  -k, --keep                        whether to keep the replayed messages in the DLQ
+  -n, --targetName=targetName       (required) name of the target SQS queue/SNS topic, e.g. task-queue-dev
+  -p, --profile=profile             AWS CLI profile name
+  -r, --region=region               (required) AWS region, e.g. us-east-1
+  -t, --targetType=SQS|SNS|Kinesis  [default: SQS] valid values are SQS [default], SNS, and Kinesis
 ```
 
 _See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/replay-sqs-dlq.js)_
@@ -310,6 +312,23 @@ OPTIONS
 ```
 
 _See code: [src/commands/tail-dynamodb.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/tail-dynamodb.js)_
+
+## `lumigo-cli tail-eventbridge`
+
+Tail an EventBridge/CloudWatch Events rule
+
+```
+USAGE
+  $ lumigo-cli tail-eventbridge
+
+OPTIONS
+  -b, --eventBusName=eventBusName  name of the EventBridge/CloudWatch Events bus
+  -n, --ruleName=ruleName          (required) name of the EventBridge/CloudWatch Events rule
+  -p, --profile=profile            AWS CLI profile name
+  -r, --region=region              (required) AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/tail-eventbridge.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/tail-eventbridge.js)_
 
 ## `lumigo-cli tail-kinesis`
 
