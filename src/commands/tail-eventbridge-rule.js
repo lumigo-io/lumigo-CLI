@@ -133,7 +133,7 @@ class TailEventbridgeRuleCommand extends Command {
 		const { queueUrl, queueArn } = await this.createQueue(ruleArn);
 		await this.addTarget(queueArn);
 
-		this.log(`polling EventBridge rule [${ruleArn}]...`);
+		this.log(`polling event rule [${ruleArn}]...`);
 		this.log("press <any key> to stop");
 
 		let polling = true;
@@ -194,16 +194,16 @@ class TailEventbridgeRuleCommand extends Command {
 	}
 }
 
-TailEventbridgeRuleCommand.description = "Tail an EventBridge/CloudWatch Events rule";
+TailEventbridgeRuleCommand.description = "Tail an EventBridge rule";
 TailEventbridgeRuleCommand.flags = {
 	ruleName: flags.string({
 		char: "n",
-		description: "name of the EventBridge/CloudWatch Events rule",
+		description: "name of the EventBridge rule",
 		required: true
 	}),
 	eventBusName: flags.string({
 		char: "b",
-		description: "name of the EventBridge/CloudWatch Events bus",
+		description: "name of the EventBridge bus",
 		required: false
 	}),
 	region: flags.string({

@@ -23,6 +23,7 @@ process.stdin.setRawMode = jest.fn();
 
 const ruleName = "my-rule";
 const command = ["tail-eventbridge-rule", "-n", ruleName, "-r", "us-east-1"];
+const proxyCommand = ["tail-cloudwatch-events-rule", "-n", ruleName, "-r", "us-east-1"];
 
 beforeEach(() => {
 	mockDescribeRule.mockReset();
@@ -75,6 +76,16 @@ describe("tail-eventbridge", () => {
 			.it("should error", ctx => {
 				expect(ctx.stdout).to.contain("finding the rule [my-rule] (bus [default]) in [us-east-1]");
 			});
+    
+		test
+			.stdout()
+			.command(proxyCommand)
+			.catch((err) => {
+				expect(err.message.startsWith("ResourceNotFoundException")).to.be.true;
+			})
+			.it("should error (tail-cloudwatch-events-rule)", ctx => {
+				expect(ctx.stdout).to.contain("finding the rule [my-rule] (bus [default]) in [us-east-1]");
+			});
 	});
   
 	describe("when the EventBridge rule exists", () => {
@@ -112,6 +123,22 @@ describe("tail-eventbridge", () => {
 					})
 				}, undefined, 2));
 			});
+      
+		test
+			.stdout()
+			.command(proxyCommand)
+			.exit(0)
+			.it("fetches and prints the events (tail-cloudwatch-events-rule)", (ctx) => {
+				expect(ctx.stdout).to.contain(JSON.stringify({
+					Region: "us-east-1",
+					Source: "my-source",
+					Resources: [],
+					"Detail-Type": "order_placed",
+					Detail: JSON.stringify({
+						orderId: "orderId"
+					})
+				}, undefined, 2));
+			});
 	});
   
 	describe("when the EventBridge rule is disabled", () => {
@@ -125,6 +152,15 @@ describe("tail-eventbridge", () => {
 			.command(command)
 			.exit(0)
 			.it("prints a warning messasge", (ctx) => {
+				expect(ctx.stdout).to.contain("WARNING!");
+				expect(ctx.stdout).to.contain("You won't see events until you enable it.");
+			});
+    
+		test
+			.stdout()
+			.command(proxyCommand)
+			.exit(0)
+			.it("prints a warning messasge (tail-cloudwatch-events-rule)", (ctx) => {
 				expect(ctx.stdout).to.contain("WARNING!");
 				expect(ctx.stdout).to.contain("You won't see events until you enable it.");
 			});
