@@ -1,4 +1,4 @@
-const {Command, flags} = require("@oclif/command");
+const { Command, flags } = require("@oclif/command");
 const TailEventbridgeRuleCommand = require("./tail-eventbridge-rule");
 
 class TailCloudwatchEventsRuleCommand extends Command {
