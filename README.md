@@ -42,6 +42,7 @@ USAGE
 * [`lumigo-cli send-to-sqs`](#lumigo-cli-send-to-sqs)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
 * [`lumigo-cli switch-profile`](#lumigo-cli-switch-profile)
+* [`lumigo-cli tail-cloudwatch-events-bus`](#lumigo-cli-tail-cloudwatch-events-bus)
 * [`lumigo-cli tail-cloudwatch-events-rule`](#lumigo-cli-tail-cloudwatch-events-rule)
 * [`lumigo-cli tail-cloudwatch-logs`](#lumigo-cli-tail-cloudwatch-logs)
 * [`lumigo-cli tail-dynamodb`](#lumigo-cli-tail-dynamodb)
@@ -273,6 +274,22 @@ USAGE
 ```
 
 _See code: [src/commands/switch-profile.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/switch-profile.js)_
+
+## `lumigo-cli tail-cloudwatch-events-bus`
+
+Tail a CloudWatch Events bus
+
+```
+USAGE
+  $ lumigo-cli tail-cloudwatch-events-bus
+
+OPTIONS
+  -n, --eventBusName=eventBusName  name of the CloudWatch Events bus, if omitted, then the default bus is used
+  -p, --profile=profile            AWS CLI profile name
+  -r, --region=region              (required) AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/tail-cloudwatch-events-bus.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/tail-cloudwatch-events-bus.js)_
 
 ## `lumigo-cli tail-cloudwatch-events-rule`
 

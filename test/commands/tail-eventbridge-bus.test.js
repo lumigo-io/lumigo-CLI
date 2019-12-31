@@ -12,6 +12,7 @@ TailEventbridgeRuleCommand.prototype.run = mockRun;
 
 const busName = "my-bus";
 const command = ["tail-eventbridge-bus", "-n", busName, "-r", "us-east-1"];
+const proxyCommand = ["tail-cloudwatch-events-bus", "-n", busName, "-r", "us-east-1"];
 
 beforeEach(() => {
 	mockPutRule.mockReset();
@@ -41,6 +42,15 @@ describe("tail-eventbridge-bus", () => {
 				expect(mockPutRule.mock.calls).to.have.length(1);
 				expect(mockDeleteRule.mock.calls).to.have.length(1);
 			});
+    
+		test
+			.stdout()
+			.command(proxyCommand)
+			.exit(0)
+			.it("deletes the temporary rule", () => {
+				expect(mockPutRule.mock.calls).to.have.length(1);
+				expect(mockDeleteRule.mock.calls).to.have.length(1);
+			});
 	});
   
 	describe("when the TailEventbridgeRuleCommand fails", () => {
@@ -56,6 +66,15 @@ describe("tail-eventbridge-bus", () => {
 				expect(mockPutRule.mock.calls).to.have.length(1);
 				expect(mockDeleteRule.mock.calls).to.have.length(1);
 			});
+    
+		test
+			.stdout()
+			.command(proxyCommand)
+			.catch("boom!")
+			.it("deletes the temporary rule", () => {
+				expect(mockPutRule.mock.calls).to.have.length(1);
+				expect(mockDeleteRule.mock.calls).to.have.length(1);
+			});
 	});
   
 	describe("when the optional profile flag is set", () => {
@@ -66,6 +85,15 @@ describe("tail-eventbridge-bus", () => {
 		test
 			.stdout()
 			.command([...command, "-p", "my-profile"])
+			.exit(0)
+			.it("deletes the temporary rule", () => {
+				expect(mockPutRule.mock.calls).to.have.length(1);
+				expect(mockDeleteRule.mock.calls).to.have.length(1);
+			});
+    
+		test
+			.stdout()
+			.command([...proxyCommand, "-p", "my-profile"])
 			.exit(0)
 			.it("deletes the temporary rule", () => {
 				expect(mockPutRule.mock.calls).to.have.length(1);
