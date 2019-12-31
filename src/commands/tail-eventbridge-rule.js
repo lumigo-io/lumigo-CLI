@@ -5,9 +5,9 @@ const { checkVersion } = require("../lib/version-check");
 const uuid = require("uuid/v4");
 require("colors");
 
-class TailEventbridgeCommand extends Command {
+class TailEventbridgeRuleCommand extends Command {
 	async run() {
-		const { flags } = this.parse(TailEventbridgeCommand);
+		const { flags } = this.parse(TailEventbridgeRuleCommand);
 		const { ruleName, eventBusName, region, profile } = flags;
 
 		global.region = region;
@@ -194,8 +194,8 @@ class TailEventbridgeCommand extends Command {
 	}
 }
 
-TailEventbridgeCommand.description = "Tail an EventBridge/CloudWatch Events rule";
-TailEventbridgeCommand.flags = {
+TailEventbridgeRuleCommand.description = "Tail an EventBridge/CloudWatch Events rule";
+TailEventbridgeRuleCommand.flags = {
 	ruleName: flags.string({
 		char: "n",
 		description: "name of the EventBridge/CloudWatch Events rule",
@@ -218,4 +218,4 @@ TailEventbridgeCommand.flags = {
 	})
 };
 
-module.exports = TailEventbridgeCommand;
+module.exports = TailEventbridgeRuleCommand;

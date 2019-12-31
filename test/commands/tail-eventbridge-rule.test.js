@@ -22,7 +22,7 @@ process.openStdin = mockOpenStdin;
 process.stdin.setRawMode = jest.fn();
 
 const ruleName = "my-rule";
-const command = ["tail-eventbridge", "-n", ruleName, "-r", "us-east-1"];
+const command = ["tail-eventbridge-rule", "-n", ruleName, "-r", "us-east-1"];
 
 beforeEach(() => {
 	mockDescribeRule.mockReset();
