@@ -63,7 +63,7 @@ describe("tail-cloudwatch-logs", () => {
 	describe("when there are more than one matching log groups", () => {
 		beforeEach(() => {
 			givenDescribeLogGroupsReturns(["/aws/lambda/function-a", "/aws/lambda/function-b"]);
-			givenDescribeLogStreamsReturns(1);
+			givenDescribeLogStreamsAlwaysReturns(1);
 			givenFilterLogEventsAlwaysReturns(["foo bar"]);
       
 			mockPrompt.mockResolvedValueOnce({
@@ -88,7 +88,7 @@ describe("tail-cloudwatch-logs", () => {
 		describe("when there are no log streams", () => {
 			beforeEach(() => {
 				givenDescribeLogStreamsReturns(0);
-				givenDescribeLogStreamsReturns(1);
+				givenDescribeLogStreamsAlwaysReturns(1);
 				givenFilterLogEventsAlwaysReturns(["foo bar"]);
 			});
       
@@ -103,7 +103,7 @@ describe("tail-cloudwatch-logs", () => {
     
 		describe("when there are log streams", () => {
 			beforeEach(() => {
-				givenDescribeLogStreamsReturns(5);
+				givenDescribeLogStreamsAlwaysReturns(5);
 				givenFilterLogEventsReturns(["old mcdonald had a farm"], true);
 				givenFilterLogEventsReturns(["ye ya ye ya o"]);
 				givenFilterLogEventsAlwaysReturns(["in the farm he had a lambda"]);
@@ -143,10 +143,21 @@ function givenDescribeLogStreamsReturns(count) {
 	});
 };
 
+function givenDescribeLogStreamsAlwaysReturns(count) {
+	mockDescribeLogStreams.mockReturnValue({
+		promise: () => Promise.resolve({
+			logStreams: _.range(0, count).map(n => ({
+				logStreamName: `log-stream-${n}`
+			}))
+		})
+	});
+};
+
 function givenFilterLogEventsReturns(messages, hasMore = false) {
 	mockFilterLogEvents.mockReturnValueOnce({
 		promise: () => Promise.resolve({
 			events: messages.map(message => ({
+				timestamp: new Date().getTime(),
 				message
 			})),
 			nextToken: hasMore ? "more" : undefined
@@ -158,6 +169,7 @@ function givenFilterLogEventsAlwaysReturns(messages) {
 	mockFilterLogEvents.mockReturnValue({
 		promise: () => Promise.resolve({
 			events: messages.map(message => ({
+				timestamp: new Date().getTime(),
 				message
 			}))
 		})
