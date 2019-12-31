@@ -96,10 +96,10 @@ class TailCloudwatchLogsCommand extends Command {
 		});
 
 		const fetch = async (startTime, endTime, nextToken, acc = []) => {
-			// this.log(`fetching logs from ${startTime} - ${endTime}`);			
+			// this.log(`fetching logs from ${startTime} - ${endTime}`);
 			const logStreamNames = await this.getLogStreamNames(logGroupName);
 			// this.log(`found ${logStreamNames.length} log streams...`);
-    
+
 			const resp = await this.Logs.filterLogEvents({
 				logGroupName,
 				logStreamNames,
@@ -108,12 +108,12 @@ class TailCloudwatchLogsCommand extends Command {
 				startTime,
 				endTime,
 				nextToken
-			}).promise();      
+			}).promise();
 
 			const logMessages = resp.events.map(x => ({
 				timestamp: x.timestamp,
 				message: x.message
-			}));			
+			}));
 			if (resp.nextToken) {
 				return fetch(startTime, endTime, resp.nextToken, acc.concat(logMessages));
 			} else {
@@ -126,17 +126,20 @@ class TailCloudwatchLogsCommand extends Command {
 		let endTime = moment.utc(moment.now()).valueOf();
 		while (polling) {
 			const logMessages = await fetch(startTime, endTime);
-			logMessages.forEach(x => 
-				this.log(`${new Date(x.timestamp).toJSON().grey.bold.bgWhite}\n${x.message}`));
-      
+			logMessages.forEach(x =>
+				this.log(
+					`${new Date(x.timestamp).toJSON().grey.bold.bgWhite}\n${x.message}`
+				)
+			);
+
 			// only move the startime forward if we received another load of messages
 			// otherwise we'd move the startime forward before messages become available
 			// due to delay, and would simply miss those messages
-			if (!_.isEmpty(logMessages)) {        
+			if (!_.isEmpty(logMessages)) {
 				startTime = _.maxBy(logMessages, x => x.timestamp).timestamp + 1;
 			}
 			endTime = moment.utc(moment.now()).valueOf();
-      
+
 			await Promise.delay(global.interval);
 		}
 	}
