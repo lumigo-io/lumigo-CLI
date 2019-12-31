@@ -61,7 +61,7 @@ beforeEach(() => {
 	});
 });
 
-describe("tail-eventbridge", () => {
+describe("tail-eventbridge-rule", () => {
 	describe("when the EventBridge rule doesn't exist", () => {
 		beforeEach(() => {
 			givenRuleIsNotFound();

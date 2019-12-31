@@ -27,8 +27,8 @@ class TailEventbridgeBusCommand extends Command {
 				region
 			];
 			if (profile) {
-				tailRuleCommand.push("-p");
-				tailRuleCommand.push(profile);
+				tailRuleCommandArgs.push("-p");
+				tailRuleCommandArgs.push(profile);
 			}
 
 			const tailRuleCommand = new TailEventBridgeRuleCommand(tailRuleCommandArgs);
