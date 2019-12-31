@@ -45,6 +45,7 @@ USAGE
 * [`lumigo-cli tail-cloudwatch-events-rule`](#lumigo-cli-tail-cloudwatch-events-rule)
 * [`lumigo-cli tail-cloudwatch-logs`](#lumigo-cli-tail-cloudwatch-logs)
 * [`lumigo-cli tail-dynamodb`](#lumigo-cli-tail-dynamodb)
+* [`lumigo-cli tail-eventbridge-bus`](#lumigo-cli-tail-eventbridge-bus)
 * [`lumigo-cli tail-eventbridge-rule`](#lumigo-cli-tail-eventbridge-rule)
 * [`lumigo-cli tail-kinesis`](#lumigo-cli-tail-kinesis)
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
@@ -330,6 +331,22 @@ OPTIONS
 ```
 
 _See code: [src/commands/tail-dynamodb.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/tail-dynamodb.js)_
+
+## `lumigo-cli tail-eventbridge-bus`
+
+Tail an EventBridge bus
+
+```
+USAGE
+  $ lumigo-cli tail-eventbridge-bus
+
+OPTIONS
+  -n, --eventBusName=eventBusName  name of the EventBridge bus, if omitted, then the default bus is used
+  -p, --profile=profile            AWS CLI profile name
+  -r, --region=region              (required) AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/tail-eventbridge-bus.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/tail-eventbridge-bus.js)_
 
 ## `lumigo-cli tail-eventbridge-rule`
 
