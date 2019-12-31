@@ -1,6 +1,8 @@
 const _ = require("lodash");
 const { getAWSSDK } = require("../lib/aws");
 const Retry = require("async-retry");
+const { ClearResult } = require("./utils");
+
 const regions = [
 	"us-east-1",
 	"us-east-2",
@@ -79,8 +81,39 @@ const getFunctionsInRegion = async region => {
 	return loop();
 };
 
+const getAllLambdasCount = async () => {
+	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region));
+	const allStacks = await Promise.all(allLambdasPromises);
+
+	return _.flatten(allStacks).length;
+};
+
+const deleteLambda = async (lambda, AWS) => {
+	const Lambda = new AWS.Lambda({ region: lambda.region });
+	await Lambda.deleteFunction({ FunctionName: lambda.functionName }).promise();
+};
+
+const deleteAllLambdas = async AWS => {
+	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region));
+	const allLambdas = await Promise.all(allLambdasPromises);
+	const deletionPromises = _.flatten(allLambdas).map(async lambda => {
+		try {
+			await deleteLambda(lambda, AWS);
+			process.stdout.write(".".green);
+			return ClearResult.getSuccess(lambda.lambdaName, lambda.region);
+		} catch (e) {
+			process.stdout.write("F".red);
+			return ClearResult.getFailed(lambda.lambdaName, lambda.region, e);
+		}
+	});
+
+	return await Promise.all(deletionPromises);
+};
+
 module.exports = {
 	regions,
 	getFunctionInRegion,
-	getFunctionsInRegion
+	getFunctionsInRegion,
+	getAllLambdasCount,
+	deleteAllLambdas
 };
