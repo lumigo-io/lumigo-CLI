@@ -8,6 +8,7 @@ A collection of helpful commands for working with AWS Lambda.
 [![Downloads/week](https://img.shields.io/npm/dw/lumigo-cli.svg)](https://npmjs.org/package/lumigo-cli)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![codecov](https://codecov.io/gh/lumigo-io/lumigo-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/lumigo-io/lumigo-cli)
+[![CircleCI](https://circleci.com/gh/lumigo-io/lumigo-CLI.svg?style=svg)](https://circleci.com/gh/lumigo-io/lumigo-CLI)
 
 <!-- toc -->
 * [Usage](#usage)
