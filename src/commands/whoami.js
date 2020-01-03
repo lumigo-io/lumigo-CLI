@@ -1,16 +1,22 @@
+const _ = require("lodash");
 const { Command } = require("@oclif/command");
-const { getProfiles } = require("aws-profile-utils");
+const { getProfiles } = require("../lib/aws-profile-utils");
 
 class WhoamiCommand extends Command {
 	async run() {
-		const profiles = getProfiles();
+		const { sharedCred, config } = getProfiles();
 
-		if (!profiles["default"]) {
+		if (!sharedCred.default) {
 			this.log("No default profile set.");
 			this.exit();
 		}
 
-		if (Object.keys(profiles).length === 1) {
+		const sharedCredProfileNames = Object.keys(sharedCred).filter(
+			x => x !== "default"
+		);
+		const configProfileNames = Object.keys(config);
+
+		if (_.isEmpty(sharedCredProfileNames) && _.isEmpty(configProfileNames)) {
 			this.log("You don't have any named profiles set up");
 			this.log(
 				"Run 'aws configure --profile profile-name' to set up named profiles"
@@ -18,25 +24,18 @@ class WhoamiCommand extends Command {
 			this.exit();
 		}
 
-		const currentProfile = Object.keys(profiles)
-			.filter(name => name !== "default")
-			.filter(name => this.areEqual(profiles[name], profiles["default"]));
+		const currentProfile = _.uniq([
+			...sharedCredProfileNames,
+			...configProfileNames
+		]).find(name => _.isEqual(sharedCred[name] || config[name], sharedCred.default));
 
-		if (!currentProfile || !currentProfile.length) {
+		if (!currentProfile) {
 			this.log("It appears you are not using any of the named profiles");
 			this.log("Run 'lumigo-cli switch-profile' to switch to a named profile");
 			this.exit();
 		}
 
-		this.log(`You are logged in as [${currentProfile[0]}]`);
-	}
-
-	// Check if default === other profiles found
-	areEqual(profile, secondProfile) {
-		return (
-			profile.aws_access_key_id === secondProfile.aws_access_key_id &&
-			profile.aws_secret_access_key === secondProfile.aws_secret_access_key
-		);
+		this.log(`You are logged in as [${currentProfile}]`);
 	}
 }
 
