@@ -1,17 +1,18 @@
+const _ = require("lodash");
 const { Command } = require("@oclif/command");
-const { replaceDefaultProfile, getProfiles } = require("aws-profile-utils");
+const { getProfiles, replaceProfiles } = require("../lib/aws-profile-utils");
 const inquirer = require("inquirer");
 
 class SwitchProfileCommand extends Command {
 	async run() {
-		const profiles = getProfiles();
+		const { sharedCred, config } = getProfiles();
 
-		if (!profiles["default"]) {
-			this.log("No default profile set.");
-			this.exit();
-		}
+		const sharedCredProfileNames = Object.keys(sharedCred).filter(
+			x => x !== "default"
+		);
+		const configProfileNames = Object.keys(config);
 
-		if (Object.keys(profiles).length === 1) {
+		if (_.isEmpty(sharedCredProfileNames) && _.isEmpty(configProfileNames)) {
 			this.log("You don't have any named profiles set up");
 			this.log(
 				"Run 'aws configure --profile profile-name' to set up named profiles"
@@ -19,13 +20,14 @@ class SwitchProfileCommand extends Command {
 			this.exit();
 		}
 
-		const profileChoices = Object.keys(profiles)
-			.filter(name => name !== "default")
-			.map(name =>
-				this.areEqual(profiles[name], profiles["default"])
-					? `${name} (current default profile)`
-					: name
-			);
+		const profileChoices = _.uniq([
+			...sharedCredProfileNames,
+			...configProfileNames
+		]).map(name =>
+			_.isEqual(sharedCred[name] || config[name], sharedCred.default)
+				? `${name} (current default profile)`
+				: name
+		);
 
 		const { accountToSwitchTo } = await inquirer.prompt([
 			{
@@ -43,19 +45,13 @@ class SwitchProfileCommand extends Command {
 			);
 
 			if (accountToSwitchTo.endsWith("(current default profile)")) {
-				this.log(`stay logged in as [${profileName}]`);
+				this.log(`Stay logged in as [${profileName}]`);
 			} else {
-				replaceDefaultProfile(profileName);
+				sharedCred.default = sharedCred[profileName] || config[profileName];
+				replaceProfiles({ sharedCred, config });
+				this.log(`You are now logged in as [${profileName}]`);
 			}
 		}
-	}
-
-	// Check if default === other profiles found
-	areEqual(profile, secondProfile) {
-		return (
-			profile.aws_access_key_id === secondProfile.aws_access_key_id &&
-			profile.aws_secret_access_key === secondProfile.aws_secret_access_key
-		);
 	}
 }
 
