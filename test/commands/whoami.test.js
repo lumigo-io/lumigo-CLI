@@ -1,17 +1,20 @@
 const {expect, test} = require("@oclif/test");
-const awsProfileUtils = require("aws-profile-utils");
+const profileUtils = require("../../src/lib/aws-profile-utils");
 
 const mockGetProfiles = jest.fn();
-awsProfileUtils.getProfiles = mockGetProfiles;
+profileUtils.getProfiles = mockGetProfiles;
 
-afterEach(() => {
+beforeEach(() => {
 	mockGetProfiles.mockReset();
 });
 
 describe("whoami", () => {
 	describe("if default profile is not set", () => {
 		beforeEach(() => {
-			mockGetProfiles.mockReturnValueOnce({});
+			mockGetProfiles.mockReturnValueOnce({
+				sharedCred: {},
+				config: {}
+			});
 		});
     
 		test
@@ -27,10 +30,13 @@ describe("whoami", () => {
 	describe("if no named profiles are set", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
-				default: {
-					aws_access_key_id: "xxx",
-					aws_secret_access_key: "xxx"
-				}
+				sharedCred: {
+					default: {
+						aws_access_key_id: "fake",
+						aws_secret_access_key: "fake"
+					}
+				},
+				config: {}
 			});
 		});
     
@@ -47,14 +53,17 @@ describe("whoami", () => {
 	describe("if no matching named profile is found", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
-				default: {
-					aws_access_key_id: "xxx",
-					aws_secret_access_key: "xxx"
+				sharedCred: {
+					default: {
+						aws_access_key_id: "fake",
+						aws_secret_access_key: "fake"
+					},
+					yancui: {
+						aws_access_key_id: "also fake",
+						aws_secret_access_key: "also fake"
+					}
 				},
-				yancui: {
-					aws_access_key_id: "yyy",
-					aws_secret_access_key: "yyy"
-				}
+				config: {}
 			});
 		});
     
@@ -68,16 +77,49 @@ describe("whoami", () => {
 			});
 	});
   
-	describe("if a matching named profile is found", () => {
+	describe("if a matching named profile is found in shared credential file", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
-				default: {
-					aws_access_key_id: "xxx",
-					aws_secret_access_key: "xxx"
+				sharedCred: {
+					default: {
+						aws_access_key_id: "fake",
+						aws_secret_access_key: "fake"
+					},
+					yancui: {
+						aws_access_key_id: "fake",
+						aws_secret_access_key: "fake"
+					}
 				},
-				yancui: {
-					aws_access_key_id: "xxx",
-					aws_secret_access_key: "xxx"
+				config: {}
+			});
+		});
+    
+		test
+			.stdout()
+			.command(["whoami"])
+			.it("shows the matching profile", ctx => {
+				expect(ctx.stdout).to.contain("You are logged in as [yancui]");
+			});
+	});
+  
+	describe("if a matching named profile is found in config file", () => {
+		beforeEach(() => {
+			mockGetProfiles.mockReturnValueOnce({
+				sharedCred: {
+					default: {
+						role_arn: "arn",
+						source_profile: "theburningmonk"
+					},
+					theburningmonk: {
+						aws_access_key_id: "fake",
+						aws_secret_access_key: "fake"
+					}
+				},
+				config: {
+					yancui: {
+						role_arn: "arn",
+						source_profile: "theburningmonk"
+					}
 				}
 			});
 		});
