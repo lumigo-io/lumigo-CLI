@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const { ClearResult } = require("./utils");
+const retry = require("async-retry");
 
 const regions = [
 	"us-east-1",
@@ -71,14 +72,26 @@ const getAllApiGwCount = async AWS => {
 const deleteApiGw = async (apiGw, AWS) => {
 	const HttpApiGw = new AWS.ApiGatewayV2({ region: apiGw.region });
 	const RestApiGw = new AWS.APIGateway({ region: apiGw.region });
-
-	if (apiGw.type === "REST") {
-		await RestApiGw.deleteRestApi({ restApiId: apiGw.apiId }).promise();
-	} else if (apiGw.type === "HTTP") {
-		await HttpApiGw.deleteApi({ ApiId: apiGw.apiId }).promise();
-	} else {
-		throw new Error(`Unknown API Gateway type '${apiGw.type}'`);
-	}
+	await retry(
+		async bail => {
+			try {
+				if (apiGw.type === "REST") {
+					await RestApiGw.deleteRestApi({ restApiId: apiGw.apiId }).promise();
+				} else if (apiGw.type === "HTTP") {
+					await HttpApiGw.deleteApi({ ApiId: apiGw.apiId }).promise();
+				} else {
+					throw new Error(`Unknown API Gateway type '${apiGw.type}'`);
+				}
+			} catch (e) {
+				if (e.code !== "TooManyRequestsException") {
+					bail(e);
+				} else {
+					throw e;
+				}
+			}
+		},
+		{ maxTimeout: 30000 }
+	);
 };
 
 const deleteAllApiGw = async AWS => {

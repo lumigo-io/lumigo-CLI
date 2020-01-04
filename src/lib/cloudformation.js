@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const { ClearResult } = require("./utils");
+const retry = require("async-retry");
 
 const regions = [
 	"us-east-1",
@@ -36,9 +37,18 @@ const stackStatusToDelete = [
 
 const deleteStack = async (stackName, region, AWS) => {
 	const CloudFormation = new AWS.CloudFormation({ region });
-	await CloudFormation.deleteStack({
-		StackName: stackName
-	}).promise();
+	// I've noticed that sometimes delete stacks succeeds after a second run.
+	await retry(
+		async () => {
+			await CloudFormation.deleteStack({
+				StackName: stackName
+			}).promise();
+		},
+		{
+			retries: 2,
+			minTimeout: 5000
+		}
+	);
 
 	await CloudFormation.waitFor("stackDeleteComplete", {
 		StackName: stackName
