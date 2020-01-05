@@ -31,43 +31,46 @@ const getAllRolesCount = async AWS => {
 const deleteRole = async (role, AWS) => {
 	const IAM = new AWS.IAM();
 
-	await retry(async bail => {
-		try {
-			const attachedPolicies = (await IAM.listAttachedRolePolicies({
-				RoleName: role.name
-			}).promise()).AttachedPolicies;
-
-			const rolePolicies = (await IAM.listRolePolicies({
-				RoleName: role.name
-			}).promise()).PolicyNames;
-
-			const promises = attachedPolicies.map(async val => {
-				await IAM.detachRolePolicy({
-					PolicyArn: val.PolicyArn,
+	await retry(
+		async bail => {
+			try {
+				const attachedPolicies = (await IAM.listAttachedRolePolicies({
 					RoleName: role.name
-				}).promise();
-			});
+				}).promise()).AttachedPolicies;
 
-			promises.concat(
-				rolePolicies.map(async val => {
-					await IAM.deleteRolePolicy({
-						PolicyName: val,
+				const rolePolicies = (await IAM.listRolePolicies({
+					RoleName: role.name
+				}).promise()).PolicyNames;
+
+				const promises = attachedPolicies.map(async val => {
+					await IAM.detachRolePolicy({
+						PolicyArn: val.PolicyArn,
 						RoleName: role.name
 					}).promise();
-				})
-			);
+				});
 
-			await Promise.all(promises);
+				promises.concat(
+					rolePolicies.map(async val => {
+						await IAM.deleteRolePolicy({
+							PolicyName: val,
+							RoleName: role.name
+						}).promise();
+					})
+				);
 
-			await IAM.deleteRole({ RoleName: role.name }).promise();
-		} catch (e) {
-			if (e.code !== "Throttling") {
-				bail(e);
-			} else {
-				throw e;
+				await Promise.all(promises);
+
+				await IAM.deleteRole({ RoleName: role.name }).promise();
+			} catch (e) {
+				if (e.code !== "Throttling") {
+					bail(e);
+				} else {
+					throw e;
+				}
 			}
-		}
-	});
+		},
+		{ retries: 100 }
+	);
 };
 
 const deleteAllRoles = async AWS => {

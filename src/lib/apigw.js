@@ -90,7 +90,7 @@ const deleteApiGw = async (apiGw, AWS) => {
 				}
 			}
 		},
-		{ maxTimeout: 30000 }
+		{ maxTimeout: 30000, retries: 100 }
 	);
 };
 

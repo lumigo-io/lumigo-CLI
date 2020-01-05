@@ -42,11 +42,11 @@ const deleteStack = async (stackName, region, retryOpts, AWS) => {
 		await CloudFormation.deleteStack({
 			StackName: stackName
 		}).promise();
-	}, retryOpts);
 
-	await CloudFormation.waitFor("stackDeleteComplete", {
-		StackName: stackName
-	}).promise();
+		await CloudFormation.waitFor("stackDeleteComplete", {
+			StackName: stackName
+		}).promise();
+	}, retryOpts);
 };
 
 /**
