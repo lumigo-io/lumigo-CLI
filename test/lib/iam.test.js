@@ -7,6 +7,9 @@ const chai = require("chai");
 require("colors"); // Required for avoid fail on console printing
 const sinon = require("sinon");
 
+jest.spyOn(global.console, "log");
+global.console.log.mockImplementation(() => {});
+
 chai.use(chaiAsPromised);
 describe("deleteAllRoles", () => {
 	let AWS = null;

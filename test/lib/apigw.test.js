@@ -11,6 +11,8 @@ const chai = require("chai");
 const sinon = require("sinon");
 require("colors"); // Required for avoid fail on console printing
 
+jest.spyOn(global.console, "log");
+global.console.log.mockImplementation(() => {});
 chai.use(chaiAsPromised);
 describe("getAllApiGwInRegion", () => {
 	let AWS = null;

@@ -6,6 +6,8 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors"); // Required for avoid fail on console printing
 
+jest.spyOn(global.console, "log");
+global.console.log.mockImplementation(() => {});
 chai.use(chaiAsPromised);
 describe("deleteAllStacks", () => {
 	let AWS = null;
