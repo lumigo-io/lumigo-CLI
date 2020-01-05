@@ -35,20 +35,14 @@ const stackStatusToDelete = [
 	"IMPORT_ROLLBACK_COMPLETE"
 ];
 
-const deleteStack = async (stackName, region, AWS) => {
+const deleteStack = async (stackName, region, retryOpts, AWS) => {
 	const CloudFormation = new AWS.CloudFormation({ region });
 	// I've noticed that sometimes delete stacks succeeds after a second run.
-	await retry(
-		async () => {
-			await CloudFormation.deleteStack({
-				StackName: stackName
-			}).promise();
-		},
-		{
-			retries: 2,
-			minTimeout: 5000
-		}
-	);
+	await retry(async () => {
+		await CloudFormation.deleteStack({
+			StackName: stackName
+		}).promise();
+	}, retryOpts);
 
 	await CloudFormation.waitFor("stackDeleteComplete", {
 		StackName: stackName
@@ -65,7 +59,13 @@ const deleteStack = async (stackName, region, AWS) => {
  *   reason: The exception object | null
  *   region: Stacks' region
  */
-const deleteAllStacks = async AWS => {
+const deleteAllStacks = async (
+	AWS,
+	retryOpts = {
+		retries: 2,
+		minTimeout: 5000
+	}
+) => {
 	const allStacksPromises = regions.map(region =>
 		getAllStacksInRegion(region, stackStatusToDelete, AWS)
 	);
@@ -73,7 +73,7 @@ const deleteAllStacks = async AWS => {
 	const deletionPromises = _.flatten(allStacks).map(async stack => {
 		if (stackStatusToDelete.includes(stack.stackStatus)) {
 			try {
-				await deleteStack(stack.stackName, stack.region, AWS);
+				await deleteStack(stack.stackName, stack.region, retryOpts, AWS);
 				process.stdout.write(".".green);
 				return ClearResult.getSuccess(stack.stackName, stack.region);
 			} catch (e) {
@@ -140,7 +140,6 @@ const getAllStacksCount = async AWS => {
 	return _.flatten(allStacks).length;
 };
 module.exports = {
-	deleteStack,
 	getAllStacksInRegion,
 	deleteAllStacks,
 	getAllStacksCount,
