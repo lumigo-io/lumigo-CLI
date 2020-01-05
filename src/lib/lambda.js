@@ -80,7 +80,7 @@ const getFunctionsInRegion = async (region, AWS) => {
 	return loop();
 };
 
-const getAllLambdasCount = async (AWS) => {
+const getAllLambdasCount = async AWS => {
 	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region, AWS));
 	const allStacks = await Promise.all(allLambdasPromises);
 
