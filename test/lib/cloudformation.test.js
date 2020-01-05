@@ -37,6 +37,10 @@ describe("deleteAllStacks", () => {
 			callback(null, {});
 		});
 
+		AWSMock.mock("CloudFormation", "waitFor", function(params, args, callback) {
+			callback(null, {});
+		});
+
 		const result = await deleteAllStacks(AWS);
 
 		expect(result.length).to.equal(16);
