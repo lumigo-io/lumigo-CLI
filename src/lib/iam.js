@@ -43,7 +43,7 @@ const deleteRole = async (role, AWS) => {
 
 			const promises = attachedPolicies.map(async val => {
 				await IAM.detachRolePolicy({
-					PolicyArn: val.PolicyArn || val.PolicyName,
+					PolicyArn: val.PolicyArn,
 					RoleName: role.name
 				}).promise();
 			});
@@ -87,7 +87,6 @@ const deleteAllRoles = async AWS => {
 	return await Promise.all(apiToDeletePromises);
 };
 module.exports = {
-	deleteRole,
 	deleteAllRoles,
 	getAllRoles,
 	getAllRolesCount
