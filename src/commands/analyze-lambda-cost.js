@@ -47,7 +47,7 @@ class AnalyzeLambdaCostCommand extends Command {
 	}
 
 	async getFunctionsInRegion(region) {
-		const functions = await Lambda.getFunctionsInRegion(region);
+		const functions = await Lambda.getFunctionsInRegion(region, getAWSSDK());
 		const summaries = await this.getCostSummary(region, functions);
 
 		return functions.map(x => {

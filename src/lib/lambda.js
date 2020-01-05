@@ -41,8 +41,7 @@ const getFunctionInRegion = async (functionName, region) => {
 	};
 };
 
-const getFunctionsInRegion = async region => {
-	const AWS = getAWSSDK();
+const getFunctionsInRegion = async (region, AWS) => {
 	const Lambda = new AWS.Lambda({ region });
 
 	const loop = async (acc = [], marker) => {
@@ -81,8 +80,8 @@ const getFunctionsInRegion = async region => {
 	return loop();
 };
 
-const getAllLambdasCount = async () => {
-	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region));
+const getAllLambdasCount = async (AWS) => {
+	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region, AWS));
 	const allStacks = await Promise.all(allLambdasPromises);
 
 	return _.flatten(allStacks).length;
@@ -94,7 +93,7 @@ const deleteLambda = async (lambda, AWS) => {
 };
 
 const deleteAllLambdas = async AWS => {
-	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region));
+	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region, AWS));
 	const allLambdas = await Promise.all(allLambdasPromises);
 	const deletionPromises = _.flatten(allLambdas).map(async lambda => {
 		try {

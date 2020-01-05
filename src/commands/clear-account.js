@@ -145,7 +145,7 @@ class ClearAccountCommand extends Command {
 		this.log("Lambdas".bold);
 		await this._resourceDeletion(
 			async () => {
-				return await getAllLambdasCount();
+				return await getAllLambdasCount(AWS);
 			},
 			async () => {
 				return await deleteAllLambdas(AWS);
