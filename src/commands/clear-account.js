@@ -172,7 +172,7 @@ class ClearAccountCommand extends Command {
 ClearAccountCommand.description =
 	"Clear your AWS account from all supported resources. Use with cautious!";
 ClearAccountCommand.flags = {
-	inactive: flags.boolean({
+	force: flags.boolean({
 		char: "f",
 		description: "Skip prompt. Use mainly in CI/CD environments",
 		required: false,
