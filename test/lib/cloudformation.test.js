@@ -9,7 +9,7 @@ require("colors"); // Required for avoid fail on console printing
 chai.use(chaiAsPromised);
 describe("deleteAllStacks", () => {
 	let AWS = null;
-	beforeAll(() => {
+	beforeEach(() => {
 		AWS = getAWSSDK();
 		AWSMock.setSDKInstance(AWS);
 	});
