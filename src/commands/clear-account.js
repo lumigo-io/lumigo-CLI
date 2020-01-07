@@ -50,20 +50,14 @@ class ClearAccountCommand extends Command {
 	}
 
 	_summary(results, singularName, hasRegion) {
-		let success = 0;
 		const failed = {};
 		results.forEach(val => {
 			const key = hasRegion ? `${val.name} [${val.region}]` : val.name;
-			if (val.status === "success") {
-				success++;
-			} else if (val.status === "fail") {
+			if (val.status === "fail") {
 				failed[key] = val.reason;
 			}
 		});
 		console.info("");
-		if (success > 0) {
-			this.log(`Successfully deleted ${success} ${singularName}(s)`.green.bold);
-		}
 		if (Object.keys(failed).length > 0) {
 			this.log(
 				`Failed deleting ${Object.keys(failed).length} ${singularName}(s)`.red
@@ -84,6 +78,7 @@ class ClearAccountCommand extends Command {
 				async () => {
 					results = await deleteAllFunc();
 					if (results.filter(val => val.status === "fail").length > 0) {
+						console.info("");
 						this.log("Trying again...");
 						throw new Error("Try again");
 					}
