@@ -38,15 +38,23 @@ const stackStatusToDelete = [
 const deleteStack = async (stackName, region, retryOpts, AWS) => {
 	const CloudFormation = new AWS.CloudFormation({ region });
 	// I've noticed that sometimes delete stacks succeeds after a second run.
-	await retry(async () => {
-		await CloudFormation.deleteStack({
-			StackName: stackName
-		}).promise();
-
-		await CloudFormation.waitFor("stackDeleteComplete", {
-			StackName: stackName
-		}).promise();
+	await retry(async bail => {
+		try {
+			await CloudFormation.deleteStack({
+				StackName: stackName
+			}).promise();
+		} catch (e) {
+			if (e.code !== "Throttling") {
+				bail(e);
+			} else {
+				throw e;
+			}
+		}
 	}, retryOpts);
+
+	await CloudFormation.waitFor("stackDeleteComplete", {
+		StackName: stackName
+	}).promise();
 };
 
 /**
@@ -62,8 +70,8 @@ const deleteStack = async (stackName, region, retryOpts, AWS) => {
 const deleteAllStacks = async (
 	AWS,
 	retryOpts = {
-		retries: 2,
-		minTimeout: 5000
+		retries: 10,
+		minTimeout: 1000
 	}
 ) => {
 	const allStacksPromises = regions.map(region =>
