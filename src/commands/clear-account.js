@@ -84,6 +84,7 @@ class ClearAccountCommand extends Command {
 				async () => {
 					results = await deleteAllFunc();
 					if (results.filter(val => val.status === "fail").length > 0) {
+						this.log("Trying again...");
 						throw new Error("Try again");
 					}
 				},
