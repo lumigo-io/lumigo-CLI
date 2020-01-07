@@ -9,14 +9,15 @@ const { getAllApiGwCount, deleteAllApiGw } = require("../lib/apigw");
 const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
 const { getCurrentProfile } = require("../lib/utils");
+const retry = require("async-retry");
 
 class ClearAccountCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ClearAccountCommand);
-		const { force, profile } = flags;
+		const { force, profile, retries } = flags;
 
 		global.profile = profile;
-
+		this.retries = retries;
 		checkVersion();
 		const AWS = getAWSSDK();
 		if (force) {
@@ -78,7 +79,17 @@ class ClearAccountCommand extends Command {
 		const count = await countFunc();
 		if (count > 0) {
 			this.log(`Deleting ${count} ${singular}(s)`);
-			const results = await deleteAllFunc();
+			let results = null;
+			await retry(
+				async () => {
+					results = await deleteAllFunc();
+					if (results.filter(val => val.status === "fail").length > 0) {
+						throw new Error("Try again");
+					}
+				},
+				{ retries: this.retries }
+			);
+
 			this._summary(results, singular, hasRegion);
 		} else {
 			this.log(`No ${singular}(s) to delete. Skipping...`);
@@ -182,6 +193,12 @@ ClearAccountCommand.flags = {
 		char: "p",
 		description: "AWS CLI profile name",
 		required: false
+	}),
+	retries: flags.string({
+		char: "r",
+		description: "How many times to try to delete stubborn resource",
+		required: false,
+		default: 2
 	})
 };
 
