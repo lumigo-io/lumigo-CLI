@@ -69,10 +69,10 @@ class ClearAccountCommand extends Command {
 		}
 	}
 
-	async resourceDeletion(countFunc, deleteAllFunc, singular, hasRegion) {
+	async resourceDeletion(countFunc, deleteAllFunc, singularName, hasRegion) {
 		const count = await countFunc();
 		if (count > 0) {
-			this.log(`Deleting ${count} ${singular}(s)`);
+			this.log(`Deleting ${count} ${singularName}(s)`);
 			let results = null;
 			await retry(
 				async () => {
@@ -86,9 +86,9 @@ class ClearAccountCommand extends Command {
 				{ retries: this.retries }
 			);
 
-			this.summary(results, singular, hasRegion);
+			this.summary(results, singularName, hasRegion);
 		} else {
-			this.log(`No ${singular}(s) to delete. Skipping...`);
+			this.log(`No ${singularName}(s) to delete. Skipping...`);
 		}
 	}
 
