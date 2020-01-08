@@ -1,4 +1,5 @@
 const { ClearResult } = require("./utils");
+
 const emptyBucket = async (bucketName, AWS) => {
 	const S3 = new AWS.S3();
 	const listResp = await S3.listObjectsV2({
