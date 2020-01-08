@@ -88,14 +88,6 @@ const deleteAllStacks = async (
 				process.stdout.write("F".red);
 				return ClearResult.getFailed(stack.stackName, stack.region, e);
 			}
-		} else {
-			process.stdout.write("S".yellow);
-			return new ClearResult(
-				stack.stackName,
-				ClearResult.SKIP,
-				stack.region,
-				new Error(stack.stackStatus)
-			);
 		}
 	});
 
