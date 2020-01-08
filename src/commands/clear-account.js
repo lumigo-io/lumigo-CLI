@@ -49,7 +49,7 @@ class ClearAccountCommand extends Command {
 		}
 	}
 
-	_summary(results, singularName, hasRegion) {
+	summary(results, singularName, hasRegion) {
 		const failed = {};
 		results.forEach(val => {
 			const key = hasRegion ? `${val.name} [${val.region}]` : val.name;
@@ -69,7 +69,7 @@ class ClearAccountCommand extends Command {
 		}
 	}
 
-	async _resourceDeletion(countFunc, deleteAllFunc, singular, hasRegion) {
+	async resourceDeletion(countFunc, deleteAllFunc, singular, hasRegion) {
 		const count = await countFunc();
 		if (count > 0) {
 			this.log(`Deleting ${count} ${singular}(s)`);
@@ -86,15 +86,15 @@ class ClearAccountCommand extends Command {
 				{ retries: this.retries }
 			);
 
-			this._summary(results, singular, hasRegion);
+			this.summary(results, singular, hasRegion);
 		} else {
 			this.log(`No ${singular}(s) to delete. Skipping...`);
 		}
 	}
 
-	async _clearS3(AWS) {
+	async clearS3(AWS) {
 		this.log("S3".bold);
-		await this._resourceDeletion(
+		await this.resourceDeletion(
 			async () => {
 				return await getBucketCount(AWS);
 			},
@@ -106,9 +106,9 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
-	async _clearCF(AWS) {
+	async clearCF(AWS) {
 		this.log("CloudFormation".bold);
-		await this._resourceDeletion(
+		await this.resourceDeletion(
 			async () => {
 				return await getAllStacksCount(AWS);
 			},
@@ -120,9 +120,9 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
-	async _clearApiGw(AWS) {
+	async clearApiGw(AWS) {
 		this.log("API Gateway".bold);
-		await this._resourceDeletion(
+		await this.resourceDeletion(
 			async () => {
 				return await getAllApiGwCount(AWS);
 			},
@@ -134,9 +134,9 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
-	async _clearRoles(AWS) {
+	async clearRoles(AWS) {
 		this.log("IAM Roles".bold);
-		await this._resourceDeletion(
+		await this.resourceDeletion(
 			async () => {
 				return await getAllRolesCount(AWS);
 			},
@@ -148,9 +148,9 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
-	async _clearLambdas(AWS) {
+	async clearLambdas(AWS) {
 		this.log("Lambdas".bold);
-		await this._resourceDeletion(
+		await this.resourceDeletion(
 			async () => {
 				return await getAllLambdasCount(AWS);
 			},
@@ -163,15 +163,15 @@ class ClearAccountCommand extends Command {
 	}
 
 	async clearEnvironment(AWS) {
-		await this._clearS3(AWS);
+		await this.clearS3(AWS);
 		console.info("");
-		await this._clearCF(AWS);
+		await this.clearCF(AWS);
 		console.info("");
-		await this._clearApiGw(AWS);
+		await this.clearApiGw(AWS);
 		console.info("");
-		await this._clearRoles(AWS);
+		await this.clearRoles(AWS);
 		console.info("");
-		await this._clearLambdas(AWS);
+		await this.clearLambdas(AWS);
 		console.info("");
 	}
 }
