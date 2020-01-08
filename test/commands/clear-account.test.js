@@ -5,13 +5,11 @@ const iam = require("../../src/lib/iam");
 const apigw = require("../../src/lib/apigw");
 const s3 = require("../../src/lib/s3");
 const cf = require("../../src/lib/cloudformation");
-const utils = require("../../src/lib/utils");
 const versionCheck = require("../../src/lib/version-check");
 
 describe("User forces clear account", () => {
 	beforeEach(() => {
 		sinon.stub(versionCheck, "checkVersion").returns(null);
-		sinon.stub(utils, "getCurrentProfile").returns("default");
 		sinon.stub(s3, "getBucketCount").returns(1);
 		sinon.stub(s3, "deleteAllBuckets").returns([{ status: "fail" }]);
 		sinon.stub(apigw, "getAllApiGwCount").returns(1);

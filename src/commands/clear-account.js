@@ -8,7 +8,6 @@ const { getAllRolesCount, deleteAllRoles } = require("../lib/iam");
 const { getAllApiGwCount, deleteAllApiGw } = require("../lib/apigw");
 const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
-const { getCurrentProfile } = require("../lib/utils");
 const retry = require("async-retry");
 
 class ClearAccountCommand extends Command {
@@ -24,15 +23,12 @@ class ClearAccountCommand extends Command {
 			this.log("Forcing account cleanup!".red.bold);
 			await this.clearEnvironment(AWS);
 		} else {
-			const profileName = getCurrentProfile();
 			const sts = new AWS.STS();
 			const caller = await sts.getCallerIdentity().promise();
 
 			const message = `You are about clear account [${
 				caller.Account
-			}] while using [${
-				profileName ? profileName : "unknown"
-			}] profile, are you sure?`;
+			}], are you sure?`;
 			const { clear } = await inquirer.prompt([
 				{
 					type: "confirm",
