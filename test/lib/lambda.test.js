@@ -1,7 +1,7 @@
 const { expect } = require("@oclif/test");
 const AWSMock = require("aws-sdk-mock");
 const { getAWSSDK } = require("../../src/lib/aws");
-const { deleteAllLambdas } = require("../../src/lib/lambda");
+const { deleteAllFunctions } = require("../../src/lib/lambda");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors"); // Required for avoid fail on console printing
@@ -41,7 +41,7 @@ describe("deleteAllLambdas", () => {
 			callback(null, {});
 		});
 
-		const result = await deleteAllLambdas(AWS);
+		const result = await deleteAllFunctions(AWS);
 
 		expect(result.length).to.equal(16);
 		result.forEach(val => {
@@ -54,7 +54,7 @@ describe("deleteAllLambdas", () => {
 			callback(new Error("Boom!"));
 		});
 
-		const result = await deleteAllLambdas(AWS);
+		const result = await deleteAllFunctions(AWS);
 
 		expect(result.length).to.equal(16);
 		result.forEach(val => {

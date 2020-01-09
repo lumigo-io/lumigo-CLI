@@ -3,12 +3,11 @@ const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 require("colors");
 const inquirer = require("inquirer");
-const { getAllLambdasCount, deleteAllLambdas } = require("../lib/lambda");
+const { getAllFunctionsCount, deleteAllFunctions } = require("../lib/lambda");
 const { getAllRolesCount, deleteAllRoles } = require("../lib/iam");
 const { getAllApiGwCount, deleteAllApiGw } = require("../lib/apigw");
 const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
-const retry = require("async-retry");
 
 class ClearAccountCommand extends Command {
 	async run() {
@@ -26,9 +25,7 @@ class ClearAccountCommand extends Command {
 			const sts = new AWS.STS();
 			const caller = await sts.getCallerIdentity().promise();
 
-			const message = `You are about clear account [${
-				caller.Account
-			}], are you sure?`;
+			const message = `You are about clear account [${caller.Account}], are you sure?`;
 			const { clear } = await inquirer.prompt([
 				{
 					type: "confirm",
@@ -69,19 +66,7 @@ class ClearAccountCommand extends Command {
 		const count = await countFunc();
 		if (count > 0) {
 			this.log(`Deleting ${count} ${singularName}(s)`);
-			let results = null;
-			await retry(
-				async () => {
-					results = await deleteAllFunc();
-					if (results.filter(val => val.status === "fail").length > 0) {
-						console.info("");
-						this.log("Trying again...");
-						throw new Error("Try again");
-					}
-				},
-				{ retries: this.retries }
-			);
-
+			let results = await deleteAllFunc();
 			this.summary(results, singularName, hasRegion);
 		} else {
 			this.log(`No ${singularName}(s) to delete. Skipping...`);
@@ -148,10 +133,10 @@ class ClearAccountCommand extends Command {
 		this.log("Lambdas".bold);
 		await this.resourceDeletion(
 			async () => {
-				return await getAllLambdasCount(AWS);
+				return await getAllFunctionsCount(AWS);
 			},
 			async () => {
-				return await deleteAllLambdas(AWS);
+				return await deleteAllFunctions(AWS);
 			},
 			"lambda",
 			true

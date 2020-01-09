@@ -80,29 +80,29 @@ const getFunctionsInRegion = async (region, AWS) => {
 	return loop();
 };
 
-const getAllLambdasCount = async AWS => {
-	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region, AWS));
-	const allStacks = await Promise.all(allLambdasPromises);
+const getAllFunctionsCount = async AWS => {
+	const allFunctionsPromises = regions.map(region => getFunctionsInRegion(region, AWS));
+	const allFunctions = await Promise.all(allFunctionsPromises);
 
-	return _.flatten(allStacks).length;
+	return _.flatten(allFunctions).length;
 };
 
-const deleteLambda = async (lambda, AWS) => {
-	const Lambda = new AWS.Lambda({ region: lambda.region });
-	await Lambda.deleteFunction({ FunctionName: lambda.functionName }).promise();
+const deleteFunction = async (functionDetails, AWS) => {
+	const Lambda = new AWS.Lambda({ region: functionDetails.region });
+	await Lambda.deleteFunction({ FunctionName: functionDetails.functionName }).promise();
 };
 
-const deleteAllLambdas = async AWS => {
-	const allLambdasPromises = regions.map(region => getFunctionsInRegion(region, AWS));
-	const allLambdas = await Promise.all(allLambdasPromises);
-	const deletionPromises = _.flatten(allLambdas).map(async lambda => {
+const deleteAllFunctions = async AWS => {
+	const allFunctionsPromises = regions.map(region => getFunctionsInRegion(region, AWS));
+	const allFunctions = await Promise.all(allFunctionsPromises);
+	const deletionPromises = _.flatten(allFunctions).map(async functionDetails => {
 		try {
-			await deleteLambda(lambda, AWS);
+			await deleteFunction(functionDetails, AWS);
 			process.stdout.write(".".green);
-			return ClearResult.getSuccess(lambda.lambdaName, lambda.region);
+			return ClearResult.getSuccess(functionDetails.functionName, functionDetails.region);
 		} catch (e) {
 			process.stdout.write("F".red);
-			return ClearResult.getFailed(lambda.lambdaName, lambda.region, e);
+			return ClearResult.getFailed(functionDetails.functionName, functionDetails.region, e);
 		}
 	});
 
@@ -113,6 +113,6 @@ module.exports = {
 	regions,
 	getFunctionInRegion,
 	getFunctionsInRegion,
-	getAllLambdasCount,
-	deleteAllLambdas
+	getAllFunctionsCount: getAllFunctionsCount,
+	deleteAllFunctions: deleteAllFunctions
 };
