@@ -99,10 +99,17 @@ const deleteAllFunctions = async AWS => {
 		try {
 			await deleteFunction(functionDetails, AWS);
 			process.stdout.write(".".green);
-			return ClearResult.getSuccess(functionDetails.functionName, functionDetails.region);
+			return ClearResult.getSuccess(
+				functionDetails.functionName,
+				functionDetails.region
+			);
 		} catch (e) {
 			process.stdout.write("F".red);
-			return ClearResult.getFailed(functionDetails.functionName, functionDetails.region, e);
+			return ClearResult.getFailed(
+				functionDetails.functionName,
+				functionDetails.region,
+				e
+			);
 		}
 	});
 
