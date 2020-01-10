@@ -67,20 +67,17 @@ class ClearAccountCommand extends Command {
 		if (count > 0) {
 			this.log(`Deleting ${count} ${singularName}(s)`);
 			let leftRetries = this.retries;
-			let results = null;
-			do {
+			let results = await deleteAllFunc();
+			while (
+				leftRetries > 0 &&
+				results.filter(val => {
+					return val.status === "fail";
+				}).length > 0
+			) {
+				console.info("\nTrying again...");
 				results = await deleteAllFunc();
-				if (
-					results.filter(val => {
-						return val.status === "fail";
-					}).length > 0
-				) {
-					leftRetries--;
-					console.info("");
-				} else {
-					break;
-				}
-			} while (leftRetries > 0);
+				leftRetries--;
+			}
 
 			this.summary(results, singularName, hasRegion);
 		} else {

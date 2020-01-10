@@ -2,19 +2,23 @@ const { ClearResult } = require("./utils");
 
 const emptyBucket = async (bucketName, AWS) => {
 	const S3 = new AWS.S3();
-	const listResp = await S3.listObjectsV2({
-		Bucket: bucketName
-	}).promise();
+	let response = {};
+	do {
+		const params = response.ContinuationToken
+			? { Bucket: bucketName, ContinuationToken: response.ContinuationToken }
+			: { Bucket: bucketName };
+		response = await S3.listObjectsV2(params).promise();
 
-	const keys = listResp.Contents.map(x => ({ Key: x.Key }));
-	if (keys.length > 0) {
-		await S3.deleteObjects({
-			Bucket: bucketName,
-			Delete: {
-				Objects: keys
-			}
-		}).promise();
-	}
+		const keys = response.Contents.map(x => ({ Key: x.Key }));
+		if (keys.length > 0) {
+			await S3.deleteObjects({
+				Bucket: bucketName,
+				Delete: {
+					Objects: keys
+				}
+			}).promise();
+		}
+	} while (response.ContinuationToken);
 };
 
 /**
