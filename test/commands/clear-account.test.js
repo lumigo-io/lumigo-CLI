@@ -7,19 +7,25 @@ const s3 = require("../../src/lib/s3");
 const cf = require("../../src/lib/cloudformation");
 const versionCheck = require("../../src/lib/version-check");
 
+jest.mock("../../src/lib/version-check");
+jest.mock("../../src/lib/cloudformation");
+jest.mock("../../src/lib/s3");
+jest.mock("../../src/lib/apigw");
+jest.mock("../../src/lib/iam");
+jest.mock("../../src/lib/lambda");
 describe("User forces clear account", () => {
 	beforeEach(() => {
-		sinon.stub(versionCheck, "checkVersion").returns(null);
-		sinon.stub(s3, "getBucketCount").returns(1);
-		sinon.stub(s3, "deleteAllBuckets").returns([{ status: "fail" }]);
-		sinon.stub(apigw, "getAllApiGwCount").returns(1);
-		sinon.stub(apigw, "deleteAllApiGw").returns([{ status: "success" }]);
-		sinon.stub(iam, "getAllRolesCount").returns(1);
-		sinon.stub(iam, "deleteAllRoles").returns([{ status: "success" }]);
-		sinon.stub(lambda, "deleteAllLambdas").returns([{ status: "success" }]);
-		sinon.stub(cf, "deleteAllStacks").returns([{ status: "success" }]);
-		sinon.stub(cf, "getAllStacksCount").returns(1);
-		sinon.stub(lambda, "getAllLambdasCount").returns(0);
+		versionCheck.checkVersion.mockResolvedValue(null);
+		s3.getBucketCount.mockResolvedValue(1);
+		s3.deleteAllBuckets.mockResolvedValue([{ status: "fail" }]);
+		apigw.getAllApiGwCount.mockResolvedValue(1);
+		apigw.deleteAllApiGw.mockResolvedValue([{ status: "success" }]);
+		iam.getAllRolesCount.mockResolvedValue(1);
+		iam.deleteAllRoles.mockResolvedValue([{ status: "success" }]);
+		cf.deleteAllStacks.mockResolvedValue([{ status: "success" }]);
+		cf.getAllStacksCount.mockResolvedValue(1);
+		lambda.getAllFunctionsCount.mockResolvedValue(0);
+		lambda.deleteAllFunctions.mockResolvedValue([{ status: "success" }]);
 	});
 	afterEach(() => {
 		sinon.restore();

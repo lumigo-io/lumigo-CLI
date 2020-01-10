@@ -1,6 +1,7 @@
 const _ = require("lodash");
 const { ClearResult } = require("./utils");
 const retry = require("async-retry");
+const async = require("async");
 
 const regions = [
 	"us-east-1",
@@ -70,7 +71,7 @@ const deleteStack = async (stackName, region, retryOpts, AWS) => {
 const deleteAllStacks = async (
 	AWS,
 	retryOpts = {
-		retries: 10,
+		retries: 3,
 		minTimeout: 1000
 	}
 ) => {
@@ -78,20 +79,26 @@ const deleteAllStacks = async (
 		getAllStacksInRegion(region, stackStatusToDelete, AWS)
 	);
 	const allStacks = await Promise.all(allStacksPromises);
-	const deletionPromises = _.flatten(allStacks).map(async stack => {
+	const results = [];
+	const asyncQueue = async.queue(async stack => {
 		if (stackStatusToDelete.includes(stack.stackStatus)) {
 			try {
 				await deleteStack(stack.stackName, stack.region, retryOpts, AWS);
 				process.stdout.write(".".green);
-				return ClearResult.getSuccess(stack.stackName, stack.region);
+				results.push(ClearResult.getSuccess(stack.stackName, stack.region));
 			} catch (e) {
 				process.stdout.write("F".red);
-				return ClearResult.getFailed(stack.stackName, stack.region, e);
+				results.push(ClearResult.getFailed(stack.stackName, stack.region, e));
 			}
 		}
+	}, 10);
+
+	_.flatten(allStacks).forEach(stack => {
+		asyncQueue.push(stack);
 	});
 
-	return await Promise.all(deletionPromises);
+	await asyncQueue.drain();
+	return results;
 };
 
 /**
