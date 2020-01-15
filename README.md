@@ -37,6 +37,7 @@ USAGE
 * [`lumigo-cli list-kinesis-shards`](#lumigo-cli-list-kinesis-shards)
 * [`lumigo-cli list-kinesis-streams`](#lumigo-cli-list-kinesis-streams)
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
+* [`lumigo-cli measure-lambda-cold-start`](#lumigo-cli-measure-lambda-cold-start)
 * [`lumigo-cli powertune-lambda`](#lumigo-cli-powertune-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli send-to-sns`](#lumigo-cli-send-to-sns)
@@ -168,6 +169,25 @@ OPTIONS
 ```
 
 _See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/list-lambda.js)_
+
+## `lumigo-cli measure-lambda-cold-start`
+
+Measures a function's initialization time
+
+```
+USAGE
+  $ lumigo-cli measure-lambda-cold-start
+
+OPTIONS
+  -e, --payload=payload            [default: {}] the JSON payload to send to the function
+  -f, --file=file                  file that contains the JSON payload to send to the function
+  -i, --invocations=invocations    [default: 100] the number of invocations to run for each configuration
+  -n, --functionName=functionName  (required) name of the Lambda function
+  -p, --profile=profile            AWS CLI profile name
+  -r, --region=region              (required) AWS region, e.g. us-east-1
+```
+
+_See code: [src/commands/measure-lambda-cold-start.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/measure-lambda-cold-start.js)_
 
 ## `lumigo-cli powertune-lambda`
 
