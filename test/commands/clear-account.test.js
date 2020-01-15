@@ -1,5 +1,4 @@
 const { expect, test } = require("@oclif/test");
-const sinon = require("sinon");
 const lambda = require("../../src/lib/lambda");
 const iam = require("../../src/lib/iam");
 const apigw = require("../../src/lib/apigw");
@@ -28,7 +27,7 @@ describe("User forces clear account", () => {
 		lambda.deleteAllFunctions.mockResolvedValue([{ status: "success" }]);
 	});
 	afterEach(() => {
-		sinon.restore();
+		jest.restoreAllMocks();
 	});
 	test.stdout()
 		.command(["clear-account", "-f"])
