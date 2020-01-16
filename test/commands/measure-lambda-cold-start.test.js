@@ -68,8 +68,8 @@ afterEach(() => {
 
 const stateMachineArn = "arn:aws:states:us-east-1:123:execution:measureColdStartStateMachine";
 
-describe("measure-lambda-cold-start", () => {
-	const command = ["measure-lambda-cold-start", "-n", "my-function", "-r", "us-east-1"];
+describe("measure-lambda-cold-starts", () => {
+	const command = ["measure-lambda-cold-starts", "-n", "my-function", "-r", "us-east-1"];
   
 	describe("if there are more than one page of versions", () => {
 		beforeEach(() => {
