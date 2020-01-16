@@ -4,18 +4,11 @@ const { deleteAllRoles } = require("../../src/lib/iam");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors"); // Required for avoid fail on console printing
+const { fail, success } = require("../test-utils/jest-mocks");
 
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
 
-const doNothing = jest.fn();
-doNothing.mockImplementation(() => {
-	return {
-		promise() {
-			return Promise.resolve({});
-		}
-	};
-});
 
 chai.use(chaiAsPromised);
 describe("deleteAllRoles", () => {
@@ -69,8 +62,8 @@ describe("deleteAllRoles", () => {
 
 		AWS.IAM.prototype.listRolePolicies = listRolePolicies;
 
-		AWS.IAM.prototype.detachRolePolicy = doNothing;
-		AWS.IAM.prototype.deleteRolePolicy = doNothing;
+		AWS.IAM.prototype.detachRolePolicy = success;
+		AWS.IAM.prototype.deleteRolePolicy = success;
 	});
 
 	afterEach(() => {
@@ -78,7 +71,7 @@ describe("deleteAllRoles", () => {
 	});
 
 	it("Successful delete all iam roles except aws based ones", async function() {
-		AWS.IAM.prototype.deleteRole = doNothing;
+		AWS.IAM.prototype.deleteRole = success;
 
 		const result = await deleteAllRoles(AWS);
 
@@ -87,14 +80,6 @@ describe("deleteAllRoles", () => {
 	});
 
 	it("Failed deleting IAM role", async function() {
-		const fail = jest.fn();
-		fail.mockImplementation(() => {
-			return {
-				promise() {
-					return Promise.reject(new Error());
-				}
-			};
-		});
 
 		AWS.IAM.prototype.deleteRole = fail;
 

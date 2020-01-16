@@ -1,10 +1,10 @@
 const { expect } = require("@oclif/test");
-const AWSMock = require("aws-sdk-mock");
 const { getAWSSDK } = require("../../src/lib/aws");
 const { deleteAllFunctions } = require("../../src/lib/lambda");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
-require("colors"); // Required for avoid fail on console printing
+require("colors");
+const { success, fail } = require("../test-utils/jest-mocks"); // Required for avoid fail on console printing
 
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
@@ -14,32 +14,36 @@ describe("deleteAllLambdas", () => {
 	let AWS = null;
 	beforeEach(() => {
 		AWS = getAWSSDK();
-		AWSMock.setSDKInstance(AWS);
+		const listFunctions = jest.fn();
 
-		AWSMock.mock("Lambda", "listFunctions", function(params, callback) {
-			callback(null, {
-				Functions: [
-					{
-						FunctionName: "Lambda1",
-						Runtime: "nodejs10.x",
-						MemorySize: 1024,
-						CodeSize: 34,
-						LastModified: "123456",
-						Timeout: 6
-					}
-				]
-			});
+		listFunctions.mockImplementation(() => {
+			return {
+				promise() {
+					return Promise.resolve({
+						Functions: [
+							{
+								FunctionName: "Lambda1",
+								Runtime: "nodejs10.x",
+								MemorySize: 1024,
+								CodeSize: 34,
+								LastModified: "123456",
+								Timeout: 6
+							}
+						]
+					});
+				}
+			};
 		});
+
+		AWS.Lambda.prototype.listFunctions = listFunctions;
 	});
 
 	afterEach(() => {
-		AWSMock.restore();
+		jest.restoreAllMocks();
 	});
 
 	it("Successful lambdas successfully", async function() {
-		AWSMock.mock("Lambda", "deleteFunction", function(params, callback) {
-			callback(null, {});
-		});
+		AWS.Lambda.prototype.deleteFunction = success;
 
 		const result = await deleteAllFunctions(AWS);
 
@@ -50,9 +54,7 @@ describe("deleteAllLambdas", () => {
 	});
 
 	it("Failed lambdas deletion", async function() {
-		AWSMock.mock("Lambda", "deleteFunction", function(params, callback) {
-			callback(new Error("Boom!"));
-		});
+		AWS.Lambda.prototype.deleteFunction = fail;
 
 		const result = await deleteAllFunctions(AWS);
 
