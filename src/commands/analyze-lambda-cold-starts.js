@@ -18,7 +18,8 @@ fields @memorySize / 1000000 as memorySize
           median(initDuration) as avgInitDuration, 
           percentile(initDuration, 75) as p75,
           percentile(initDuration, 95) as p95,
-          max(initDuration) as maxInitDuration
+          max(initDuration) as maxInitDuration,
+          stddev(initDuration) as stddev
     by functionName, memorySize`;
 
 class AnalyzeLambdaColdStartsCommand extends Command {
@@ -326,6 +327,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 				"p75",
 				"p95",
 				"max init",
+				"std dev",
 				"provisioned concurrency (PC)",
 				"PC utilization"
 			]
@@ -348,6 +350,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 					x.p75 ? this.formatInitDuration(x.p75) : "-",
 					x.p95 ? this.formatInitDuration(x.p95) : "-",
 					x.maxInitDuration ? this.formatInitDuration(x.maxInitDuration) : "-",
+					x.stddev ? this.formatInitDuration(x.stddev) : "-",
 					x.provisionedConcurrency || "-",
 					this.formatPcUtilization(x.provisionedConcurrencyUtilization)
 				]);
@@ -364,6 +367,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 				x.p75 ? this.formatInitDuration(x.p75) : "-",
 				x.p95 ? this.formatInitDuration(x.p95) : "-",
 				x.maxInitDuration ? this.formatInitDuration(x.maxInitDuration) : "-",
+				x.stddev ? this.formatInitDuration(x.stddev) : "-",
 				x.provisionedConcurrency || "-",
 				this.formatPcUtilization(x.provisionedConcurrencyUtilization)
 			]);
