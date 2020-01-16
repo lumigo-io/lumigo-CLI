@@ -149,7 +149,11 @@ const waitForCloudFormationComplete = async stackName => {
 			factor: 1,
 			minTimeout: ONE_SECOND,
 			maxTimeout: ONE_SECOND,
-			onRetry: () => process.stdout.write(".")
+			onRetry: (_e, attempt) => {
+				if (attempt % 5 === 0) {
+					process.stdout.write(".");
+				}
+			}
 		}
 	);
 };

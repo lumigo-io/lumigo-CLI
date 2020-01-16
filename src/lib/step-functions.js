@@ -34,12 +34,19 @@ const waitForStateMachineOutput = async executionArn => {
 			} else {
 				throw new Error("still running...");
 			}
+      
+			process.stdout.write("\n");
 		},
 		{
-			retries: 600, // 10 mins
+			retries: 10800, // 3 hour
 			factor: 1,
 			minTimeout: ONE_SECOND,
-			maxTimeout: ONE_SECOND
+			maxTimeout: ONE_SECOND,
+			onRetry: (_e, attempt) => {
+				if (attempt % 10 === 0) {
+					process.stdout.write(".");
+				}
+			}
 		}
 	);
 };
