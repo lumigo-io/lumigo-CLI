@@ -10,9 +10,9 @@ const ApplicationId =
 	"arn:aws:serverlessrepo:us-east-1:374852340823:applications/measure-cold-start";
 const StackName = "serverlessrepo-lumigo-cli-measure-cold-start";
 
-class MeasureLambdaColdStartCommand extends Command {
+class MeasureLambdaColdStartsCommand extends Command {
 	async run() {
-		const { flags } = this.parse(MeasureLambdaColdStartCommand);
+		const { flags } = this.parse(MeasureLambdaColdStartsCommand);
 		const { functionName, region, profile, invocations, file } = flags;
 
 		global.region = region;
@@ -76,8 +76,8 @@ class MeasureLambdaColdStartCommand extends Command {
 	}
 }
 
-MeasureLambdaColdStartCommand.description = "Measures a function's initialization time";
-MeasureLambdaColdStartCommand.flags = {
+MeasureLambdaColdStartsCommand.description = "Measures a function's initialization time";
+MeasureLambdaColdStartsCommand.flags = {
 	functionName: flags.string({
 		char: "n",
 		description: "name of the Lambda function",
@@ -148,4 +148,4 @@ const findCloudFormation = async version => {
 	}
 };
 
-module.exports = MeasureLambdaColdStartCommand;
+module.exports = MeasureLambdaColdStartsCommand;

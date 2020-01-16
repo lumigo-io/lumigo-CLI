@@ -32,12 +32,13 @@ USAGE
 <!-- commands -->
 * [`lumigo-cli analyze-lambda-cold-starts`](#lumigo-cli-analyze-lambda-cold-starts)
 * [`lumigo-cli analyze-lambda-cost`](#lumigo-cli-analyze-lambda-cost)
+* [`lumigo-cli clear-account`](#lumigo-cli-clear-account)
 * [`lumigo-cli feedback`](#lumigo-cli-feedback)
 * [`lumigo-cli help [COMMAND]`](#lumigo-cli-help-command)
 * [`lumigo-cli list-kinesis-shards`](#lumigo-cli-list-kinesis-shards)
 * [`lumigo-cli list-kinesis-streams`](#lumigo-cli-list-kinesis-streams)
 * [`lumigo-cli list-lambda`](#lumigo-cli-list-lambda)
-* [`lumigo-cli measure-lambda-cold-start`](#lumigo-cli-measure-lambda-cold-start)
+* [`lumigo-cli measure-lambda-cold-starts`](#lumigo-cli-measure-lambda-cold-starts)
 * [`lumigo-cli powertune-lambda`](#lumigo-cli-powertune-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli send-to-sns`](#lumigo-cli-send-to-sns)
@@ -54,7 +55,6 @@ USAGE
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
 * [`lumigo-cli whoami`](#lumigo-cli-whoami)
-* [`lumigo-cli clear-account`](#lumigo-cli-clear-account)
 
 ## `lumigo-cli analyze-lambda-cold-starts`
 
@@ -90,6 +90,22 @@ OPTIONS
 ```
 
 _See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/analyze-lambda-cost.js)_
+
+## `lumigo-cli clear-account`
+
+Clear your AWS account from all supported resources. Use with cautious!
+
+```
+USAGE
+  $ lumigo-cli clear-account
+
+OPTIONS
+  -f, --force            Skip prompt. Use mainly in CI/CD environments
+  -p, --profile=profile  AWS CLI profile name
+  -r, --retries=retries  [default: 2] How many times to try to delete stubborn resource
+```
+
+_See code: [src/commands/clear-account.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/clear-account.js)_
 
 ## `lumigo-cli feedback`
 
@@ -171,13 +187,13 @@ OPTIONS
 
 _See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/list-lambda.js)_
 
-## `lumigo-cli measure-lambda-cold-start`
+## `lumigo-cli measure-lambda-cold-starts`
 
 Measures a function's initialization time
 
 ```
 USAGE
-  $ lumigo-cli measure-lambda-cold-start
+  $ lumigo-cli measure-lambda-cold-starts
 
 OPTIONS
   -e, --payload=payload            [default: {}] the JSON payload to send to the function
@@ -188,7 +204,7 @@ OPTIONS
   -r, --region=region              (required) AWS region, e.g. us-east-1
 ```
 
-_See code: [src/commands/measure-lambda-cold-start.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/measure-lambda-cold-start.js)_
+_See code: [src/commands/measure-lambda-cold-starts.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/measure-lambda-cold-starts.js)_
 
 ## `lumigo-cli powertune-lambda`
 
@@ -462,26 +478,4 @@ USAGE
 ```
 
 _See code: [src/commands/whoami.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/whoami.js)_
-
-## `lumigo-cli clear-account`
-
-Clear your AWS account from provisioned resources. Will prompt before deletion.
-Works in the following order:
-* S3
-* CloudFormation stacks
-* API GW
-* Roles
-* Lambdas
-
-**Pay attention, this is a dangerous command, it will delete any resource you have in your AWS account**
-```
-USAGE
-  $ lumigo-cli clear-account
-
-OPTIONS
-  -f, --force                Skip prompt. Use mainly in CI/CD environments  
-  -p, --profile=profile      AWS CLI profile name
-```
-
-_See code: [src/commands/clear-account.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/clear-account.js)_
 <!-- commandsstop -->
