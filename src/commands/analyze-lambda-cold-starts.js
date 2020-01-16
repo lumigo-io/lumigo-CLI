@@ -14,7 +14,12 @@ fields @memorySize / 1000000 as memorySize
   | filter @message like /(?i)(Init Duration)/
   | parse @message /^REPORT.*Init Duration: (?<initDuration>.*) ms.*/
   | parse @log /^.*\\/aws\\/lambda\\/(?<functionName>.*)/
-  | stats count() as coldStarts, median(initDuration) as avgInitDuration, max(initDuration) as maxInitDuration by functionName, memorySize`;
+  | stats count() as coldStarts, 
+          median(initDuration) as avgInitDuration, 
+          percentile(initDuration, 75) as p75,
+          percentile(initDuration, 95) as p95,
+          max(initDuration) as maxInitDuration
+    by functionName, memorySize`;
 
 class AnalyzeLambdaColdStartsCommand extends Command {
 	async run() {
@@ -56,7 +61,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 	}
 
 	async getFunctionsInRegion(region) {
-		const functionDetails = await Lambda.getFunctionsInRegion(region, getAWSSDK());
+		const functionDetails = await Lambda.getFunctionsInRegion(region);
 		const functionNames = functionDetails.map(x => x.functionName);
 		const rows = await this.getStats(region, functionNames);
 		const pcs = await this.getProvisionedConcurrency(region, functionNames);
@@ -318,12 +323,16 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 				"memory",
 				"count",
 				"median init",
+				"p75",
+				"p95",
 				"max init",
 				"provisioned concurrency (PC)",
 				"PC utilization"
 			]
 		});
-		_.sortBy(functions, ["coldStarts", "avgInitDuration"])
+    
+		const [hasColdStarts, noColdStarts] = _.partition(functions, (f) => f.coldStarts > 0);
+		_.sortBy(hasColdStarts, ["coldStarts", "avgInitDuration"])
 			.reverse()
 			.forEach(x => {
 				table.push([
@@ -333,11 +342,29 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 					x.memorySize,
 					x.coldStarts || "-",
 					x.avgInitDuration ? this.formatInitDuration(x.avgInitDuration) : "-",
+					x.p75 ? this.formatInitDuration(x.p75) : "-",
+					x.p95 ? this.formatInitDuration(x.p95) : "-",
 					x.maxInitDuration ? this.formatInitDuration(x.maxInitDuration) : "-",
 					x.provisionedConcurrency || "-",
 					this.formatPcUtilization(x.provisionedConcurrencyUtilization)
 				]);
 			});
+
+		noColdStarts.forEach(x => {
+			table.push([
+				x.region,
+				humanize.truncatechars(x.functionName, 45),
+				x.runtime,
+				x.memorySize,
+				x.coldStarts || "-",
+				x.avgInitDuration ? this.formatInitDuration(x.avgInitDuration) : "-",
+				x.p75 ? this.formatInitDuration(x.p75) : "-",
+				x.p95 ? this.formatInitDuration(x.p95) : "-",
+				x.maxInitDuration ? this.formatInitDuration(x.maxInitDuration) : "-",
+				x.provisionedConcurrency || "-",
+				this.formatPcUtilization(x.provisionedConcurrencyUtilization)
+			]);
+		});
 
 		this.log(table.toString());
 
