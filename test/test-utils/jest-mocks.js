@@ -16,7 +16,21 @@ fail.mockImplementation(() => {
 	};
 });
 
+const getPromiseResponse = response => {
+	const mockFunction = jest.fn();
+	mockFunction.mockImplementation(() => {
+		return {
+			promise() {
+				return Promise.resolve(response);
+			}
+		};
+	});
+
+	return mockFunction;
+};
+
 module.exports = {
 	fail,
-	success
+	success,
+	getPromiseResponse
 };

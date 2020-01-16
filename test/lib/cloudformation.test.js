@@ -4,7 +4,7 @@ const { deleteAllStacks } = require("../../src/lib/cloudformation");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors");
-const { success, fail } = require("../test-utils/jest-mocks"); // Required for avoid fail on console printing
+const { success, fail, getPromiseResponse } = require("../test-utils/jest-mocks"); // Required for avoid fail on console printing
 
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
@@ -14,25 +14,15 @@ describe("deleteAllStacks", () => {
 	beforeEach(() => {
 		AWS = getAWSSDK();
 
-		const listStacks = jest.fn();
-
-		listStacks.mockImplementation(() => {
-			return {
-				promise() {
-					return Promise.resolve({
-						StackSummaries: [
-							{
-								StackId: "1234",
-								StackName: "MyStack",
-								StackStatus: "CREATE_COMPLETE"
-							}
-						]
-					});
+		AWS.CloudFormation.prototype.listStacks = getPromiseResponse({
+			StackSummaries: [
+				{
+					StackId: "1234",
+					StackName: "MyStack",
+					StackStatus: "CREATE_COMPLETE"
 				}
-			};
+			]
 		});
-
-		AWS.CloudFormation.prototype.listStacks = listStacks;
 	});
 
 	afterEach(() => {

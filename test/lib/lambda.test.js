@@ -4,7 +4,7 @@ const { deleteAllFunctions } = require("../../src/lib/lambda");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors");
-const { success, fail } = require("../test-utils/jest-mocks"); // Required for avoid fail on console printing
+const { success, fail, getPromiseResponse } = require("../test-utils/jest-mocks"); // Required for avoid fail on console printing
 
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
@@ -14,28 +14,19 @@ describe("deleteAllLambdas", () => {
 	let AWS = null;
 	beforeEach(() => {
 		AWS = getAWSSDK();
-		const listFunctions = jest.fn();
 
-		listFunctions.mockImplementation(() => {
-			return {
-				promise() {
-					return Promise.resolve({
-						Functions: [
-							{
-								FunctionName: "Lambda1",
-								Runtime: "nodejs10.x",
-								MemorySize: 1024,
-								CodeSize: 34,
-								LastModified: "123456",
-								Timeout: 6
-							}
-						]
-					});
+		AWS.Lambda.prototype.listFunctions = getPromiseResponse({
+			Functions: [
+				{
+					FunctionName: "Lambda1",
+					Runtime: "nodejs10.x",
+					MemorySize: 1024,
+					CodeSize: 34,
+					LastModified: "123456",
+					Timeout: 6
 				}
-			};
+			]
 		});
-
-		AWS.Lambda.prototype.listFunctions = listFunctions;
 	});
 
 	afterEach(() => {

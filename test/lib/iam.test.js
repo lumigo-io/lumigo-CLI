@@ -4,63 +4,35 @@ const { deleteAllRoles } = require("../../src/lib/iam");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors"); // Required for avoid fail on console printing
-const { fail, success } = require("../test-utils/jest-mocks");
+const { fail, success, getPromiseResponse } = require("../test-utils/jest-mocks");
 
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
-
 
 chai.use(chaiAsPromised);
 describe("deleteAllRoles", () => {
 	let AWS = null;
 	beforeEach(() => {
 		AWS = getAWSSDK();
-		const listRoles = jest.fn();
-		listRoles.mockImplementation(() => {
-			return {
-				promise() {
-					return Promise.resolve({
-						Roles: [
-							{
-								Path: "/aws-service-role/",
-								RoleId: "1234",
-								RoleName: "Private AWS"
-							},
-							{ Path: "/my-roles/", RoleId: "5678", RoleName: "my role" }
-						]
-					});
-				}
-			};
+
+		AWS.IAM.prototype.listRoles = getPromiseResponse({
+			Roles: [
+				{
+					Path: "/aws-service-role/",
+					RoleId: "1234",
+					RoleName: "Private AWS"
+				},
+				{ Path: "/my-roles/", RoleId: "5678", RoleName: "my role" }
+			]
 		});
 
-		AWS.IAM.prototype.listRoles = listRoles;
-
-		const listAttachedRolePolicies = jest.fn();
-
-		listAttachedRolePolicies.mockImplementation(() => {
-			return {
-				promise() {
-					return Promise.resolve({
-						AttachedPolicies: [{ PolicyArn: "arn:iam-role" }]
-					});
-				}
-			};
+		AWS.IAM.prototype.listAttachedRolePolicies = getPromiseResponse({
+			AttachedPolicies: [{ PolicyArn: "arn:iam-role" }]
 		});
 
-		AWS.IAM.prototype.listAttachedRolePolicies = listAttachedRolePolicies;
-
-		const listRolePolicies = jest.fn();
-		listRolePolicies.mockImplementation(() => {
-			return {
-				promise() {
-					return Promise.resolve({
-						PolicyNames: ["my-policy"]
-					});
-				}
-			};
+		AWS.IAM.prototype.listRolePolicies = getPromiseResponse({
+			PolicyNames: ["my-policy"]
 		});
-
-		AWS.IAM.prototype.listRolePolicies = listRolePolicies;
 
 		AWS.IAM.prototype.detachRolePolicy = success;
 		AWS.IAM.prototype.deleteRolePolicy = success;
@@ -80,7 +52,6 @@ describe("deleteAllRoles", () => {
 	});
 
 	it("Failed deleting IAM role", async function() {
-
 		AWS.IAM.prototype.deleteRole = fail;
 
 		const result = await deleteAllRoles(AWS);

@@ -1,75 +1,39 @@
 const { expect } = require("@oclif/test");
-const AWSMock = require("aws-sdk-mock");
 const { getAWSSDK } = require("../../src/lib/aws");
 const {
-	getAllApiGwInRegion,
 	deleteApiGw,
 	deleteAllApiGw
 } = require("../../src/lib/apigw");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
-const sinon = require("sinon");
-require("colors"); // Required for avoid fail on console printing
+require("colors");
+const { getPromiseResponse, success, fail } = require("../test-utils/jest-mocks"); // Required for avoid fail on console printing
 
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
 chai.use(chaiAsPromised);
-describe("getAllApiGwInRegion", () => {
-	let AWS = null;
-	beforeAll(() => {
-		AWS = getAWSSDK();
-		AWSMock.setSDKInstance(AWS);
+
+let AWS = null;
+beforeEach(() => {
+	AWS = getAWSSDK();
+
+	AWS.ApiGatewayV2.prototype.getApis = getPromiseResponse({
+		Items: [{ ApiId: "1234", Name: "httpApi" }]
 	});
-	it("Get 2 types of api GW and return a valid representation  ", async function() {
-		AWSMock.mock("ApiGatewayV2", "getApis", function(params, callback) {
-			callback(null, {
-				Items: [{ ApiId: "1234", Name: "httpApi" }]
-			});
-		});
 
-		AWSMock.mock("APIGateway", "getRestApis", function(params, callback) {
-			callback(null, {
-				items: [{ id: "5678", name: "restApi" }]
-			});
-		});
-
-		const result = await getAllApiGwInRegion("us-west-1", AWS);
-
-		expect(result.length).to.equal(2);
+	AWS.APIGateway.prototype.getRestApis = getPromiseResponse({
+		items: [{ id: "5678", name: "restApi" }]
 	});
 });
 
+afterEach(() => {
+	jest.restoreAllMocks();
+});
+
 describe("deleteApiGw", () => {
-	let AWS = null;
-	beforeAll(() => {
-		AWS = getAWSSDK();
-		AWSMock.setSDKInstance(AWS);
-	});
-
-	afterEach(() => {
-		AWSMock.restore();
-	});
-
 	it("2 api's deleted successfully", async () => {
-		AWSMock.mock("ApiGatewayV2", "getApis", function(params, callback) {
-			callback(null, {
-				Items: [{ ApiId: "1234", Name: "httpApi" }]
-			});
-		});
-
-		AWSMock.mock("APIGateway", "getRestApis", function(params, callback) {
-			callback(null, {
-				items: [{ id: "5678", name: "restApi" }]
-			});
-		});
-
-		AWSMock.mock("ApiGatewayV2", "deleteApi", function(params, callback) {
-			callback(null, {});
-		});
-
-		AWSMock.mock("APIGateway", "deleteRestApi", function(params, callback) {
-			callback(null, {});
-		});
+		AWS.ApiGatewayV2.prototype.deleteApi = success;
+		AWS.APIGateway.prototype.deleteRestApi = success;
 
 		const result = await deleteAllApiGw(AWS);
 
@@ -81,25 +45,8 @@ describe("deleteApiGw", () => {
 	});
 
 	it("1 api deleted successfully, one failed", async () => {
-		AWSMock.mock("ApiGatewayV2", "getApis", function(params, callback) {
-			callback(null, {
-				Items: [{ ApiId: "1234", Name: "httpApi" }]
-			});
-		});
-
-		AWSMock.mock("APIGateway", "getRestApis", function(params, callback) {
-			callback(null, {
-				items: [{ id: "5678", name: "restApi" }]
-			});
-		});
-
-		AWSMock.mock("ApiGatewayV2", "deleteApi", function(params, callback) {
-			callback(null, {});
-		});
-
-		AWSMock.mock("APIGateway", "deleteRestApi", function(params, callback) {
-			callback(new Error());
-		});
+		AWS.ApiGatewayV2.prototype.deleteApi = success;
+		AWS.APIGateway.prototype.deleteRestApi = fail;
 
 		const result = await deleteAllApiGw(AWS);
 
@@ -118,20 +65,8 @@ describe("deleteApiGw", () => {
 });
 
 describe("deleteApiGw", () => {
-	let AWS = null;
-	beforeAll(() => {
-		AWS = getAWSSDK();
-		AWSMock.setSDKInstance(AWS);
-	});
-
-	afterEach(() => {
-		AWSMock.restore();
-	});
-
 	it("Successful delete HTTP API nothing fails ", async function() {
-		AWSMock.mock("ApiGatewayV2", "deleteApi", function(params, callback) {
-			callback(null, {});
-		});
+		AWS.ApiGatewayV2.prototype.deleteApi = success;
 
 		await deleteApiGw(
 			{
@@ -145,9 +80,7 @@ describe("deleteApiGw", () => {
 	});
 
 	it("Successful delete REST API nothing fails ", async function() {
-		AWSMock.mock("APIGateway", "deleteRestApi", function(params, callback) {
-			callback(null, {});
-		});
+		AWS.APIGateway.prototype.deleteRestApi = success;
 
 		await deleteApiGw(
 			{
@@ -177,15 +110,22 @@ describe("deleteApiGw", () => {
 	});
 
 	it("TooManyRequestsException, retry ", async function() {
-		const deleteStub = sinon.stub();
-		AWSMock.mock("APIGateway", "deleteRestApi", deleteStub);
-		deleteStub.onCall(0).callsFake((params, callback) => {
-			callback({ code: "TooManyRequestsException" });
+		const fail = jest.fn();
+		let counter = 1;
+		fail.mockImplementation(() => {
+			return {
+				promise() {
+					if (counter === 1) {
+						counter++;
+						return Promise.reject({ code: "TooManyRequestsException" });
+					} else {
+						return Promise.reject(new Error());
+					}
+				}
+			};
 		});
 
-		deleteStub.onCall(1).callsFake((params, callback) => {
-			callback(new Error());
-		});
+		AWS.APIGateway.prototype.deleteRestApi = fail;
 
 		const func = async () => {
 			await deleteApiGw(

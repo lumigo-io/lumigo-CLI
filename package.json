@@ -34,7 +34,6 @@
     "@commitlint/config-conventional": "^8.0.0",
     "@oclif/dev-cli": "^1.22.2",
     "@oclif/test": "^1.2.5",
-    "aws-sdk-mock": "^5.0.0",
     "chai-as-promised": "^7.1.1",
     "codecov": "^3.6.1",
     "eslint": "^5.16.0",
@@ -50,8 +49,7 @@
     "jest": "^24.9.0",
     "lint-staged": "^9.1.0",
     "prettier": "^1.18.2",
-    "semantic-release": "^15.13.24",
-    "sinon": "^8.0.2"
+    "semantic-release": "^15.13.24"
   },
   "engines": {
     "node": ">=8.12.0"
