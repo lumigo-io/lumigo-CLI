@@ -1,10 +1,10 @@
 const { expect } = require("@oclif/test");
-const AWSMock = require("aws-sdk-mock");
 const { getAWSSDK } = require("../../src/lib/aws");
 const { deleteAllStacks } = require("../../src/lib/cloudformation");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
-require("colors"); // Required for avoid fail on console printing
+require("colors");
+const { success, fail } = require("../test-utils/jest-mocks"); // Required for avoid fail on console printing
 
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
@@ -13,33 +13,35 @@ describe("deleteAllStacks", () => {
 	let AWS = null;
 	beforeEach(() => {
 		AWS = getAWSSDK();
-		AWSMock.setSDKInstance(AWS);
+
+		const listStacks = jest.fn();
+
+		listStacks.mockImplementation(() => {
+			return {
+				promise() {
+					return Promise.resolve({
+						StackSummaries: [
+							{
+								StackId: "1234",
+								StackName: "MyStack",
+								StackStatus: "CREATE_COMPLETE"
+							}
+						]
+					});
+				}
+			};
+		});
+
+		AWS.CloudFormation.prototype.listStacks = listStacks;
 	});
 
 	afterEach(() => {
-		AWSMock.restore();
+		jest.restoreAllMocks();
 	});
 
 	it("Delete all stacks successfully", async function() {
-		AWSMock.mock("CloudFormation", "listStacks", function(params, callback) {
-			callback(null, {
-				StackSummaries: [
-					{
-						StackId: "1234",
-						StackName: "MyStack",
-						StackStatus: "CREATE_COMPLETE"
-					}
-				]
-			});
-		});
-
-		AWSMock.mock("CloudFormation", "deleteStack", function(params, callback) {
-			callback(null, {});
-		});
-
-		AWSMock.mock("CloudFormation", "waitFor", function(params, args, callback) {
-			callback(null, {});
-		});
+		AWS.CloudFormation.prototype.deleteStack = success;
+		AWS.CloudFormation.prototype.waitFor = success;
 
 		const result = await deleteAllStacks(AWS);
 
@@ -50,21 +52,7 @@ describe("deleteAllStacks", () => {
 	});
 
 	it("Fail Deleting all stacks", async function() {
-		AWSMock.mock("CloudFormation", "listStacks", function(params, callback) {
-			callback(null, {
-				StackSummaries: [
-					{
-						StackId: "1234",
-						StackName: "MyStack",
-						StackStatus: "CREATE_COMPLETE"
-					}
-				]
-			});
-		});
-
-		AWSMock.mock("CloudFormation", "deleteStack", function(params, callback) {
-			callback(new Error("Boom!"));
-		});
+		AWS.CloudFormation.prototype.deleteStack = fail;
 
 		const result = await deleteAllStacks(AWS, { retries: 1, minTimeout: 2 });
 
