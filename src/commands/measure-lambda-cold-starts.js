@@ -1,40 +1,28 @@
-const _ = require("lodash");
 const { getAWSSDK } = require("../lib/aws");
 const { getLatestVersion, deploy } = require("../lib/sar");
 const { startStateMachine, waitForStateMachineOutput } = require("../lib/step-functions");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const fs = require("fs");
-const inquirer = require("inquirer");
-const childProcess = require("child_process");
 require("colors");
 
 const ApplicationId =
-	"arn:aws:serverlessrepo:us-east-1:451282441545:applications/aws-lambda-power-tuning";
-const StackName = "serverlessrepo-lumigo-cli-powertuning-lambda";
+	"arn:aws:serverlessrepo:us-east-1:374852340823:applications/measure-cold-start";
+const StackName = "serverlessrepo-lumigo-cli-measure-cold-start";
 
-class PowertuneLambdaCommand extends Command {
+class MeasureLambdaColdStartsCommand extends Command {
 	async run() {
-		const { flags } = this.parse(PowertuneLambdaCommand);
-		const {
-			functionName,
-			region,
-			profile,
-			strategy,
-			invocations,
-			file,
-			balancedWeight,
-			powerValues
-		} = flags;
+		const { flags } = this.parse(MeasureLambdaColdStartsCommand);
+		const { functionName, region, profile, invocations, file } = flags;
 
 		global.region = region;
 		global.profile = profile;
 
 		checkVersion();
 
-		this.log(`checking the aws-lambda-power-tuning SAR in [${region}]`);
+		this.log(`checking the measure-cold-start SAR in [${region}]`);
 		const version = await getLatestVersion(ApplicationId);
-		this.log(`the latest version of aws-lambda-power-tuning SAR is ${version}`);
+		this.log(`the latest version of measure-cold-start SAR is ${version}`);
 
 		this.log(
 			`looking for deployed CloudFormation stack [${StackName}] in [${region}]`
@@ -45,7 +33,7 @@ class PowertuneLambdaCommand extends Command {
 			case "not found":
 				this.log("stack is not found");
 				this.log(
-					`deploying the aws-lambda-power-tuning SAR [${version}] to [${region}]`
+					`deploying the measure-cold-start SAR [${version}] to [${region}]`
 				);
 				stateMachineArn = (await deploy(ApplicationId, version, StackName))
 					.StateMachineARN;
@@ -74,15 +62,10 @@ class PowertuneLambdaCommand extends Command {
 		const [_arn, _aws, _states, _region, accountId, ...rest] = stateMachineArn.split(
 			":"
 		);
-		const lambdaArn = `arn:aws:lambda:${region}:${accountId}:function:${functionName}`;
 		const input = JSON.stringify({
-			lambdaARN: lambdaArn,
-			num: invocations,
-			payload: payload,
-			parallelInvocation: false,
-			strategy: strategy,
-			balancedWeight: balancedWeight,
-			powerValues: powerValues
+			functionName: functionName,
+			count: invocations,
+			payload: payload
 		});
 		const executionArn = await startStateMachine(stateMachineArn, input);
 		this.log("State Machine execution started");
@@ -90,29 +73,11 @@ class PowertuneLambdaCommand extends Command {
 
 		const result = await waitForStateMachineOutput(executionArn);
 		this.log(JSON.stringify(result, null, 2).yellow);
-
-		// since v2.1.1 the powertuning SFN returns a visualization URL as well
-		const visualizationUrl = _.get(result, "stateMachine.visualization");
-
-		if (visualizationUrl) {
-			const { visualize } = await inquirer.prompt([
-				{
-					type: "list",
-					name: "visualize",
-					message: "Do you want to open the visualization to see more results?",
-					choices: ["yes", "no"]
-				}
-			]);
-
-			if (visualize === "yes") {
-				openVisualization(visualizationUrl);
-			}
-		}
 	}
 }
 
-PowertuneLambdaCommand.description = "Powertunes a Lambda function for cost or speed";
-PowertuneLambdaCommand.flags = {
+MeasureLambdaColdStartsCommand.description = "Measures a function's initialization time";
+MeasureLambdaColdStartsCommand.flags = {
 	functionName: flags.string({
 		char: "n",
 		description: "name of the Lambda function",
@@ -127,12 +92,6 @@ PowertuneLambdaCommand.flags = {
 		char: "p",
 		description: "AWS CLI profile name",
 		required: false
-	}),
-	strategy: flags.string({
-		char: "s",
-		description: 'what to powertune the function for - "cost", "speed" or "balanced"',
-		required: true,
-		options: ["cost", "speed", "balanced"]
 	}),
 	invocations: flags.integer({
 		char: "i",
@@ -151,36 +110,7 @@ PowertuneLambdaCommand.flags = {
 		description: "file that contains the JSON payload to send to the function",
 		required: false,
 		exclusive: ["payload"]
-	}),
-	balancedWeight: flags.string({
-		char: "w",
-		description:
-			'the trade-off between cost and time, 0.0 is equivalent to "speed" strategy, 1.0 is equivalent to "cost" strategy',
-		required: false,
-		parse: x => parseFloat(x)
-	}),
-	powerValues: flags.string({
-		char: "v",
-		description:
-			"comma-separated list of power values to be tested, e.g. 128,256,512,1024",
-		required: false,
-		parse: x => {
-			if (x === "ALL") {
-				return "ALL";
-			} else {
-				return x.split(",").map(n => parseInt(n));
-			}
-		}
 	})
-};
-
-const openVisualization = url => {
-	try {
-		// this works on many platforms
-		childProcess.execSync(`python -m webbrowser "${url}"`);
-	} catch (err) {
-		childProcess.execSync(`open "${url}"`);
-	}
 };
 
 const findCloudFormation = async version => {
@@ -218,4 +148,4 @@ const findCloudFormation = async version => {
 	}
 };
 
-module.exports = PowertuneLambdaCommand;
+module.exports = MeasureLambdaColdStartsCommand;
