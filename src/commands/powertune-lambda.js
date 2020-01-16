@@ -47,13 +47,15 @@ class PowertuneLambdaCommand extends Command {
 				this.log(
 					`deploying the aws-lambda-power-tuning SAR [${version}] to [${region}]`
 				);
-				stateMachineArn = (await deploy(ApplicationId, version, StackName)).StateMachineARN;
+				stateMachineArn = (await deploy(ApplicationId, version, StackName))
+					.StateMachineARN;
 				break;
 			case "outdated":
 				this.log(
 					`stack is deployed but is running an outdated version [${findCfnResult.version}]`
 				);
-				stateMachineArn = (await deploy(ApplicationId, version, StackName, true)).StateMachineARN;
+				stateMachineArn = (await deploy(ApplicationId, version, StackName, true))
+					.StateMachineARN;
 				break;
 			default:
 				this.log("stack is deployed and up-to-date");

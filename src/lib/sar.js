@@ -69,12 +69,16 @@ const deploy = async (applicationId, version, stackName, isUpdate = false) => {
 
 	const outputs = await waitForCloudFormationComplete(stackName);
 	console.log("SAR deployment completed");
-  
+
 	// turn output array into an object
-	return _.reduce(outputs, (obj, x) => {
-		obj[x.OutputKey] = x.OutputValue;
-		return obj;
-	}, {});	
+	return _.reduce(
+		outputs,
+		(obj, x) => {
+			obj[x.OutputKey] = x.OutputValue;
+			return obj;
+		},
+		{}
+	);
 };
 
 const generateCloudFormationTemplate = async (applicationId, version) => {
