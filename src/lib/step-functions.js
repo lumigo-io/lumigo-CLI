@@ -30,12 +30,11 @@ const waitForStateMachineOutput = async executionArn => {
 			if (FailedStates.includes(resp.status)) {
 				bail(new Error(`execution failed [${resp.status}]: ${resp.output}`));
 			} else if (resp.status === "SUCCEEDED") {
+				process.stdout.write("\n");
 				return JSON.parse(resp.output);
 			} else {
 				throw new Error("still running...");
 			}
-      
-			process.stdout.write("\n");
 		},
 		{
 			retries: 10800, // 3 hour
