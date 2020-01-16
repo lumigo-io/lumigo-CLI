@@ -61,7 +61,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 	}
 
 	async getFunctionsInRegion(region) {
-		const functionDetails = await Lambda.getFunctionsInRegion(region);
+		const functionDetails = await Lambda.getFunctionsInRegion(region, getAWSSDK());
 		const functionNames = functionDetails.map(x => x.functionName);
 		const rows = await this.getStats(region, functionNames);
 		const pcs = await this.getProvisionedConcurrency(region, functionNames);
