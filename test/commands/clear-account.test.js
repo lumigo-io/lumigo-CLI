@@ -38,5 +38,11 @@ describe("User forces clear account", () => {
 			expect(ctx.stdout).to.contain("Deleting 1 CF stack(s)");
 			expect(ctx.stdout).to.contain("Deleting 1 role(s)");
 			expect(ctx.stdout).to.contain("Deleting 1 API Gateway(s)");
+
+			expect(cf.deleteAllStacks.mock.calls.length).to.equal(1);
+			expect(lambda.deleteAllFunctions.mock.calls.length).to.equal(0);
+			expect(iam.deleteAllRoles.mock.calls.length).to.equal(1);
+			expect(apigw.deleteAllApiGw.mock.calls.length).to.equal(1);
+			expect(s3.deleteAllBuckets.mock.calls.length).to.equal(3); // retry
 		});
 });
