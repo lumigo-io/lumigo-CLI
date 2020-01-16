@@ -54,6 +54,7 @@ USAGE
 * [`lumigo-cli tail-sns`](#lumigo-cli-tail-sns)
 * [`lumigo-cli tail-sqs`](#lumigo-cli-tail-sqs)
 * [`lumigo-cli whoami`](#lumigo-cli-whoami)
+* [`lumigo-cli clear-account`](#lumigo-cli-clear-account)
 
 ## `lumigo-cli analyze-lambda-cold-starts`
 
@@ -461,4 +462,26 @@ USAGE
 ```
 
 _See code: [src/commands/whoami.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/whoami.js)_
+
+## `lumigo-cli clear-account`
+
+Clear your AWS account from provisioned resources. Will prompt before deletion.
+Works in the following order:
+* S3
+* CloudFormation stacks
+* API GW
+* Roles
+* Lambdas
+
+**Pay attention, this is a dangerous command, it will delete any resource you have in your AWS account**
+```
+USAGE
+  $ lumigo-cli clear-account
+
+OPTIONS
+  -f, --force                Skip prompt. Use mainly in CI/CD environments  
+  -p, --profile=profile      AWS CLI profile name
+```
+
+_See code: [src/commands/clear-account.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/clear-account.js)_
 <!-- commandsstop -->

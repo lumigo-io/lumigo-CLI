@@ -27,7 +27,7 @@ class ListLambdaCommand extends Command {
 	}
 
 	async getFunctionsInRegion(region, inactive) {
-		const functions = await Lambda.getFunctionsInRegion(region);
+		const functions = await Lambda.getFunctionsInRegion(region, getAWSSDK());
 		const functionNames = functions.map(x => x.functionName);
 		const lastInvokedOn = await this.getLastInvocationDates(region, functionNames);
 
