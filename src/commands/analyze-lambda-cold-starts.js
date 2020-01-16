@@ -61,7 +61,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 	}
 
 	async getFunctionsInRegion(region) {
-		const functionDetails = await Lambda.getFunctionsInRegion(region, getAWSSDK());
+		const functionDetails = await Lambda.getFunctionsInRegion(region);
 		const functionNames = functionDetails.map(x => x.functionName);
 		const rows = await this.getStats(region, functionNames);
 		const pcs = await this.getProvisionedConcurrency(region, functionNames);
@@ -330,8 +330,11 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 				"PC utilization"
 			]
 		});
-    
-		const [hasColdStarts, noColdStarts] = _.partition(functions, (f) => f.coldStarts > 0);
+
+		const [hasColdStarts, noColdStarts] = _.partition(
+			functions,
+			f => f.coldStarts > 0
+		);
 		_.sortBy(hasColdStarts, ["coldStarts", "avgInitDuration"])
 			.reverse()
 			.forEach(x => {
