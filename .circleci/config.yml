@@ -18,7 +18,7 @@ jobs:
     steps:
       - checkout
       - run: npm ci
-      - run: ./scripts/segment.sh
+      - run: ./scripts/segment.sh 
       - run: npm run semantic-release
 
 workflows:
