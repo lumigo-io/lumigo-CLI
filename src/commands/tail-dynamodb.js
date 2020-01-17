@@ -2,6 +2,7 @@ const _ = require("lodash");
 const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
+const { track } = require("../lib/analytics");
 require("colors");
 
 class TailDynamodbCommand extends Command {
@@ -14,6 +15,8 @@ class TailDynamodbCommand extends Command {
 		global.endpoint = endpoint;
 
 		checkVersion();
+
+		track("tail-dynamodb", { region, hasEndpoint: !_.isEmpty(endpoint) });
 
 		this.log(`checking DynamoDB table [${tableName}] in [${region}]`);
 		const streamArn = await this.getStreamArn(tableName);

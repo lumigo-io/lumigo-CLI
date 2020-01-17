@@ -4,6 +4,7 @@ const { startStateMachine, waitForStateMachineOutput } = require("../lib/step-fu
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const fs = require("fs");
+const { track } = require("../lib/analytics");
 require("colors");
 
 const ApplicationId =
@@ -19,6 +20,8 @@ class MeasureLambdaColdStartsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
+
+		track("measure-lambda-cold-starts", { region, invocations });
 
 		this.log(`checking the measure-cold-start SAR in [${region}]`);
 		const version = await getLatestVersion(ApplicationId);

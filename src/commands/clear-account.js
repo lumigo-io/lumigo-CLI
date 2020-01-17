@@ -1,13 +1,14 @@
 const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
-require("colors");
 const inquirer = require("inquirer");
 const { getAllFunctionsCount, deleteAllFunctions } = require("../lib/lambda");
 const { getAllRolesCount, deleteAllRoles } = require("../lib/iam");
 const { getAllApiGwCount, deleteAllApiGw } = require("../lib/apigw");
 const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
+const { track } = require("../lib/analytics");
+require("colors");
 
 class ClearAccountCommand extends Command {
 	async run() {
@@ -16,8 +17,13 @@ class ClearAccountCommand extends Command {
 
 		global.profile = profile;
 		this.retries = retries;
+
 		checkVersion();
+
+		track("clear-account", { force, retries });
+
 		const AWS = getAWSSDK();
+
 		if (force) {
 			this.log("Forcing account cleanup!".red.bold);
 			await this.clearEnvironment(AWS);

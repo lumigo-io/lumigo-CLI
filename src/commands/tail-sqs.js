@@ -3,6 +3,7 @@ const { getAWSSDK } = require("../lib/aws");
 const { getQueueUrl } = require("../lib/sqs");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
+const { track } = require("../lib/analytics");
 require("colors");
 
 let seenMessageIds = new Set();
@@ -16,6 +17,8 @@ class TailSqsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
+
+		track("tail-sqs", { region });
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);
 		const queueUrl = await getQueueUrl(queueName);

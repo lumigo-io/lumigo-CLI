@@ -12,6 +12,7 @@
     "@oclif/config": "^1.13.3",
     "@oclif/plugin-help": "^2.2.1",
     "@octokit/rest": "^16.33.1",
+    "analytics-node": "^3.4.0-beta.1",
     "async": "^3.1.0",
     "async-retry": "^1.2.3",
     "aws-sdk": "^2.584.0",
