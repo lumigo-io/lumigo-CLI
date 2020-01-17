@@ -4,9 +4,10 @@ const Table = require("cli-table");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const Kinesis = require("../lib/kinesis");
-require("colors");
 const uuid = require("uuid");
 const { getStreamsInRegion } = require("../lib/kinesis");
+const { track } = require("../lib/analytics");
+require("colors");
 
 const FIVE_MIN_IN_SECONDS = 60 * 5;
 const MAX_RECORDS_PER_SHARD_WRITE = 1000;
@@ -26,6 +27,9 @@ class ListKinesisStreamsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
+    
+		track("list-kinesis-streams", { region });
+
 		let streamsDescription = [];
 		if (region) {
 			this.log(`Checking Kinesis streams in [${region}]`);

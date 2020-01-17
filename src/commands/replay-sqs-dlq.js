@@ -4,6 +4,7 @@ const { getQueueUrl } = require("../lib/sqs");
 const { getTopicArn } = require("../lib/sns");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
+const { track } = require("../lib/analytics");
 
 class ReplaySqsDlqCommand extends Command {
 	async run() {
@@ -23,6 +24,8 @@ class ReplaySqsDlqCommand extends Command {
 		global.keep = keep;
 
 		checkVersion();
+    
+		track("replay-sqs-dlq", { region, targetType, concurrency, keep });
 
 		this.log(`finding the SQS DLQ [${dlqQueueName}] in [${region}]`);
 		const dlqQueueUrl = await getQueueUrl(dlqQueueName);

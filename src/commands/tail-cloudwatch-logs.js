@@ -5,6 +5,7 @@ const { checkVersion } = require("../lib/version-check");
 const Promise = require("bluebird");
 const moment = require("moment");
 const inquirer = require("inquirer");
+const { track } = require("../lib/analytics");
 require("colors");
 
 class TailCloudwatchLogsCommand extends Command {
@@ -18,6 +19,8 @@ class TailCloudwatchLogsCommand extends Command {
 		global.interval = interval || 1000;
 
 		checkVersion();
+    
+		track("tail-cloudwatch-logs", { });
 
 		const AWS = getAWSSDK();
 		this.Logs = new AWS.CloudWatchLogs();

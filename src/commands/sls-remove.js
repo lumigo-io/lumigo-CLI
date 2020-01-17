@@ -2,6 +2,7 @@ const _ = require("lodash");
 const AWS = require("aws-sdk");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
+const { track } = require("../lib/analytics");
 
 class SlsRemoveCommand extends Command {
 	async run() {
@@ -15,6 +16,8 @@ class SlsRemoveCommand extends Command {
 		}
 
 		checkVersion();
+    
+		track("sls-remove", { region, emptyS3Buckets });
 
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);
 		const deploymentBucketName = await this.getDeploymentBucketName(stackName);

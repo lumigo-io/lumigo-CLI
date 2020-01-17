@@ -1,9 +1,12 @@
 const _ = require("lodash");
 const { Command } = require("@oclif/command");
 const { getProfiles } = require("../lib/aws-profile-utils");
+const { track } = require("../lib/analytics");
 
 class WhoamiCommand extends Command {
 	async run() {
+		track("whoami", { });
+
 		const { sharedCred, config } = getProfiles();
 
 		if (!sharedCred.default) {

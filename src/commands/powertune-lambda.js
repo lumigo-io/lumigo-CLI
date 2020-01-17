@@ -7,6 +7,7 @@ const { checkVersion } = require("../lib/version-check");
 const fs = require("fs");
 const inquirer = require("inquirer");
 const childProcess = require("child_process");
+const { track } = require("../lib/analytics");
 require("colors");
 
 const ApplicationId =
@@ -31,6 +32,8 @@ class PowertuneLambdaCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
+    
+		track("powertune-lambda", { region, strategy });
 
 		this.log(`checking the aws-lambda-power-tuning SAR in [${region}]`);
 		const version = await getLatestVersion(ApplicationId);

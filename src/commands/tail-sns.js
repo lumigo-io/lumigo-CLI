@@ -4,6 +4,7 @@ const { getTopicArn } = require("../lib/sns");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const uuid = require("uuid/v4");
+const { track } = require("../lib/analytics");
 require("colors");
 
 class TailSnsCommand extends Command {
@@ -15,6 +16,8 @@ class TailSnsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
+
+		track("tail-sns", { region });
 
 		this.log(`finding the topic [${topicName}] in [${region}]`);
 		const topicArn = await getTopicArn(topicName);

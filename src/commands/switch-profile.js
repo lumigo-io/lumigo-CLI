@@ -2,9 +2,12 @@ const _ = require("lodash");
 const { Command } = require("@oclif/command");
 const { getProfiles, replaceProfiles } = require("../lib/aws-profile-utils");
 const inquirer = require("inquirer");
+const { track } = require("../lib/analytics");
 
 class SwitchProfileCommand extends Command {
 	async run() {
+		track("switch-profile", { });
+
 		const { sharedCred, config } = getProfiles();
 
 		const sharedCredProfileNames = Object.keys(sharedCred).filter(
