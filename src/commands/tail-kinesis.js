@@ -15,7 +15,7 @@ class TailKinesisCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("tail-kinesis", { region });
 
 		this.log(`checking Kinesis stream [${streamName}] in [${region}]`);

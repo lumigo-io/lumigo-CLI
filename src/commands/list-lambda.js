@@ -19,7 +19,7 @@ class ListLambdaCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("list-lambda", { region, inactive });
 
 		if (region) {

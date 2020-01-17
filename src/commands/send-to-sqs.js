@@ -22,7 +22,7 @@ class SendToSqsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("send-to-sqs", { region });
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);

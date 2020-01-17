@@ -15,7 +15,7 @@ class TailDynamodbCommand extends Command {
 		global.endpoint = endpoint;
 
 		checkVersion();
-    
+
 		track("tail-dynamodb", { region, hasEndpoint: !_.isEmpty(endpoint) });
 
 		this.log(`checking DynamoDB table [${tableName}] in [${region}]`);

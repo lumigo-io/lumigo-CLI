@@ -21,7 +21,7 @@ class ListKinesisShardsCommand extends Command {
 		}
 
 		checkVersion();
-    
+
 		track("list-kinesis-shards", { region, hasName: !_.isEmpty(streamName) });
 
 		this.log(`checking Kinesis stream [${streamName}] in [${region}]`);

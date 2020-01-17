@@ -24,7 +24,7 @@ class ReplaySqsDlqCommand extends Command {
 		global.keep = keep;
 
 		checkVersion();
-    
+
 		track("replay-sqs-dlq", { region, targetType, concurrency, keep });
 
 		this.log(`finding the SQS DLQ [${dlqQueueName}] in [${region}]`);

@@ -6,7 +6,7 @@ const { track } = require("../lib/analytics");
 
 class SwitchProfileCommand extends Command {
 	async run() {
-		track("switch-profile", { });
+		track("switch-profile", {});
 
 		const { sharedCred, config } = getProfiles();
 

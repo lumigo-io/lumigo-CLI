@@ -32,7 +32,7 @@ class PowertuneLambdaCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("powertune-lambda", { region, strategy });
 
 		this.log(`checking the aws-lambda-power-tuning SAR in [${region}]`);

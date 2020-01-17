@@ -16,7 +16,7 @@ class SlsRemoveCommand extends Command {
 		}
 
 		checkVersion();
-    
+
 		track("sls-remove", { region, emptyS3Buckets });
 
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);

@@ -17,7 +17,7 @@ class TailSqsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("tail-sqs", { region });
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);

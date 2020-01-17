@@ -19,8 +19,8 @@ class TailCloudwatchLogsCommand extends Command {
 		global.interval = interval || 1000;
 
 		checkVersion();
-    
-		track("tail-cloudwatch-logs", { });
+
+		track("tail-cloudwatch-logs", {});
 
 		const AWS = getAWSSDK();
 		this.Logs = new AWS.CloudWatchLogs();

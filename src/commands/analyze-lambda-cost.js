@@ -21,7 +21,7 @@ class AnalyzeLambdaCostCommand extends Command {
 		global.days = days || 30; // defaults to check last 30 days
 
 		checkVersion();
-    
+
 		track("analyze-lambda-cost", { region, days, hasName: !_.isEmpty(name) });
 
 		if (name) {

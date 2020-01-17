@@ -36,8 +36,13 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		}
 
 		global.hours = hours;
-    
-		track("analyze-lambda-cold-starts", { region, hours, days, hasName: !_.isEmpty(name) });
+
+		track("analyze-lambda-cold-starts", {
+			region,
+			hours,
+			days,
+			hasName: !_.isEmpty(name)
+		});
 
 		this.log(`analyzing cold starts over the last ${hours} hours`);
 

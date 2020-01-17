@@ -17,13 +17,13 @@ class ClearAccountCommand extends Command {
 
 		global.profile = profile;
 		this.retries = retries;
-    
+
 		checkVersion();
-    
+
 		track("clear-account", { force, retries });
-    
+
 		const AWS = getAWSSDK();
-    
+
 		if (force) {
 			this.log("Forcing account cleanup!".red.bold);
 			await this.clearEnvironment(AWS);

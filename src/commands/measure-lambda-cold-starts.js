@@ -20,7 +20,7 @@ class MeasureLambdaColdStartsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("list-lambda", { region, invocations });
 
 		this.log(`checking the measure-cold-start SAR in [${region}]`);

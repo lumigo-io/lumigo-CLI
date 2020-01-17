@@ -5,7 +5,7 @@ const { track } = require("../lib/analytics");
 
 class WhoamiCommand extends Command {
 	async run() {
-		track("whoami", { });
+		track("whoami", {});
 
 		const { sharedCred, config } = getProfiles();
 

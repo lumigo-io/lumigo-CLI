@@ -17,7 +17,7 @@ class TailEventbridgeRuleCommand extends Command {
 		global.eventBusName = eventBusName;
 
 		checkVersion();
-    
+
 		track("tail-eventbridge-rule", { region });
 
 		this.log(

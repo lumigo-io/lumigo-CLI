@@ -27,7 +27,7 @@ class ListKinesisStreamsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("list-kinesis-streams", { region });
 
 		let streamsDescription = [];

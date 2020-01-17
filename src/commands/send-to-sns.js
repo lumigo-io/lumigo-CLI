@@ -18,7 +18,7 @@ class SendToSnsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		track("send-to-sns", { region, concurrency });
 
 		this.log(`finding the topic [${topicName}] in [${region}]`);

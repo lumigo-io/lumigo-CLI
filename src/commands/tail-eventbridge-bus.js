@@ -11,7 +11,7 @@ class TailEventbridgeBusCommand extends Command {
 		global.region = region;
 		global.profile = profile;
 		global.eventBusName = eventBusName;
-    
+
 		track("tail-eventbridge-bus", { region });
 
 		const ruleName = await this.createRule();
