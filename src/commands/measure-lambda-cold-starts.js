@@ -21,7 +21,7 @@ class MeasureLambdaColdStartsCommand extends Command {
 
 		checkVersion();
 
-		track("list-lambda", { region, invocations });
+		track("measure-lambda-cold-starts", { region, invocations });
 
 		this.log(`checking the measure-cold-start SAR in [${region}]`);
 		const version = await getLatestVersion(ApplicationId);
