@@ -66,7 +66,8 @@ USAGE
 
 OPTIONS
   -d, --days=days        only find cold starts in the last X days
-  -h, --hours=hours      [default: 1] only find cold starts in the last X hours
+  -h, --hours=hours      only find cold starts in the last X hours
+  -m, --minutes=minutes  [default: 60] only find cold starts in the last X minutes
   -n, --name=name        only analyze this function, e.g. hello-world
   -p, --profile=profile  AWS CLI profile name
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1

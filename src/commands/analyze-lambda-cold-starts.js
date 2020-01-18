@@ -9,6 +9,7 @@ const Retry = require("async-retry");
 const { track } = require("../lib/analytics");
 require("colors");
 
+const ONE_MIN_IN_MILLIS = 60 * 1000;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const queryString = `
 fields @memorySize / 1000000 as memorySize
@@ -26,25 +27,30 @@ fields @memorySize / 1000000 as memorySize
 class AnalyzeLambdaColdStartsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(AnalyzeLambdaColdStartsCommand);
-		let { name, region, profile, hours, days } = flags;
+		let { name, region, profile, minutes, hours, days } = flags;
 		global.profile = profile;
 
 		checkVersion();
-
-		if (days) {
-			hours = days * 24;
+    
+		if (hours) {
+			minutes = hours * 60;
 		}
 
-		global.hours = hours;
+		if (days) {
+			minutes = days * 24 * 60;
+		}
+
+		global.minutes = minutes;
 
 		track("analyze-lambda-cold-starts", {
 			region,
+			minutes,
 			hours,
 			days,
 			hasName: !_.isEmpty(name)
 		});
 
-		this.log(`analyzing cold starts over the last ${hours} hours`);
+		this.log(`analyzing cold starts over the last ${minutes} minutes`);
 
 		if (name) {
 			this.show(await this.getFunctionInRegion(name, region));
@@ -195,10 +201,8 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 	async getProvisionedConcurrencyUtilization(region, functions) {
 		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch({ region });
-
-		const startTime = new Date();
-		startTime.setHours(startTime.getHours() - global.hours);
-
+    
+		const startTime = new Date(Date.now() - global.minutes * ONE_MIN_IN_MILLIS);
 		const queries = _.flatMap(functions, ({ functionName, qualifiers }) =>
 			qualifiers.map(qualifier => this.utilizationMetric(functionName, qualifier))
 		);
@@ -238,8 +242,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		const CloudWatchLogs = new AWS.CloudWatchLogs({ region });
 
 		const endTime = new Date();
-		const startTime = new Date();
-		startTime.setHours(startTime.getHours() - global.hours);
+		const startTime = new Date(Date.now() - global.minutes * ONE_MIN_IN_MILLIS);
 
 		this.log(
 			`${region}: running CloudWatch Insights query against ${functionNames.length} log groups`
@@ -420,16 +423,23 @@ AnalyzeLambdaColdStartsCommand.flags = {
 		description: "AWS CLI profile name",
 		required: false
 	}),
+	minutes: flags.integer({
+		char: "m",
+		description: "only find cold starts in the last X minutes",
+		required: false,
+		exclusive: ["days", "hours"],
+		default: 60
+	}),
 	hours: flags.integer({
 		char: "h",
 		description: "only find cold starts in the last X hours",
 		required: false,
-		exclusive: ["days"],
-		default: 1
+		exclusive: ["days", "minutes"],
 	}),
 	days: flags.integer({
 		char: "d",
 		description: "only find cold starts in the last X days",
+		exclusive: ["hours", "minutes"],
 		required: false
 	})
 };

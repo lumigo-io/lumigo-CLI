@@ -209,8 +209,8 @@ describe("analyze-lambda-cold-starts", () => {
 		test
 			.stdout()
 			.command([command, "-r", "us-east-1", "-d", "6"])
-			.it("converts days to hours", (ctx) => {
-				expect(ctx.stdout).to.contain("analyzing cold starts over the last 144 hours");
+			.it("converts days to minutes", (ctx) => {
+				expect(ctx.stdout).to.contain("analyzing cold starts over the last 8640 minutes");
 			});
 	});
 });
