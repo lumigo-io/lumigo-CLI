@@ -31,7 +31,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		global.profile = profile;
 
 		checkVersion();
-    
+
 		if (hours) {
 			minutes = hours * 60;
 		}
@@ -201,7 +201,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 	async getProvisionedConcurrencyUtilization(region, functions) {
 		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch({ region });
-    
+
 		const startTime = new Date(Date.now() - global.minutes * ONE_MIN_IN_MILLIS);
 		const queries = _.flatMap(functions, ({ functionName, qualifiers }) =>
 			qualifiers.map(qualifier => this.utilizationMetric(functionName, qualifier))
@@ -434,7 +434,7 @@ AnalyzeLambdaColdStartsCommand.flags = {
 		char: "h",
 		description: "only find cold starts in the last X hours",
 		required: false,
-		exclusive: ["days", "minutes"],
+		exclusive: ["days", "minutes"]
 	}),
 	days: flags.integer({
 		char: "d",
