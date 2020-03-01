@@ -26,16 +26,16 @@ describe("aws-profile-utils", () => {
 		beforeEach(() => {
 			mockReadFileSync.mockReturnValue("");
 		});
-    
+
 		it("should return empty objects", () => {
 			const { sharedCred, config } = profileUtils.getProfiles();
 			expect(sharedCred).toEqual({});
 			expect(config).toEqual({});
-      
+
 			expectFilePathsMatches(".aws/credential", ".aws/config");
 		});
 	});
-  
+
 	describe("when the files are populated", () => {
 		beforeEach(() => {
 			// shared cred config
@@ -55,7 +55,7 @@ role_arn = arn
 source_profile = yancui
 region = us-east-1`);
 		});
-    
+
 		it("should return parsed objects", () => {
 			const { sharedCred, config } = profileUtils.getProfiles();
 			expect(sharedCred).toEqual({
@@ -78,10 +78,10 @@ region = us-east-1`);
 					region: "us-east-1"
 				}
 			});
-      
+
 			expectFilePathsMatches(".aws/credential", ".aws/config");
 		});
-	});  
+	});
 });
 
 function expectFilePathsMatches(sharedCredFile, configFile) {

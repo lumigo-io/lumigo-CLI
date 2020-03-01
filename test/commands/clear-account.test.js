@@ -5,9 +5,11 @@ const apigw = require("../../src/lib/apigw");
 const s3 = require("../../src/lib/s3");
 const cf = require("../../src/lib/cloudformation");
 const versionCheck = require("../../src/lib/version-check");
+const cwLogs = require("../../src/lib/cloudwatch-logs");
 
 jest.mock("../../src/lib/version-check");
 jest.mock("../../src/lib/cloudformation");
+jest.mock("../../src/lib/cloudwatch-logs");
 jest.mock("../../src/lib/s3");
 jest.mock("../../src/lib/apigw");
 jest.mock("../../src/lib/iam");
@@ -23,6 +25,8 @@ describe("User forces clear account", () => {
 		iam.deleteAllRoles.mockResolvedValue([{ status: "success" }]);
 		cf.deleteAllStacks.mockResolvedValue([{ status: "success" }]);
 		cf.getAllStacksCount.mockResolvedValue(1);
+		cwLogs.getAllLogGroupsCount.mockResolvedValue(1);
+		cwLogs.deleteAllLogGroups.mockResolvedValue([{ status: "success" }]);
 		lambda.getAllFunctionsCount.mockResolvedValue(0);
 		lambda.deleteAllFunctions.mockResolvedValue([{ status: "success" }]);
 	});

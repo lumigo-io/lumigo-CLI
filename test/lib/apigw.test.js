@@ -1,9 +1,6 @@
 const { expect } = require("@oclif/test");
 const { getAWSSDK } = require("../../src/lib/aws");
-const {
-	deleteApiGw,
-	deleteAllApiGw
-} = require("../../src/lib/apigw");
+const { deleteApiGw, deleteAllApiGw } = require("../../src/lib/apigw");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors");

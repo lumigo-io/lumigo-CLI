@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const {expect, test} = require("@oclif/test");
+const { expect, test } = require("@oclif/test");
 const AWS = require("aws-sdk");
 const uuid = require("uuid/v4");
 
@@ -19,14 +19,15 @@ const queueUrl = "https://sqs.us-east-1.amazonaws.com/12345/queue-dev";
 beforeEach(() => {
 	mockListQueues.mockReset();
 	mockSendMessageBatch.mockReset();
-  
+
 	uuid.mockImplementation(() => "testid");
-  
+
 	mockListQueues.mockReturnValue({
-		promise: () => Promise.resolve({
-			QueueUrls: [queueUrl]
-		})
-	});  
+		promise: () =>
+			Promise.resolve({
+				QueueUrls: [queueUrl]
+			})
+	});
 });
 
 describe("send-to-sqs", () => {
@@ -35,47 +36,65 @@ describe("send-to-sqs", () => {
 			givenSendMessageBatchReturns();
 			givenSendMessageBatchReturns();
 		});
-    
-		test
-			.stdout()
-			.command(["send-to-sqs", "-n", "queue-dev", "-r", "us-east-1", "-f", "test/test_sqs_input.txt"])
+
+		test.stdout()
+			.command([
+				"send-to-sqs",
+				"-n",
+				"queue-dev",
+				"-r",
+				"us-east-1",
+				"-f",
+				"test/test_sqs_input.txt"
+			])
 			.it("sends all the file's content to sqs", ctx => {
 				expect(ctx.stdout).to.contain("all done!");
 
 				// there's a total of 15 messages, so should be two batches
 				expect(mockSendMessageBatch.mock.calls).to.have.lengthOf(2);
-				const messages = _
-					.flatMap(mockSendMessageBatch.mock.calls, calls => calls[0].Entries)
-					.map(x => x.MessageBody);
+				const messages = _.flatMap(
+					mockSendMessageBatch.mock.calls,
+					calls => calls[0].Entries
+				).map(x => x.MessageBody);
 				expect(messages).to.have.lengthOf(15);
 				_.range(1, 16).forEach(n => {
 					expect(messages).to.contain(`message ${n}`);
-				});				
+				});
 			});
 	});
 
 	describe("when there are partial failures", () => {
 		beforeEach(() => {
-			givenSendMessageBatchReturns([{
-				Id: "testid",
-				Message: "boom!"
-			}]);
+			givenSendMessageBatchReturns([
+				{
+					Id: "testid",
+					Message: "boom!"
+				}
+			]);
 			givenSendMessageBatchReturns();
 		});
-    
-		test
-			.stdout()
-			.command(["send-to-sqs", "-n", "queue-dev", "-r", "us-east-1", "-f", "test/test_sqs_input.txt"])
+
+		test.stdout()
+			.command([
+				"send-to-sqs",
+				"-n",
+				"queue-dev",
+				"-r",
+				"us-east-1",
+				"-f",
+				"test/test_sqs_input.txt"
+			])
 			.it("reports the failed messages", ctx => {
 				expect(ctx.stdout).to.contain("all done!");
 
 				// there's a total of 15 messages, so should be two batches
 				expect(mockSendMessageBatch.mock.calls).to.have.lengthOf(2);
-				const messages = _
-					.flatMap(mockSendMessageBatch.mock.calls, calls => calls[0].Entries)
-					.map(x => x.MessageBody);
+				const messages = _.flatMap(
+					mockSendMessageBatch.mock.calls,
+					calls => calls[0].Entries
+				).map(x => x.MessageBody);
 				expect(messages).to.have.lengthOf(15);
-        
+
 				expect(ctx.stdout).to.contain("boom!");
 			});
 	});
@@ -85,20 +104,28 @@ describe("send-to-sqs", () => {
 			givenSendMessageBatchReturns();
 			givenSendMessageBatchFails(new Error("boom!"));
 		});
-    
-		test
-			.stdout()
-			.command(["send-to-sqs", "-n", "queue-dev", "-r", "us-east-1", "-f", "test/test_sqs_input.txt"])
+
+		test.stdout()
+			.command([
+				"send-to-sqs",
+				"-n",
+				"queue-dev",
+				"-r",
+				"us-east-1",
+				"-f",
+				"test/test_sqs_input.txt"
+			])
 			.it("reports the failed messages", ctx => {
 				expect(ctx.stdout).to.contain("all done!");
 
 				// there's a total of 15 messages, so should be two batches
 				expect(mockSendMessageBatch.mock.calls).to.have.lengthOf(2);
-				const messages = _
-					.flatMap(mockSendMessageBatch.mock.calls, calls => calls[0].Entries)
-					.map(x => x.MessageBody);
+				const messages = _.flatMap(
+					mockSendMessageBatch.mock.calls,
+					calls => calls[0].Entries
+				).map(x => x.MessageBody);
 				expect(messages).to.have.lengthOf(15);
-        
+
 				expect(ctx.stdout).to.contain("boom!");
 			});
 	});
@@ -106,14 +133,15 @@ describe("send-to-sqs", () => {
 
 function givenSendMessageBatchReturns(failed) {
 	mockSendMessageBatch.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			Failed: failed
-		})
+		promise: () =>
+			Promise.resolve({
+				Failed: failed
+			})
 	});
-};
+}
 
 function givenSendMessageBatchFails(error) {
 	mockSendMessageBatch.mockReturnValueOnce({
 		promise: () => Promise.reject(error)
 	});
-};
+}

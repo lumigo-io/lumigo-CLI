@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const {expect, test} = require("@oclif/test");
+const { expect, test } = require("@oclif/test");
 const AWS = require("aws-sdk");
 const fs = require("fs");
 const inquirer = require("inquirer");
@@ -36,27 +36,27 @@ const fileContent = JSON.stringify({
 
 beforeEach(() => {
 	mockCreateCloudFormationTemplate.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			TemplateId: "template-id"
-		})
+		promise: () =>
+			Promise.resolve({
+				TemplateId: "template-id"
+			})
 	});
-  
+
 	mockCreateStack.mockReturnValueOnce({
-		promise: () => Promise.resolve({      
-		})
+		promise: () => Promise.resolve({})
 	});
-  
+
 	mockUpdateStack.mockReturnValueOnce({
-		promise: () => Promise.resolve({      
-		})
+		promise: () => Promise.resolve({})
 	});
 
 	mockStartExecution.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			executionArn: "execution-arn"
-		})
+		promise: () =>
+			Promise.resolve({
+				executionArn: "execution-arn"
+			})
 	});
-  
+
 	mockReadFileSync.mockReturnValueOnce(fileContent);
 	mockPrompt.mockImplementation(() => ({ visualize: "no" }));
 	mockExecSync.mockImplementation(() => "");
@@ -80,8 +80,16 @@ afterEach(() => {
 const stateMachineArn = "arn:aws:states:us-east-1:123:execution:powerTuningStateMachine";
 
 describe("powertune-lambda", () => {
-	const command = ["powertune-lambda", "-n", "my-function", "-s", "speed", "-r", "us-east-1"];
-  
+	const command = [
+		"powertune-lambda",
+		"-n",
+		"my-function",
+		"-s",
+		"speed",
+		"-r",
+		"us-east-1"
+	];
+
 	describe("if there are more than one page of versions", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"], true);
@@ -89,19 +97,18 @@ describe("powertune-lambda", () => {
 			givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.1", stateMachineArn);
 			givenDescribeExecutionReturns("SUCCEEDED", {});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.it("fetches all pages and pick the highest versions", () => {
 				expect(mockListApplicationVersions.mock.calls).to.have.length(2);
-        
-				// if it picked the highest version, and then the current stack returns the same 
+
+				// if it picked the highest version, and then the current stack returns the same
 				// version then we wouldn't try to deploy the SAR again
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.be.empty;
 			});
 	});
-  
+
 	describe("if SAR has not been deployed before", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -110,19 +117,18 @@ describe("powertune-lambda", () => {
 			givenGetCloudFormationTemplateReturns("ACTIVE");
 			givenDescribeExecutionReturns("SUCCEEDED", {});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.it("deploys latest version of SAR", () => {
-				expect(mockListApplicationVersions.mock.calls).to.have.length(1);        
+				expect(mockListApplicationVersions.mock.calls).to.have.length(1);
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.have.length(1);
 				expect(mockUpdateStack.mock.calls).to.be.empty;
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(1);
 			});
 	});
-  
+
 	describe("if SAR has been deployed but is an old version", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -131,19 +137,18 @@ describe("powertune-lambda", () => {
 			givenGetCloudFormationTemplateReturns("ACTIVE");
 			givenDescribeExecutionReturns("SUCCEEDED", {});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.it("deploys latest version of SAR", () => {
-				expect(mockListApplicationVersions.mock.calls).to.have.length(1);        
+				expect(mockListApplicationVersions.mock.calls).to.have.length(1);
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.be.empty;
 				expect(mockUpdateStack.mock.calls).to.have.length(1);
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(1);
 			});
 	});
-  
+
 	describe("when the SAR CloudFormation template is not ready yet", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -153,18 +158,17 @@ describe("powertune-lambda", () => {
 			givenGetCloudFormationTemplateReturns("ACTIVE");
 			givenDescribeExecutionReturns("SUCCEEDED", {});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.it("retries after 1s", () => {
-				expect(mockListApplicationVersions.mock.calls).to.have.length(1);        
+				expect(mockListApplicationVersions.mock.calls).to.have.length(1);
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.have.length(1);
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(2);
 			});
 	});
-  
+
 	describe("when the CloudFormation create is not finished yet", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -174,19 +178,18 @@ describe("powertune-lambda", () => {
 			givenGetCloudFormationTemplateReturns("ACTIVE");
 			givenDescribeExecutionReturns("SUCCEEDED", {});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.it("retries after 1s", () => {
-				expect(mockListApplicationVersions.mock.calls).to.have.length(1);        
+				expect(mockListApplicationVersions.mock.calls).to.have.length(1);
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.have.length(1);
 				expect(mockDescribeStacks.mock.calls).to.have.length(3);
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(1);
 			});
 	});
-  
+
 	describe("when the state machine execution is not finished yet", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -196,19 +199,18 @@ describe("powertune-lambda", () => {
 			givenDescribeExecutionReturns("RUNNING", {});
 			givenDescribeExecutionReturns("SUCCEEDED", {});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.it("retries after 1s", () => {
-				expect(mockListApplicationVersions.mock.calls).to.have.length(1);        
+				expect(mockListApplicationVersions.mock.calls).to.have.length(1);
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.have.length(1);
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockDescribeExecution.mock.calls).to.have.length(2);
 			});
 	});
-  
+
 	describe("when the CloudFormation deployment errs", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -216,19 +218,18 @@ describe("powertune-lambda", () => {
 			givenDescribeStacksReturns("ROLLBACK_COMPLETE"); // when deploying SAR
 			givenGetCloudFormationTemplateReturns("ACTIVE");
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.catch("deployment failed, stack is in [ROLLBACK_COMPLETE] status")
 			.it("rethrows the error", () => {
-				expect(mockListApplicationVersions.mock.calls).to.have.length(1);        
+				expect(mockListApplicationVersions.mock.calls).to.have.length(1);
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.have.length(1);
 			});
 	});
-  
+
 	describe("when the state machine execution errs", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -237,20 +238,19 @@ describe("powertune-lambda", () => {
 			givenGetCloudFormationTemplateReturns("ACTIVE");
 			givenDescribeExecutionReturns("FAILED", {});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(command)
 			.catch("execution failed [FAILED]: {}")
 			.it("rethrows the error", () => {
-				expect(mockListApplicationVersions.mock.calls).to.have.length(1);        
+				expect(mockListApplicationVersions.mock.calls).to.have.length(1);
 				expect(mockCreateCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockGetCloudFormationTemplate.mock.calls).to.have.length(1);
 				expect(mockCreateStack.mock.calls).to.have.length(1);
 				expect(mockDescribeExecution.mock.calls).to.have.length(1);
 			});
 	});
-  
+
 	describe("when the user provides a file as payload", () => {
 		beforeEach(() => {
 			// not sure why, but if I monkeypatch fs in global then all the tests
@@ -261,10 +261,19 @@ describe("powertune-lambda", () => {
 			givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
 			givenDescribeExecutionReturns("SUCCEEDED", {});
 		});
-    
-		test
-			.stdout()
-			.command(["powertune-lambda", "-n", "my-function", "-s", "speed", "-r", "us-east-1", "-f", "input.json"])
+
+		test.stdout()
+			.command([
+				"powertune-lambda",
+				"-n",
+				"my-function",
+				"-s",
+				"speed",
+				"-r",
+				"us-east-1",
+				"-f",
+				"input.json"
+			])
 			.it("sends the file content as payload instead", () => {
 				expect(mockReadFileSync.mock.calls).to.have.length(1);
 				const [req] = mockStartExecution.mock.calls[0];
@@ -272,7 +281,7 @@ describe("powertune-lambda", () => {
 				expect(input.payload).to.equal(fileContent);
 			});
 	});
-  
+
 	describe("when user chooses to visualize the result", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -284,15 +293,24 @@ describe("powertune-lambda", () => {
 			});
 			givenUserChooseToVisualizeResult();
 		});
-    
-		test
-			.stdout()
-			.command(["powertune-lambda", "-n", "my-function", "-s", "speed", "-r", "us-east-1"])
+
+		test.stdout()
+			.command([
+				"powertune-lambda",
+				"-n",
+				"my-function",
+				"-s",
+				"speed",
+				"-r",
+				"us-east-1"
+			])
 			.it("opens the browser with Python", () => {
 				const commands = _.flatMap(mockExecSync.mock.calls).join("\n");
-				expect(commands).to.contain(['python -m webbrowser "https://lambda-power-tuning.show/#123"']);
+				expect(commands).to.contain([
+					'python -m webbrowser "https://lambda-power-tuning.show/#123"'
+				]);
 			});
-      
+
 		describe("if python is not available", () => {
 			beforeEach(() => {
 				givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
@@ -311,13 +329,22 @@ describe("powertune-lambda", () => {
 					}
 				});
 			});
-      
-			test
-				.stdout()
-				.command(["powertune-lambda", "-n", "my-function", "-s", "speed", "-r", "us-east-1"])
+
+			test.stdout()
+				.command([
+					"powertune-lambda",
+					"-n",
+					"my-function",
+					"-s",
+					"speed",
+					"-r",
+					"us-east-1"
+				])
 				.it("opens the browser with native 'open' command", () => {
 					const commands = _.flatMap(mockExecSync.mock.calls).join("\n");
-					expect(commands).to.contain(['open "https://lambda-power-tuning.show/#123"']);
+					expect(commands).to.contain([
+						'open "https://lambda-power-tuning.show/#123"'
+					]);
 				});
 		});
 	});
@@ -328,10 +355,11 @@ function givenListAppVersionsReturns(versions, hasMore = false) {
 		SemanticVersion: v
 	}));
 	mockListApplicationVersions.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			Versions: versionDetails,
-			NextToken: hasMore ? "more" : undefined
-		})
+		promise: () =>
+			Promise.resolve({
+				Versions: versionDetails,
+				NextToken: hasMore ? "more" : undefined
+			})
 	});
 }
 
@@ -344,14 +372,14 @@ function givenDescribeStacksThrows() {
 function givenDescribeStacksReturns(status, version, stateMachineARN) {
 	const tags = [];
 	const outputs = [];
-  
+
 	if (version) {
 		tags.push({
 			Key: "serverlessrepo:semanticVersion",
 			Value: version
 		});
 	}
-  
+
 	if (stateMachineARN) {
 		outputs.push({
 			OutputKey: "StateMachineARN",
@@ -360,31 +388,36 @@ function givenDescribeStacksReturns(status, version, stateMachineARN) {
 	}
 
 	mockDescribeStacks.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			Stacks: [{
-				StackStatus: status,
-				Tags: tags,
-				Outputs: outputs
-			}]
-		})
+		promise: () =>
+			Promise.resolve({
+				Stacks: [
+					{
+						StackStatus: status,
+						Tags: tags,
+						Outputs: outputs
+					}
+				]
+			})
 	});
 }
 
 function givenGetCloudFormationTemplateReturns(status) {
 	mockGetCloudFormationTemplate.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			Status: status,
-			TemplateUrl: "http://template-url.com"
-		})
+		promise: () =>
+			Promise.resolve({
+				Status: status,
+				TemplateUrl: "http://template-url.com"
+			})
 	});
 }
 
 function givenDescribeExecutionReturns(status, output) {
 	mockDescribeExecution.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			status: status,
-			output: JSON.stringify(output)
-		})
+		promise: () =>
+			Promise.resolve({
+				status: status,
+				output: JSON.stringify(output)
+			})
 	});
 }
 

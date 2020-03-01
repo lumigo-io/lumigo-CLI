@@ -1,4 +1,4 @@
-const {expect, test} = require("@oclif/test");
+const { expect, test } = require("@oclif/test");
 const profileUtils = require("../../src/lib/aws-profile-utils");
 
 const mockGetProfiles = jest.fn();
@@ -16,9 +16,8 @@ describe("whoami", () => {
 				config: {}
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["whoami"])
 			.exit()
 			.it("exits without showing any profiles", ctx => {
@@ -26,7 +25,7 @@ describe("whoami", () => {
 				expect(ctx.stdout).to.not.contain("You are logged in as");
 			});
 	});
-  
+
 	describe("if no named profiles are set", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -39,9 +38,8 @@ describe("whoami", () => {
 				config: {}
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["whoami"])
 			.exit()
 			.it("exits without showing any profiles", ctx => {
@@ -49,7 +47,7 @@ describe("whoami", () => {
 				expect(ctx.stdout).to.not.contain("You are logged in as");
 			});
 	});
-  
+
 	describe("if no matching named profile is found", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -66,17 +64,18 @@ describe("whoami", () => {
 				config: {}
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["whoami"])
 			.exit()
 			.it("exits without showing any profiles", ctx => {
-				expect(ctx.stdout).to.contain("It appears you are not using any of the named profiles");
+				expect(ctx.stdout).to.contain(
+					"It appears you are not using any of the named profiles"
+				);
 				expect(ctx.stdout).to.not.contain("You are logged in as");
 			});
 	});
-  
+
 	describe("if a matching named profile is found in shared credential file", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -93,15 +92,14 @@ describe("whoami", () => {
 				config: {}
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["whoami"])
 			.it("shows the matching profile", ctx => {
 				expect(ctx.stdout).to.contain("You are logged in as [yancui]");
 			});
 	});
-  
+
 	describe("if a matching named profile is found in config file", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -123,9 +121,8 @@ describe("whoami", () => {
 				}
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["whoami"])
 			.it("shows the matching profile", ctx => {
 				expect(ctx.stdout).to.contain("You are logged in as [yancui]");
