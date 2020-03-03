@@ -57,7 +57,7 @@ describe("list-kinesis-streams", () => {
 
 	test.stdout()
 		.command(["list-kinesis-streams", "-r", "us-east-1"])
-		.it("calls only one region", (ctx) => {
+		.it("calls only one region", ctx => {
 			expect(mockListStreams.mock.calls).to.have.length(1);
 
 			expect(ctx.stdout).to.contain("stream-a");

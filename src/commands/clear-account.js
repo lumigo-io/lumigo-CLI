@@ -9,6 +9,7 @@ const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
 const { track } = require("../lib/analytics");
 require("colors");
+const { getAllLogGroupsCount, deleteAllLogGroups } = require("../lib/cloudwatch-logs");
 
 class ClearAccountCommand extends Command {
 	async run() {
@@ -161,6 +162,20 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
+	async clearLogGroups(AWS) {
+		this.log("Log Groups".bold);
+		await this.resourceDeletion(
+			async () => {
+				return await getAllLogGroupsCount(AWS);
+			},
+			async () => {
+				return await deleteAllLogGroups(AWS);
+			},
+			"log group",
+			true
+		);
+	}
+
 	async clearEnvironment(AWS) {
 		await this.clearS3(AWS);
 		console.info("");
@@ -171,6 +186,8 @@ class ClearAccountCommand extends Command {
 		await this.clearRoles(AWS);
 		console.info("");
 		await this.clearLambdas(AWS);
+		console.info("");
+		await this.clearLogGroups(AWS);
 		console.info("");
 	}
 }

@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const {expect, test} = require("@oclif/test");
+const { expect, test } = require("@oclif/test");
 const AWS = require("aws-sdk");
 
 const mockListTopics = jest.fn();
@@ -15,12 +15,13 @@ process.stdout.cursorTo = jest.fn();
 beforeEach(() => {
 	mockListTopics.mockReset();
 	mockPublish.mockReset();
-  
+
 	mockListTopics.mockReturnValue({
-		promise: () => Promise.resolve({
-			Topics: [{ TopicArn: "arn:aws:sns:us-east-1:12345:my-topic" }]
-		})
-	});  
+		promise: () =>
+			Promise.resolve({
+				Topics: [{ TopicArn: "arn:aws:sns:us-east-1:12345:my-topic" }]
+			})
+	});
 });
 
 describe("send-to-sns", () => {
@@ -28,44 +29,58 @@ describe("send-to-sns", () => {
 		beforeEach(() => {
 			givenPublishAlwaysReturns();
 		});
-    
-		test
-			.stdout()
-			.command(["send-to-sns", "-n", "my-topic", "-r", "us-east-1", "-f", "test/test_sns_input.txt"])
+
+		test.stdout()
+			.command([
+				"send-to-sns",
+				"-n",
+				"my-topic",
+				"-r",
+				"us-east-1",
+				"-f",
+				"test/test_sns_input.txt"
+			])
 			.it("sends all the file's content to sns", ctx => {
 				expect(ctx.stdout).to.contain("all done!");
 
 				// there's a total of 5 messages
 				expect(mockPublish.mock.calls).to.have.lengthOf(5);
-				const messages = _
-					.flatMap(mockPublish.mock.calls, calls => calls)
-					.map(x => x.Message);
+				const messages = _.flatMap(mockPublish.mock.calls, calls => calls).map(
+					x => x.Message
+				);
 				expect(messages).to.have.lengthOf(5);
 				_.range(1, 6).forEach(n => {
 					expect(messages).to.contain(`message ${n}`);
-				});				
+				});
 			});
 	});
-  
+
 	describe("when there are failures", () => {
 		beforeEach(() => {
 			givenPublishFails(new Error("boom!"));
 			givenPublishAlwaysReturns();
 		});
-    
-		test
-			.stdout()
-			.command(["send-to-sns", "-n", "my-topic", "-r", "us-east-1", "-f", "test/test_sns_input.txt"])
+
+		test.stdout()
+			.command([
+				"send-to-sns",
+				"-n",
+				"my-topic",
+				"-r",
+				"us-east-1",
+				"-f",
+				"test/test_sns_input.txt"
+			])
 			.it("reports the failed messages", ctx => {
 				expect(ctx.stdout).to.contain("all done!");
 
 				// there's a total of 5 messages
 				expect(mockPublish.mock.calls).to.have.lengthOf(5);
-				const messages = _
-					.flatMap(mockPublish.mock.calls, calls => calls)
-					.map(x => x.Message);
+				const messages = _.flatMap(mockPublish.mock.calls, calls => calls).map(
+					x => x.Message
+				);
 				expect(messages).to.have.lengthOf(5);
-        
+
 				expect(ctx.stdout).to.contain("boom!");
 			});
 	});
@@ -75,10 +90,10 @@ function givenPublishAlwaysReturns() {
 	mockPublish.mockReturnValue({
 		promise: () => Promise.resolve({})
 	});
-};
+}
 
 function givenPublishFails(error) {
 	mockPublish.mockReturnValueOnce({
 		promise: () => Promise.reject(error)
 	});
-};
+}

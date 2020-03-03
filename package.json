@@ -96,7 +96,8 @@
     "version": "oclif-dev readme && git add README.md",
     "semantic-release": "semantic-release",
     "prettier:ci": "prettier --list-different \"src/**/*.js\"",
-    "prettier:fix": "prettier --write \"./src/**/*.js\""
+    "prettier:fix": "prettier --write \"./src/**/*.js\" && prettier --write \"./test/**/*.js\"",
+    "eslint:fix": "eslint --fix \"./src/**/*.js\""
   },
   "prettier": {
     "useTabs": true,

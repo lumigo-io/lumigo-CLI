@@ -1,4 +1,4 @@
-const {expect, test} = require("@oclif/test");
+const { expect, test } = require("@oclif/test");
 const inquirer = require("inquirer");
 const profileUtils = require("../../src/lib/aws-profile-utils");
 
@@ -13,7 +13,7 @@ beforeEach(() => {
 	mockGetProfiles.mockReset();
 	mockReplaceProfiles.mockReset();
 	mockPrompt.mockReset();
-  
+
 	mockReplaceProfiles.mockReturnValue();
 });
 
@@ -29,40 +29,42 @@ describe("switch-profile", () => {
 				},
 				config: {}
 			});
-      
+
 			mockPrompt.mockResolvedValueOnce({
 				accountToSwitchTo: "yancui"
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["switch-profile"])
-			.it("options are presented without the suffix (current default profile)", ctx => {        
-				expect(ctx.stdout).to.contain("You are now logged in as [yancui]");
-				expect(mockPrompt.mock.calls).to.have.length(1);
-				expectMockIsCalledWith(mockPrompt, ([{ choices }]) => {
-					expect(choices).to.deep.eq(["yancui"]);
-				});
-				expect(mockReplaceProfiles.mock.calls).to.have.length(1);
-				expectMockIsCalledWith(mockReplaceProfiles, (actual) => {
-					expect(actual).to.deep.eq({
-						sharedCred: {
-							default: {
-								aws_access_key_id: "fake",
-								aws_secret_access_key: "fake"
-							},
-							yancui: {
-								aws_access_key_id: "fake",
-								aws_secret_access_key: "fake"
-							}
-						},
-						config: {}
+			.it(
+				"options are presented without the suffix (current default profile)",
+				ctx => {
+					expect(ctx.stdout).to.contain("You are now logged in as [yancui]");
+					expect(mockPrompt.mock.calls).to.have.length(1);
+					expectMockIsCalledWith(mockPrompt, ([{ choices }]) => {
+						expect(choices).to.deep.eq(["yancui"]);
 					});
-				});
-			});
+					expect(mockReplaceProfiles.mock.calls).to.have.length(1);
+					expectMockIsCalledWith(mockReplaceProfiles, actual => {
+						expect(actual).to.deep.eq({
+							sharedCred: {
+								default: {
+									aws_access_key_id: "fake",
+									aws_secret_access_key: "fake"
+								},
+								yancui: {
+									aws_access_key_id: "fake",
+									aws_secret_access_key: "fake"
+								}
+							},
+							config: {}
+						});
+					});
+				}
+			);
 	});
-  
+
 	describe("if no named profiles are set", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -75,9 +77,8 @@ describe("switch-profile", () => {
 				config: {}
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["switch-profile"])
 			.exit()
 			.it("exits without showing any profiles", ctx => {
@@ -86,7 +87,7 @@ describe("switch-profile", () => {
 				expect(mockReplaceProfiles.mock.calls).to.be.empty;
 			});
 	});
-  
+
 	describe("if user chooses the current profile", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -102,21 +103,20 @@ describe("switch-profile", () => {
 				},
 				config: {}
 			});
-      
+
 			mockPrompt.mockResolvedValueOnce({
 				accountToSwitchTo: "yancui (current default profile)"
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["switch-profile"])
 			.it("stays logged in as current profile", ctx => {
 				expect(ctx.stdout).to.contain("Stay logged in as [yancui]");
 				expect(mockReplaceProfiles.mock.calls).to.be.empty;
 			});
 	});
-  
+
 	describe("if user chooses to switch to a shared credential profile", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -132,19 +132,18 @@ describe("switch-profile", () => {
 				},
 				config: {}
 			});
-      
+
 			mockPrompt.mockResolvedValueOnce({
 				accountToSwitchTo: "yancui"
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["switch-profile"])
-			.it("switches to the new profile", (ctx) => {
+			.it("switches to the new profile", ctx => {
 				expect(ctx.stdout).to.contain("You are now logged in as [yancui]");
 				expect(mockReplaceProfiles.mock.calls).to.have.length(1);
-				expectMockIsCalledWith(mockReplaceProfiles, (actual) => {
+				expectMockIsCalledWith(mockReplaceProfiles, actual => {
 					expect(actual).to.deep.eq({
 						sharedCred: {
 							default: {
@@ -158,10 +157,10 @@ describe("switch-profile", () => {
 						},
 						config: {}
 					});
-				});			
+				});
 			});
 	});
-  
+
 	describe("if user chooses to switch to a config profile", () => {
 		beforeEach(() => {
 			mockGetProfiles.mockReturnValueOnce({
@@ -182,19 +181,18 @@ describe("switch-profile", () => {
 					}
 				}
 			});
-      
+
 			mockPrompt.mockResolvedValueOnce({
 				accountToSwitchTo: "yancui"
 			});
 		});
-    
-		test
-			.stdout()
+
+		test.stdout()
 			.command(["switch-profile"])
-			.it("switches to the new profile", (ctx) => {
+			.it("switches to the new profile", ctx => {
 				expect(ctx.stdout).to.contain("You are now logged in as [yancui]");
 				expect(mockReplaceProfiles.mock.calls).to.have.length(1);
-				expectMockIsCalledWith(mockReplaceProfiles, (actual) => {
+				expectMockIsCalledWith(mockReplaceProfiles, actual => {
 					expect(actual).to.deep.eq({
 						sharedCred: {
 							default: {
@@ -213,7 +211,7 @@ describe("switch-profile", () => {
 							}
 						}
 					});
-				});			
+				});
 			});
 	});
 });

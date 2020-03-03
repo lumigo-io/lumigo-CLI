@@ -1,4 +1,4 @@
-const {expect, test} = require("@oclif/test");
+const { expect, test } = require("@oclif/test");
 const AWS = require("aws-sdk");
 const Promise = require("bluebird");
 
@@ -23,9 +23,10 @@ beforeEach(() => {
 	mockOpenStdin.mockReset();
 
 	mockGetShardIterator.mockReturnValue({
-		promise: () => Promise.resolve({
-			ShardIterator: "iterator"
-		})
+		promise: () =>
+			Promise.resolve({
+				ShardIterator: "iterator"
+			})
 	});
 
 	mockOpenStdin.mockReturnValue({
@@ -39,17 +40,17 @@ describe("tail-dynamodb", () => {
 			givenDescribeTableReturns();
 		});
 
-		test
-			.stdout()
+		test.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
 			.exit(0)
-			.it("reports the table has no stream", async (ctx) => {
+			.it("reports the table has no stream", async ctx => {
 				expect(ctx.stdout).to.contain("table doesn't have a stream, exiting...");
 			});
 	});
 
 	describe("when the stream has one shard", () => {
-		const streamArn = "arn:aws:dynamodb:us-east-1:12345:table/users-dev/stream/2019-10-03T20:40:59.351";
+		const streamArn =
+			"arn:aws:dynamodb:us-east-1:12345:table/users-dev/stream/2019-10-03T20:40:59.351";
 
 		beforeEach(() => {
 			givenDescribeTableReturns(streamArn);
@@ -58,20 +59,24 @@ describe("tail-dynamodb", () => {
 			givenGetRecordsAlwaysReturns([]);
 		});
 
-		test
-			.stdout()
+		test.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
 			.exit(0)
-			.it("displays messages in the console", async (ctx) => {
-				expect(ctx.stdout).to.contain(`checking DynamoDB stream [${streamArn}] in [us-east-1]`);
-				expect(ctx.stdout).to.contain("polling DynamoDB stream for table [users-dev] (1 shards)...");
+			.it("displays messages in the console", async ctx => {
+				expect(ctx.stdout).to.contain(
+					`checking DynamoDB stream [${streamArn}] in [us-east-1]`
+				);
+				expect(ctx.stdout).to.contain(
+					"polling DynamoDB stream for table [users-dev] (1 shards)..."
+				);
 				expect(ctx.stdout).to.contain("message 1");
 				expect(ctx.stdout).to.contain("message 2");
 			});
 	});
 
 	describe("when the stream has more than one shard", () => {
-		const streamArn = "arn:aws:dynamodb:us-east-1:12345:table/users-dev/stream/2019-10-03T20:40:59.351";
+		const streamArn =
+			"arn:aws:dynamodb:us-east-1:12345:table/users-dev/stream/2019-10-03T20:40:59.351";
 
 		beforeEach(() => {
 			givenDescribeTableReturns(streamArn);
@@ -82,12 +87,13 @@ describe("tail-dynamodb", () => {
 			givenGetRecordsAlwaysReturns([]);
 		});
 
-		test
-			.stdout()
+		test.stdout()
 			.command(["tail-dynamodb", "-n", "users-dev", "-r", "us-east-1"])
 			.exit(0)
 			.it("displays messages in the console", ctx => {
-				expect(ctx.stdout).to.contain("polling DynamoDB stream for table [users-dev] (2 shards)...");
+				expect(ctx.stdout).to.contain(
+					"polling DynamoDB stream for table [users-dev] (2 shards)..."
+				);
 				expect(ctx.stdout).to.contain("message 1");
 				expect(ctx.stdout).to.contain("message 2");
 				// because each shard return the first event and since there is no shard03, the message 3 won't be fetched
@@ -98,44 +104,48 @@ describe("tail-dynamodb", () => {
 
 function givenDescribeTableReturns(streamArn) {
 	mockDescribeTable.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			Table: {
-				LatestStreamArn: streamArn
-			}
-		})
+		promise: () =>
+			Promise.resolve({
+				Table: {
+					LatestStreamArn: streamArn
+				}
+			})
 	});
 }
 
 function givenDescribeStreamsReturns(shardIds) {
 	mockDescribeStream.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			StreamDescription: {
-				StreamARN: "arn",
-				StreamStatus: "ACTIVE",
-				StreamViewType: "NEW_AND_OLD_IMAGES",
-				Shards: shardIds.map(shardId => ({ ShardId: shardId }))
-			}
-		})
+		promise: () =>
+			Promise.resolve({
+				StreamDescription: {
+					StreamARN: "arn",
+					StreamStatus: "ACTIVE",
+					StreamViewType: "NEW_AND_OLD_IMAGES",
+					Shards: shardIds.map(shardId => ({ ShardId: shardId }))
+				}
+			})
 	});
-};
+}
 
 function givenGetRecordsReturns(records) {
 	mockGetRecords.mockReturnValueOnce({
-		promise: () => Promise.resolve({
-			Records: records,
-			NextIterator: "iterator more"
-		})
+		promise: () =>
+			Promise.resolve({
+				Records: records,
+				NextIterator: "iterator more"
+			})
 	});
-};
+}
 
 function givenGetRecordsAlwaysReturns(records) {
 	mockGetRecords.mockReturnValue({
-		promise: () => Promise.resolve({
-			Records: records,
-			NextIterator: "iterator more"
-		})
+		promise: () =>
+			Promise.resolve({
+				Records: records,
+				NextIterator: "iterator more"
+			})
 	});
-};
+}
 
 function genEvent(id) {
 	return JSON.stringify({
