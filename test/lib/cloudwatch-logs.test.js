@@ -1,6 +1,9 @@
 const { expect } = require("@oclif/test");
 const { getAWSSDK } = require("../../src/lib/aws");
-const { deleteAllLogGroups } = require("../../src/lib/cloudwatch-logs");
+const {
+	deleteAllLogGroups,
+	getAllLogGroupsCount
+} = require("../../src/lib/cloudwatch-logs");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors");
@@ -9,8 +12,10 @@ const { success, fail, getPromiseResponse } = require("../test-utils/jest-mocks"
 jest.spyOn(global.console, "log");
 global.console.log.mockImplementation(() => {});
 chai.use(chaiAsPromised);
-describe("deleteAllLogGroups", () => {
+
+describe("test interface", () => {
 	let AWS = null;
+
 	beforeEach(() => {
 		AWS = getAWSSDK();
 
@@ -49,5 +54,11 @@ describe("deleteAllLogGroups", () => {
 		result.forEach(val => {
 			expect(val.status).to.equal("fail");
 		});
+	});
+
+	it("Count number of log groups", async function() {
+		const count = await getAllLogGroupsCount(AWS);
+
+		expect(count).to.equal(16);
 	});
 });
