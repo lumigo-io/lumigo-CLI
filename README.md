@@ -220,6 +220,7 @@ OPTIONS
   -f, --file=file                      file that contains the JSON payload to send to the function
   -i, --invocations=invocations        [default: 100] the number of invocations to run for each configuration
   -n, --functionName=functionName      (required) name of the Lambda function
+  -o, --outputFile=outputFile          output file for the powertune SAR response
   -p, --profile=profile                AWS CLI profile name
   -r, --region=region                  (required) AWS region, e.g. us-east-1
   -s, --strategy=cost|speed|balanced   (required) what to powertune the function for - "cost", "speed" or "balanced"
