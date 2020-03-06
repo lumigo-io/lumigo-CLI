@@ -309,7 +309,7 @@ describe("powertune-lambda", () => {
 				"output.json"
 			])
 			.it("writes the response to file", () => {
-				expect(mockWriteFileSync.mock.calls).to.have.length(1);								
+				expect(mockWriteFileSync.mock.calls).to.have.length(1);
 			});
 	});
 

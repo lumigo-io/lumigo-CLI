@@ -95,7 +95,7 @@ class PowertuneLambdaCommand extends Command {
 		const result = await waitForStateMachineOutput(executionArn);
 		result.functionName = functionName;
 		this.log(JSON.stringify(result, null, 2).yellow);
-    
+
 		if (outputFile) {
 			fs.writeFileSync(outputFile, JSON.stringify(result, null, 2));
 		}
