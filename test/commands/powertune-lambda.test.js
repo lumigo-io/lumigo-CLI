@@ -22,6 +22,7 @@ AWS.StepFunctions.prototype.startExecution = mockStartExecution;
 const mockDescribeExecution = jest.fn();
 AWS.StepFunctions.prototype.describeExecution = mockDescribeExecution;
 const mockReadFileSync = jest.fn();
+const mockWriteFileSync = jest.fn();
 const mockPrompt = jest.fn();
 inquirer.prompt = mockPrompt;
 const mockExecSync = jest.fn();
@@ -58,6 +59,7 @@ beforeEach(() => {
 	});
 
 	mockReadFileSync.mockReturnValueOnce(fileContent);
+	mockWriteFileSync.mockReturnValueOnce();
 	mockPrompt.mockImplementation(() => ({ visualize: "no" }));
 	mockExecSync.mockImplementation(() => "");
 });
@@ -73,6 +75,7 @@ afterEach(() => {
 	mockDescribeExecution.mockReset();
 	consoleLog.mockReset();
 	mockReadFileSync.mockReset();
+	mockWriteFileSync.mockReset();
 	mockPrompt.mockReset();
 	mockExecSync.mockReset();
 });
@@ -279,6 +282,34 @@ describe("powertune-lambda", () => {
 				const [req] = mockStartExecution.mock.calls[0];
 				const input = JSON.parse(req.input);
 				expect(input.payload).to.equal(fileContent);
+			});
+	});
+
+	describe("when the user provides a file as output", () => {
+		beforeEach(() => {
+			// not sure why, but if I monkeypatch fs in global then all the tests
+			// fail with "globby.sync is not a function"
+			// hence why I'm monkeypatching in the test instead
+			fs.writeFileSync = mockWriteFileSync;
+			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
+			givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
+			givenDescribeExecutionReturns("SUCCEEDED", {});
+		});
+
+		test.stdout()
+			.command([
+				"powertune-lambda",
+				"-n",
+				"my-function",
+				"-s",
+				"speed",
+				"-r",
+				"us-east-1",
+				"-o",
+				"output.json"
+			])
+			.it("writes the response to file", () => {
+				expect(mockWriteFileSync.mock.calls).to.have.length(1);								
 			});
 	});
 
