@@ -25,7 +25,8 @@ class PowertuneLambdaCommand extends Command {
 			invocations,
 			file,
 			balancedWeight,
-			powerValues
+			powerValues,
+			outputFile
 		} = flags;
 
 		global.region = region;
@@ -92,7 +93,12 @@ class PowertuneLambdaCommand extends Command {
 		this.log(`execution ARN is ${executionArn}`);
 
 		const result = await waitForStateMachineOutput(executionArn);
+		result.functionName = functionName;
 		this.log(JSON.stringify(result, null, 2).yellow);
+
+		if (outputFile) {
+			fs.writeFileSync(outputFile, JSON.stringify(result, null, 2));
+		}
 
 		// since v2.1.1 the powertuning SFN returns a visualization URL as well
 		const visualizationUrl = _.get(result, "stateMachine.visualization");
@@ -174,6 +180,11 @@ PowertuneLambdaCommand.flags = {
 				return x.split(",").map(n => parseInt(n));
 			}
 		}
+	}),
+	outputFile: flags.string({
+		char: "o",
+		description: "output file for the powertune SAR response",
+		required: false
 	})
 };
 
