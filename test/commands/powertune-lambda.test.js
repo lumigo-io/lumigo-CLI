@@ -379,6 +379,33 @@ describe("powertune-lambda", () => {
 				});
 		});
 	});
+  
+	describe("when user suppresses vizualization", () => {
+		beforeEach(() => {
+			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
+			givenDescribeStacksReturns("CREATE_COMPLETE", "1.0.0", stateMachineArn);
+			givenDescribeExecutionReturns("SUCCEEDED", {
+				stateMachine: {
+					visualization: "https://lambda-power-tuning.show/#123"
+				}
+			});
+		});
+
+		test.stdout()
+			.command([
+				"powertune-lambda",
+				"-n",
+				"my-function",
+				"-s",
+				"speed",
+				"-r",
+				"us-east-1",
+				"-z"
+			])
+			.it("doesn't show prompt", () => {
+				expect(mockPrompt.mock.calls).length.to.be.empty;
+			});
+	});
 });
 
 function givenListAppVersionsReturns(versions, hasMore = false) {

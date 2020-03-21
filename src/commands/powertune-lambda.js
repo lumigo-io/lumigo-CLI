@@ -26,7 +26,8 @@ class PowertuneLambdaCommand extends Command {
 			file,
 			balancedWeight,
 			powerValues,
-			outputFile
+			outputFile,
+			noVisualization
 		} = flags;
 
 		global.region = region;
@@ -99,22 +100,24 @@ class PowertuneLambdaCommand extends Command {
 		if (outputFile) {
 			fs.writeFileSync(outputFile, JSON.stringify(result, null, 2));
 		}
+    
+		if (!noVisualization) {
+		  // since v2.1.1 the powertuning SFN returns a visualization URL as well
+			const visualizationUrl = _.get(result, "stateMachine.visualization");
 
-		// since v2.1.1 the powertuning SFN returns a visualization URL as well
-		const visualizationUrl = _.get(result, "stateMachine.visualization");
+			if (visualizationUrl) {
+				const { visualize } = await inquirer.prompt([
+					{
+						type: "list",
+						name: "visualize",
+						message: "Do you want to open the visualization to see more results?",
+						choices: ["yes", "no"]
+					}
+				]);
 
-		if (visualizationUrl) {
-			const { visualize } = await inquirer.prompt([
-				{
-					type: "list",
-					name: "visualize",
-					message: "Do you want to open the visualization to see more results?",
-					choices: ["yes", "no"]
+				if (visualize === "yes") {
+					openVisualization(visualizationUrl);
 				}
-			]);
-
-			if (visualize === "yes") {
-				openVisualization(visualizationUrl);
 			}
 		}
 	}
@@ -184,6 +187,12 @@ PowertuneLambdaCommand.flags = {
 	outputFile: flags.string({
 		char: "o",
 		description: "output file for the powertune SAR response",
+		required: false
+	}),
+	noVisualization: flags.boolean({
+		char: "z",
+		description: "suppresses the prompt to show visualization",
+		default: false,
 		required: false
 	})
 };
