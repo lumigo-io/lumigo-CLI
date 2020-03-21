@@ -228,6 +228,8 @@ OPTIONS
 
   -w, --balancedWeight=balancedWeight  the trade-off between cost and time, 0.0 is equivalent to "speed" strategy, 1.0
                                        is equivalent to "cost" strategy
+
+  -z, --noVisualization                suppresses the prompt to show visualization
 ```
 
 _See code: [src/commands/powertune-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.26.0/src/commands/powertune-lambda.js)_
