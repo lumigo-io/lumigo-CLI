@@ -100,9 +100,9 @@ class PowertuneLambdaCommand extends Command {
 		if (outputFile) {
 			fs.writeFileSync(outputFile, JSON.stringify(result, null, 2));
 		}
-    
+
 		if (!noVisualization) {
-		  // since v2.1.1 the powertuning SFN returns a visualization URL as well
+			// since v2.1.1 the powertuning SFN returns a visualization URL as well
 			const visualizationUrl = _.get(result, "stateMachine.visualization");
 
 			if (visualizationUrl) {
@@ -110,7 +110,8 @@ class PowertuneLambdaCommand extends Command {
 					{
 						type: "list",
 						name: "visualize",
-						message: "Do you want to open the visualization to see more results?",
+						message:
+							"Do you want to open the visualization to see more results?",
 						choices: ["yes", "no"]
 					}
 				]);

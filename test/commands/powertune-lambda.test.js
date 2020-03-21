@@ -379,7 +379,7 @@ describe("powertune-lambda", () => {
 				});
 		});
 	});
-  
+
 	describe("when user suppresses vizualization", () => {
 		beforeEach(() => {
 			givenListAppVersionsReturns(["0.0.1", "0.1.0", "1.0.0"]);
