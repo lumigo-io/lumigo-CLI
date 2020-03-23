@@ -27,7 +27,9 @@ class PowertuneLambdaCommand extends Command {
 			balancedWeight,
 			powerValues,
 			outputFile,
-			noVisualization
+			noVisualization,
+			autoOptimize,
+			autoOptimizeAlias
 		} = flags;
 
 		global.region = region;
@@ -85,9 +87,11 @@ class PowertuneLambdaCommand extends Command {
 			num: invocations,
 			payload: payload,
 			parallelInvocation: false,
-			strategy: strategy,
-			balancedWeight: balancedWeight,
-			powerValues: powerValues
+			strategy,
+			balancedWeight,
+			powerValues,
+			autoOptimize,
+			autoOptimizeAlias
 		});
 		const executionArn = await startStateMachine(stateMachineArn, input);
 		this.log("State Machine execution started");
@@ -194,6 +198,18 @@ PowertuneLambdaCommand.flags = {
 		char: "z",
 		description: "suppresses the prompt to show visualization",
 		default: false,
+		required: false
+	}),
+	autoOptimize: flags.boolean({
+		description:
+			"if true, apply the optimal configuration at the end of its execution",
+		default: false,
+		required: false
+	}),
+	autoOptimizeAlias: flags.string({
+		description:
+			"the state machine will create or update this alias with the new optimal power value",
+		dependsOn: ["autoOptimize"],
 		required: false
 	})
 };
