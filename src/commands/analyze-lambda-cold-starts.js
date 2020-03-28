@@ -250,38 +250,55 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		this.log(`${region}: query start time is ${startTime.toJSON()}`);
 		this.log(`${region}: end time is ${endTime.toJSON()}`);
 
+		const run = async logGroupNames => {
+			try {
+				const startResp = await CloudWatchLogs.startQuery({
+					logGroupNames,
+					startTime: startTime.getTime() / 1000,
+					endTime: endTime.getTime() / 1000,
+					queryString
+				}).promise();
+
+				const queryId = startResp.queryId;
+				const results = await Retry(
+					async () => {
+						const resp = await CloudWatchLogs.getQueryResults({
+							queryId
+						}).promise();
+
+						if (resp.status !== "Complete") {
+							throw new Error("query result not ready yet...");
+						}
+
+						return resp.results;
+					},
+					{
+						retries: 200, // 10 mins
+						minTimeout: 3000,
+						maxTimeout: 3000
+					}
+				);
+
+				return results;
+			} catch (err) {
+				this.log(err.message.red);
+
+				if (err.code === "ResourceNotFoundException") {
+					// e.g. Log group '/aws/lambda/example' does not exist for account ID 'xxx'
+					const missing = err.message.match(
+						/Log group '(.*)' does not exist/
+					)[1];
+					return run(logGroupNames.filter(x => x !== missing));
+				}
+
+				return [];
+			}
+		};
+
 		// CW Insights only allows up to 20 log groups at a time
 		const promises = _.chunk(functionNames, 20).map(async chunk => {
 			const logGroupNames = chunk.map(x => `/aws/lambda/${x}`);
-
-			const startResp = await CloudWatchLogs.startQuery({
-				logGroupNames,
-				startTime: startTime.getTime() / 1000,
-				endTime: endTime.getTime() / 1000,
-				queryString
-			}).promise();
-
-			const queryId = startResp.queryId;
-			const results = await Retry(
-				async () => {
-					const resp = await CloudWatchLogs.getQueryResults({
-						queryId
-					}).promise();
-
-					if (resp.status !== "Complete") {
-						throw new Error("query result not ready yet...");
-					}
-
-					return resp.results;
-				},
-				{
-					retries: 200, // 10 mins
-					minTimeout: 3000,
-					maxTimeout: 3000
-				}
-			);
-
-			return results;
+			return await run(logGroupNames);
 		});
 
 		const rows = _.flatMap(await Promise.all(promises));

@@ -16,10 +16,6 @@ AWS.Lambda.prototype.listProvisionedConcurrencyConfigs = mockListProvisionedConc
 const command = "analyze-lambda-cold-starts";
 
 beforeEach(() => {
-	mockStartQuery.mockReturnValue({
-		promise: () => Promise.resolve({ queryId: "foo" })
-	});
-
 	mockListProvisionedConcurrencyConfigs.mockReturnValue({
 		promise: () =>
 			Promise.resolve({
@@ -39,6 +35,7 @@ afterEach(() => {
 describe("analyze-lambda-cold-starts", () => {
 	describe("if a function has no cold starts", () => {
 		beforeEach(() => {
+			givenStartQueryAlwaysSucceeds();
 			givenListFunctionsAlwaysReturns(["function-a"]);
 			givenGetQueryResultsAlwaysReturns("Complete", []);
 
@@ -89,6 +86,7 @@ describe("analyze-lambda-cold-starts", () => {
 
 	describe("if a function has cold starts", () => {
 		beforeEach(() => {
+			givenStartQueryAlwaysSucceeds();
 			givenListFunctionsReturns(["function"]);
 			givenListFunctionsAlwaysReturns([]);
 
@@ -140,6 +138,7 @@ describe("analyze-lambda-cold-starts", () => {
 
 	describe("if there are more than one page of functions", () => {
 		beforeEach(() => {
+			givenStartQueryAlwaysSucceeds();
 			givenListFunctionsReturns(["function-a"], true);
 			givenListFunctionsReturns(["function-b"]);
 
@@ -202,6 +201,7 @@ describe("analyze-lambda-cold-starts", () => {
 
 	describe("if query result is not ready yet", () => {
 		beforeEach(() => {
+			givenStartQueryAlwaysSucceeds();
 			givenListFunctionsReturns(["function-a"]);
 
 			givenGetQueryResultsReturns("Running", []);
@@ -237,7 +237,42 @@ describe("analyze-lambda-cold-starts", () => {
 				);
 			});
 	});
+
+	describe("if log group doesn't exist", () => {
+		beforeEach(() => {
+			givenStartQueryFails({
+				code: "ResourceNotFoundException",
+				message:
+					"Log group '/aws/lambda/function1' does not exist for account ID 'xxx'"
+			});
+			givenListFunctionsReturns(["function1", "function2"]);
+		});
+
+		test.stdout()
+			.command([command, "-r", "us-east-1"])
+			.it("skips the missing CloudWatch Logs log group upon retry", () => {
+				expect(mockStartQuery.mock.calls).to.have.lengthOf(2);
+				const [req1, req2] = mockStartQuery.mock.calls;
+				expect(req1[0].logGroupNames).to.deep.equal([
+					"/aws/lambda/function1",
+					"/aws/lambda/function2"
+				]);
+				expect(req2[0].logGroupNames).to.deep.equal(["/aws/lambda/function2"]);
+			});
+	});
 });
+
+function givenStartQueryAlwaysSucceeds() {
+	mockStartQuery.mockReturnValue({
+		promise: () => Promise.resolve({ queryId: "foo" })
+	});
+}
+
+function givenStartQueryFails(error) {
+	mockStartQuery.mockReturnValueOnce({
+		promise: () => Promise.reject(error)
+	});
+}
 
 function givenGetQueryResultsReturns(status, results) {
 	mockGetQueryResults.mockReturnValueOnce({
