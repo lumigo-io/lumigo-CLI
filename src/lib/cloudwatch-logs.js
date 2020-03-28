@@ -103,6 +103,7 @@ const getAllLogGroupsCount = async AWS => {
 
 	return _.flatten(allLogGroups).length;
 };
+
 module.exports = {
 	getAllLogGroupsInRegion,
 	deleteAllLogGroups,

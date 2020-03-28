@@ -146,6 +146,7 @@ const getAllStacksCount = async AWS => {
 
 	return _.flatten(allStacks).length;
 };
+
 module.exports = {
 	getAllStacksInRegion,
 	deleteAllStacks,

@@ -54,6 +54,7 @@ const getBucketCount = async AWS => {
 	const response = await S3.listBuckets().promise();
 	return response.Buckets.length;
 };
+
 module.exports = {
 	deleteAllBuckets,
 	getBucketCount

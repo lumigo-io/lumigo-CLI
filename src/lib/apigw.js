@@ -20,6 +20,7 @@ const regions = [
 	"ap-south-1",
 	"sa-east-1"
 ];
+
 const getAllApiGwInRegion = async (region, AWS) => {
 	const HttpApiGw = new AWS.ApiGatewayV2({ region });
 
@@ -62,6 +63,7 @@ const getAllApiGwInRegion = async (region, AWS) => {
 
 	return foundApiGw;
 };
+
 const getAllApiGwCount = async AWS => {
 	const allApiPromises = regions.map(region => getAllApiGwInRegion(region, AWS));
 	const allApis = await Promise.all(allApiPromises);
@@ -112,6 +114,7 @@ const deleteAllApiGw = async AWS => {
 
 	return await Promise.all(apiToDeletePromises);
 };
+
 module.exports = {
 	deleteApiGw,
 	deleteAllApiGw,
