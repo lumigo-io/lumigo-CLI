@@ -7,9 +7,10 @@ const { getAllRolesCount, deleteAllRoles } = require("../lib/iam");
 const { getAllApiGwCount, deleteAllApiGw } = require("../lib/apigw");
 const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
+const { getAllLogGroupsCount, deleteAllLogGroups } = require("../lib/cloudwatch-logs");
+const { getAllNatGatewaysCount, deleteAllNatGateways } = require("../lib/nat");
 const { track } = require("../lib/analytics");
 require("colors");
-const { getAllLogGroupsCount, deleteAllLogGroups } = require("../lib/cloudwatch-logs");
 
 class ClearAccountCommand extends Command {
 	async run() {
@@ -175,6 +176,20 @@ class ClearAccountCommand extends Command {
 			true
 		);
 	}
+  
+	async clearNatGateways(AWS) {
+		this.log("NAT Gateways".bold);
+		await this.resourceDeletion(
+			async () => {
+				return await getAllNatGatewaysCount(AWS);
+			},
+			async () => {
+				return await deleteAllNatGateways(AWS);
+			},
+			"NAT Gateway",
+			true
+		);
+	}
 
 	async clearEnvironment(AWS) {
 		await this.clearS3(AWS);
@@ -188,6 +203,8 @@ class ClearAccountCommand extends Command {
 		await this.clearLambdas(AWS);
 		console.info("");
 		await this.clearLogGroups(AWS);
+		console.info("");
+		await this.clearNatGateways(AWS);
 		console.info("");
 	}
 }
