@@ -176,7 +176,7 @@ class ClearAccountCommand extends Command {
 			true
 		);
 	}
-  
+
 	async clearNatGateways(AWS) {
 		this.log("NAT Gateways".bold);
 		await this.resourceDeletion(

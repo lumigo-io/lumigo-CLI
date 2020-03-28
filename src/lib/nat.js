@@ -58,9 +58,7 @@ const deleteAllNatGateways = async (
 			results.push(ClearResult.getSuccess(x.natGatewayId, x.region));
 		} catch (e) {
 			process.stdout.write("F".red);
-			results.push(
-				ClearResult.getFailed(x.natGatewayId, x.region, e)
-			);
+			results.push(ClearResult.getFailed(x.natGatewayId, x.region, e));
 		}
 	}, 10);
 

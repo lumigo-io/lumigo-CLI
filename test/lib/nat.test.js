@@ -1,9 +1,6 @@
 const { expect } = require("@oclif/test");
 const { getAWSSDK } = require("../../src/lib/aws");
-const {
-	deleteAllNatGateways,
-	getAllNatGatewaysCount
-} = require("../../src/lib/nat");
+const { deleteAllNatGateways, getAllNatGatewaysCount } = require("../../src/lib/nat");
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 require("colors");
