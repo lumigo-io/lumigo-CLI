@@ -89,6 +89,7 @@ const deleteAllRoles = async AWS => {
 
 	return await Promise.all(apiToDeletePromises);
 };
+
 module.exports = {
 	deleteAllRoles,
 	getAllRoles,
