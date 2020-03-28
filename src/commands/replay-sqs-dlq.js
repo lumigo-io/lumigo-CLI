@@ -26,7 +26,7 @@ class ReplaySqsDlqCommand extends Command {
 		global.keep = keep;
 		const AWS = getAWSSDK();
 		global.SQS = new AWS.SQS();
-    
+
 		const targetOptions = {
 			region: targetRegion,
 			profile: targetProfile
@@ -42,17 +42,25 @@ class ReplaySqsDlqCommand extends Command {
 		let sendToTarget;
 		switch (targetType) {
 			case "SNS":
-				this.log(`finding the SNS topic [${targetName}] in [${targetRegion || region}]`);
+				this.log(
+					`finding the SNS topic [${targetName}] in [${targetRegion || region}]`
+				);
 				sendToTarget = this.sendToSNS(
-					await getTopicArn(targetName, targetOptions), targetOptions);
+					await getTopicArn(targetName, targetOptions),
+					targetOptions
+				);
 				break;
 			case "Kinesis":
 				sendToTarget = this.sendToKinesis(targetName, targetOptions);
 				break;
 			default:
-				this.log(`finding the SQS queue [${targetName}] in [${targetRegion || region}]`);
+				this.log(
+					`finding the SQS queue [${targetName}] in [${targetRegion || region}]`
+				);
 				sendToTarget = this.sendToSQS(
-					await getQueueUrl(targetName, targetOptions), targetOptions);
+					await getQueueUrl(targetName, targetOptions),
+					targetOptions
+				);
 				break;
 		}
 

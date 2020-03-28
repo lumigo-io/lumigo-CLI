@@ -98,7 +98,13 @@ describe("replay-sqs-dlq", () => {
 			});
 
 		test.stdout()
-			.command([...commandArgs, "--targetRegion", "eu-west-1", "--targetProfile", "dev"])
+			.command([
+				...commandArgs,
+				"--targetRegion",
+				"eu-west-1",
+				"--targetProfile",
+				"dev"
+			])
 			.it("replays them to the main SQS queue in another account & region", ctx => {
 				expect(ctx.stdout).to.contain(
 					"finding the SQS DLQ [queue-dlq-dev] in [us-east-1]"
@@ -123,7 +129,7 @@ describe("replay-sqs-dlq", () => {
 
 				// 10 poller * 10 empty receives + 1 non-empty receive = 101 calls
 				expect(mockReceiveMessage.mock.calls).to.have.lengthOf(101);
-        
+
 				// region & profile should be changed to the target
 				expect(AWS.config.region).to.equal("eu-west-1");
 				expect(AWS.config.credentials.profile).to.equal("dev");
@@ -184,7 +190,15 @@ describe("replay-sqs-dlq", () => {
 			});
 
 		test.stdout()
-			.command([...commandArgs, "-t", "SNS", "--targetRegion", "eu-west-1", "--targetProfile", "dev"])
+			.command([
+				...commandArgs,
+				"-t",
+				"SNS",
+				"--targetRegion",
+				"eu-west-1",
+				"--targetProfile",
+				"dev"
+			])
 			.it("replays them to a SNS topic in another account & region", ctx => {
 				expect(ctx.stdout).to.contain(
 					"finding the SQS DLQ [queue-dlq-dev] in [us-east-1]"
@@ -210,7 +224,7 @@ describe("replay-sqs-dlq", () => {
 
 				// 10 poller * 10 empty receives + 1 non-empty receive = 101 calls
 				expect(mockReceiveMessage.mock.calls).to.have.lengthOf(101);
-        
+
 				// region & profile should be changed to the target
 				expect(AWS.config.region).to.equal("eu-west-1");
 				expect(AWS.config.credentials.profile).to.equal("dev");
@@ -242,7 +256,15 @@ describe("replay-sqs-dlq", () => {
 			});
 
 		test.stdout()
-			.command([...commandArgs, "-t", "Kinesis", "--targetRegion", "eu-west-1", "--targetProfile", "dev"])
+			.command([
+				...commandArgs,
+				"-t",
+				"Kinesis",
+				"--targetRegion",
+				"eu-west-1",
+				"--targetProfile",
+				"dev"
+			])
 			.it("replays them to a Kinesis stream in another account & region", ctx => {
 				expect(ctx.stdout).to.contain(
 					"finding the SQS DLQ [queue-dlq-dev] in [us-east-1]"
@@ -264,7 +286,7 @@ describe("replay-sqs-dlq", () => {
 
 				// 10 poller * 10 empty receives + 1 non-empty receive = 101 calls
 				expect(mockReceiveMessage.mock.calls).to.have.lengthOf(101);
-        
+
 				// region & profile should be changed to the target
 				expect(AWS.config.region).to.equal("eu-west-1");
 				expect(AWS.config.credentials.profile).to.equal("dev");

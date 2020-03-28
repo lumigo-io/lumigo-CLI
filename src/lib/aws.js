@@ -1,7 +1,7 @@
 process.env.AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1";
 const _ = require("lodash");
 
-const getAWSSDK = (options) => {
+const getAWSSDK = options => {
 	const AWS = require("aws-sdk");
 
 	if (_.get(options, "region")) {
