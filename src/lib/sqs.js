@@ -1,7 +1,7 @@
 const { getAWSSDK } = require("../lib/aws");
 
-const getQueueUrl = async queueName => {
-	const AWS = getAWSSDK();
+const getQueueUrl = async (queueName, options) => {
+	const AWS = getAWSSDK(options);
 	const SQS = new AWS.SQS();
 	const resp = await SQS.listQueues({
 		QueueNamePrefix: queueName
