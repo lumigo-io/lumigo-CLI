@@ -13,6 +13,8 @@ class ReplaySqsDlqCommand extends Command {
 			dlqQueueName,
 			targetName,
 			targetType,
+			targetRegion,
+			targetProfile,
 			region,
 			concurrency,
 			profile,
@@ -22,6 +24,13 @@ class ReplaySqsDlqCommand extends Command {
 		global.region = region;
 		global.profile = profile;
 		global.keep = keep;
+		const AWS = getAWSSDK();
+		global.SQS = new AWS.SQS();
+
+		const targetOptions = {
+			region: targetRegion,
+			profile: targetProfile
+		};
 
 		checkVersion();
 
@@ -33,15 +42,25 @@ class ReplaySqsDlqCommand extends Command {
 		let sendToTarget;
 		switch (targetType) {
 			case "SNS":
-				this.log(`finding the SNS topic [${targetName}] in [${region}]`);
-				sendToTarget = this.sendToSNS(await getTopicArn(targetName));
+				this.log(
+					`finding the SNS topic [${targetName}] in [${targetRegion || region}]`
+				);
+				sendToTarget = this.sendToSNS(
+					await getTopicArn(targetName, targetOptions),
+					targetOptions
+				);
 				break;
 			case "Kinesis":
-				sendToTarget = this.sendToKinesis(targetName);
+				sendToTarget = this.sendToKinesis(targetName, targetOptions);
 				break;
 			default:
-				this.log(`finding the SQS queue [${targetName}] in [${region}]`);
-				sendToTarget = this.sendToSQS(await getQueueUrl(targetName));
+				this.log(
+					`finding the SQS queue [${targetName}] in [${targetRegion || region}]`
+				);
+				sendToTarget = this.sendToSQS(
+					await getQueueUrl(targetName, targetOptions),
+					targetOptions
+				);
 				break;
 		}
 
@@ -60,8 +79,8 @@ class ReplaySqsDlqCommand extends Command {
 		await Promise.all(promises);
 	}
 
-	sendToSQS(queueUrl) {
-		const AWS = getAWSSDK();
+	sendToSQS(queueUrl, options) {
+		const AWS = getAWSSDK(options);
 		const SQS = new AWS.SQS();
 
 		return async messages => {
@@ -77,8 +96,8 @@ class ReplaySqsDlqCommand extends Command {
 		};
 	}
 
-	sendToSNS(topicArn) {
-		const AWS = getAWSSDK();
+	sendToSNS(topicArn, options) {
+		const AWS = getAWSSDK(options);
 		const SNS = new AWS.SNS();
 
 		return async messages => {
@@ -103,8 +122,8 @@ class ReplaySqsDlqCommand extends Command {
 		};
 	}
 
-	sendToKinesis(streamName) {
-		const AWS = getAWSSDK();
+	sendToKinesis(streamName, options) {
+		const AWS = getAWSSDK(options);
 		const Kinesis = new AWS.Kinesis();
 
 		return async messages => {
@@ -120,14 +139,12 @@ class ReplaySqsDlqCommand extends Command {
 	}
 
 	async runPoller(dlqQueueUrl, sendToTarget) {
-		const AWS = getAWSSDK();
-		const SQS = new AWS.SQS();
 		let emptyReceives = 0;
 		let seenMessageIds = new Set();
 
 		// eslint-disable-next-line no-constant-condition
 		while (true) {
-			const resp = await SQS.receiveMessage({
+			const resp = await global.SQS.receiveMessage({
 				QueueUrl: dlqQueueUrl,
 				MaxNumberOfMessages: 10,
 				MessageAttributeNames: ["All"]
@@ -154,7 +171,7 @@ class ReplaySqsDlqCommand extends Command {
 					Id: msg.MessageId,
 					ReceiptHandle: msg.ReceiptHandle
 				}));
-				await SQS.deleteMessageBatch({
+				await global.SQS.deleteMessageBatch({
 					QueueUrl: dlqQueueUrl,
 					Entries: deleteEntries
 				}).promise();
@@ -182,6 +199,14 @@ ReplaySqsDlqCommand.flags = {
 		required: false,
 		options: ["SQS", "SNS", "Kinesis"],
 		default: "SQS"
+	}),
+	targetProfile: flags.string({
+		description: "AWS CLI profile name to use for the target account",
+		required: false
+	}),
+	targetRegion: flags.string({
+		description: "AWS region for the target resource, e.g. eu-west-1",
+		required: false
 	}),
 	region: flags.string({
 		char: "r",

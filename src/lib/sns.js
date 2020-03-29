@@ -1,7 +1,7 @@
 const { getAWSSDK } = require("../lib/aws");
 
-const getTopicArn = async topicName => {
-	const AWS = getAWSSDK();
+const getTopicArn = async (topicName, options) => {
+	const AWS = getAWSSDK(options);
 	const SNS = new AWS.SNS();
 	const loop = async nextToken => {
 		const resp = await SNS.listTopics({
