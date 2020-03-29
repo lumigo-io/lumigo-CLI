@@ -67,7 +67,7 @@ class S3SelectBatchCommand extends Command {
 		this.log("all done!".green);
 	}
 
-	async getObjectKeys(bucket, prefix) {
+	async getObjectKeys(Bucket, Prefix) {
 		const AWS = getAWSSDK();
 		const S3 = new AWS.S3();
 
@@ -76,12 +76,8 @@ class S3SelectBatchCommand extends Command {
 		let response = {};
 		do {
 			const params = response.ContinuationToken
-				? {
-					Bucket: bucket,
-					Prefix: prefix,
-					ContinuationToken: response.ContinuationToken
-				  }
-				: { Bucket: bucket, Prefix: prefix };
+				? { Bucket, Prefix, ContinuationToken: response.ContinuationToken }
+				: { Bucket, Prefix };
 			response = await S3.listObjectsV2(params).promise();
 
 			const keys = response.Contents.map(x => x.Key);
