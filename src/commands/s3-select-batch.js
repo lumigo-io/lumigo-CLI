@@ -24,7 +24,7 @@ class S3SelectBatchCommand extends Command {
 
 		this.log(`finding objects with prefix of [${prefix}] in the bucket [${bucket}]`);
 		const { keys, totalSize } = await this.getObjectKeys(bucket, prefix);
-    
+
 		if (_.isEmpty(keys)) {
 			this.log("no objects found, skipped...");
 			return;
