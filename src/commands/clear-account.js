@@ -3,7 +3,12 @@ const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const inquirer = require("inquirer");
 const { getAllFunctionsCount, deleteAllFunctions } = require("../lib/lambda");
-const { getAllRolesCount, deleteAllRoles } = require("../lib/iam");
+const {
+	getAllRolesCount,
+	deleteAllRoles,
+	getAllPoliciesCount,
+	deleteAllPolicies
+} = require("../lib/iam");
 const { getAllApiGwCount, deleteAllApiGw } = require("../lib/apigw");
 const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
@@ -191,6 +196,20 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
+	async clearPolicies(AWS) {
+		this.log("Policies".bold);
+		await this.resourceDeletion(
+			async () => {
+				return await getAllPoliciesCount(AWS);
+			},
+			async () => {
+				return await deleteAllPolicies(AWS);
+			},
+			"Policy",
+			false
+		);
+	}
+
 	async clearEnvironment(AWS) {
 		await this.clearS3(AWS);
 		console.info("");
@@ -205,6 +224,8 @@ class ClearAccountCommand extends Command {
 		await this.clearLogGroups(AWS);
 		console.info("");
 		await this.clearNatGateways(AWS);
+		console.info("");
+		await this.clearPolicies(AWS);
 		console.info("");
 	}
 }

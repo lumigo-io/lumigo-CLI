@@ -57,5 +57,6 @@ describe("User forces clear account", () => {
 			expect(apigw.deleteAllApiGw.mock.calls.length).to.equal(1);
 			expect(s3.deleteAllBuckets.mock.calls.length).to.equal(3); // retry
 			expect(natGateways.deleteAllNatGateways.mock.calls.length).to.equal(1);
+			expect(iam.deleteAllPolicies.mock.calls.length).to.equal(1);
 		});
 });
