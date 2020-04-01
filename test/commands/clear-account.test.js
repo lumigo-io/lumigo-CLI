@@ -25,6 +25,8 @@ describe("User forces clear account", () => {
 		apigw.deleteAllApiGw.mockResolvedValue([{ status: "success" }]);
 		iam.getAllRolesCount.mockResolvedValue(1);
 		iam.deleteAllRoles.mockResolvedValue([{ status: "success" }]);
+		iam.getAllPoliciesCount.mockResolvedValue(1);
+		iam.deleteAllPolicies.mockResolvedValue([{ status: "success" }]);
 		cf.deleteAllStacks.mockResolvedValue([{ status: "success" }]);
 		cf.getAllStacksCount.mockResolvedValue(1);
 		cwLogs.getAllLogGroupsCount.mockResolvedValue(1);
@@ -47,6 +49,7 @@ describe("User forces clear account", () => {
 			expect(ctx.stdout).to.contain("Deleting 1 role(s)");
 			expect(ctx.stdout).to.contain("Deleting 1 API Gateway(s)");
 			expect(ctx.stdout).to.contain("Deleting 1 NAT Gateway(s)");
+			expect(ctx.stdout).to.contain("Deleting 1 Policy(s)");
 
 			expect(cf.deleteAllStacks.mock.calls.length).to.equal(1);
 			expect(lambda.deleteAllFunctions.mock.calls.length).to.equal(0);
