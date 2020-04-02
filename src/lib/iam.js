@@ -1,6 +1,68 @@
 const { ClearResult } = require("./utils");
 const retry = require("async-retry");
 
+const getAllPolicies = async AWS => {
+	const IAM = new AWS.IAM();
+
+	let foundPolicies = [];
+	let response = {};
+	do {
+		const params = response.Marker
+			? { Marker: response.Marker, Scope: "Local" }
+			: { Scope: "Local" };
+		response = await IAM.listPolicies(params).promise();
+		foundPolicies = foundPolicies.concat(
+			response.Policies.map(val => {
+				return {
+					arn: val.Arn,
+					name: val.PolicyName
+				};
+			})
+		);
+	} while (response.Marker);
+
+	return foundPolicies;
+};
+
+const getAllPoliciesCount = async AWS => {
+	return (await getAllPolicies(AWS)).length;
+};
+
+const deletePolicy = async (policy, AWS) => {
+	const IAM = new AWS.IAM();
+
+	await retry(
+		async bail => {
+			try {
+				await IAM.deletePolicy({ PolicyArn: policy.arn }).promise();
+			} catch (e) {
+				if (e.code !== "Throttling") {
+					bail(e);
+				} else {
+					throw e;
+				}
+			}
+		},
+		{ retries: 100 }
+	);
+};
+
+const deleteAllPolicies = async AWS => {
+	const allRoles = await getAllPolicies(AWS);
+
+	const apiToDeletePromises = allRoles.map(async policy => {
+		try {
+			await deletePolicy(policy, AWS);
+			process.stdout.write(".".green);
+			return ClearResult.getSuccess(policy.name, "global");
+		} catch (e) {
+			process.stdout.write("F".red);
+			return ClearResult.getFailed(policy.name, "global", e);
+		}
+	});
+
+	return await Promise.all(apiToDeletePromises);
+};
 const getAllRoles = async AWS => {
 	const IAM = new AWS.IAM();
 
@@ -93,5 +155,7 @@ const deleteAllRoles = async AWS => {
 module.exports = {
 	deleteAllRoles,
 	getAllRoles,
-	getAllRolesCount
+	getAllRolesCount,
+	deleteAllPolicies,
+	getAllPoliciesCount
 };
