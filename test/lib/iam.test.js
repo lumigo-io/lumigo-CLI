@@ -13,6 +13,7 @@ chai.use(chaiAsPromised);
 describe("deleteAllRoles", () => {
 	let AWS = null;
 	beforeEach(() => {
+		jest.resetModules();
 		AWS = getAWSSDK();
 
 		AWS.IAM.prototype.listRoles = getPromiseResponse({
@@ -85,9 +86,10 @@ describe("deleteAllRoles", () => {
 	});
 });
 
-describe("deleteAllProfiles", () => {
+describe("deleteAllPolicies", () => {
 	let AWS = null;
 	beforeEach(() => {
+		jest.resetModules();
 		AWS = getAWSSDK();
 
 		AWS.IAM.prototype.listPolicies = getPromiseResponse({
@@ -99,7 +101,6 @@ describe("deleteAllProfiles", () => {
 				{ Arn: "aws:policy2", PolicyName: "my_policy2" }
 			]
 		});
-
 		AWS.IAM.prototype.deletePolicy = success;
 	});
 
@@ -108,8 +109,6 @@ describe("deleteAllProfiles", () => {
 	});
 
 	it("Successful delete all policies", async function() {
-		AWS.IAM.prototype.deleteRole = success;
-
 		const result = await deleteAllPolicies(AWS);
 
 		expect(result.length).to.equal(2);
