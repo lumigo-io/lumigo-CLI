@@ -126,10 +126,10 @@ see https://amzn.to/2R8Ba2z for more details on S3 Select query parameters.
 		let writeRecord, finalize;
 		if (outputFile) {
 			const fd = fs.openSync(outputFile, "w");
-			writeRecord = r => fs.writeSync(fd, JSON.stringify(r) + "\n");
+			writeRecord = r => fs.writeSync(fd, r + "\n");
 			finalize = () => fs.closeSync(fd);
 		} else {
-			writeRecord = r => this.log(JSON.stringify(r, null, 2));
+			writeRecord = r => this.log(r);
 			finalize = () => {};
 		}
 
@@ -140,13 +140,11 @@ see https://amzn.to/2R8Ba2z for more details on S3 Select query parameters.
 				).promise();
 
 				const eventStream = resp.Payload;
-				return new Promise((resolve, reject) => {
+				await new Promise((resolve, reject) => {
 					eventStream.on("data", function(event) {
 						if (event.Records) {
-							const data = JSON.parse(
-								event.Records.Payload.toString("utf8")
-							);
-							data.Records.forEach(r => writeRecord(r));
+							const data = event.Records.Payload.toString("utf8");
+							writeRecord(data);
 						}
 					});
 					eventStream.on("error", err => reject(err));

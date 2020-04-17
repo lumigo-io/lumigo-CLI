@@ -58,7 +58,8 @@ describe("select-s3-batch", () => {
 				}
 			]);
 
-			givenSelectObjectContentReturns(records);
+			const data = records.map(x => JSON.stringify(x)).join("\n");
+			givenSelectObjectContentReturns(data);
 		});
 
 		describe("when the objects are in JSON", () => {
@@ -85,7 +86,7 @@ describe("select-s3-batch", () => {
 					});
 
 					records.forEach(r => {
-						expect(ctx.stdout).to.contain(JSON.stringify(r, null, 2));
+						expect(ctx.stdout).to.contain(JSON.stringify(r));
 					});
 				});
 		});
@@ -112,7 +113,7 @@ describe("select-s3-batch", () => {
 					});
 
 					records.forEach(r => {
-						expect(ctx.stdout).to.contain(JSON.stringify(r, null, 2));
+						expect(ctx.stdout).to.contain(JSON.stringify(r));
 					});
 				});
 		});
@@ -137,7 +138,7 @@ describe("select-s3-batch", () => {
 					});
 
 					records.forEach(r => {
-						expect(ctx.stdout).to.contain(JSON.stringify(r, null, 2));
+						expect(ctx.stdout).to.contain(JSON.stringify(r));
 					});
 				});
 		});
@@ -215,17 +216,13 @@ function createAutoPlayStream(events) {
 	};
 }
 
-function givenSelectObjectContentReturns(records) {
+function givenSelectObjectContentReturns(data) {
 	mockSelectObjectContent.mockReturnValue({
 		promise: () => {
 			const events = [
 				{
 					Records: {
-						Payload: Buffer.from(
-							JSON.stringify({
-								Records: records
-							})
-						)
+						Payload: Buffer.from(data)
 					}
 				}
 			];
