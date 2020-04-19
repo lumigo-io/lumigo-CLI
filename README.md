@@ -72,6 +72,7 @@ OPTIONS
   -n, --name=name        only analyze this function, e.g. hello-world
   -p, --profile=profile  AWS CLI profile name
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1
+  --httpProxy=httpProxy  URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/analyze-lambda-cold-starts.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/analyze-lambda-cold-starts.js)_
@@ -89,6 +90,7 @@ OPTIONS
   -n, --name=name        only analyze this function, e.g. hello-world
   -p, --profile=profile  AWS CLI profile name
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1
+  --httpProxy=httpProxy  URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/analyze-lambda-cost.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/analyze-lambda-cost.js)_
@@ -105,6 +107,7 @@ OPTIONS
   -f, --force            Skip prompt. Use mainly in CI/CD environments
   -p, --profile=profile  AWS CLI profile name
   -r, --retries=retries  [default: 2] How many times to try to delete stubborn resource
+  --httpProxy=httpProxy  URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/clear-account.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/clear-account.js)_
@@ -154,6 +157,7 @@ OPTIONS
   -n, --streamName=streamName  (required) name of the Kinesis stream, e.g. event-stream-dev
   -p, --profile=profile        AWS CLI profile name
   -r, --region=region          (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy        http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/list-kinesis-shards.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/list-kinesis-shards.js)_
@@ -169,6 +173,7 @@ USAGE
 OPTIONS
   -p, --profile=profile  AWS CLI profile name
   -r, --region=region    AWS region, e.g. us-east-1
+  --httpProxy=httpProxy  URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/list-kinesis-streams.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/list-kinesis-streams.js)_
@@ -185,6 +190,7 @@ OPTIONS
   -i, --inactive         only include functions that are inactive for 30 days
   -p, --profile=profile  AWS CLI profile name
   -r, --region=region    only include functions in an AWS region, e.g. us-east-1
+  --httpProxy=httpProxy  URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/list-lambda.js)_
@@ -204,6 +210,7 @@ OPTIONS
   -n, --functionName=functionName  (required) name of the Lambda function
   -p, --profile=profile            AWS CLI profile name
   -r, --region=region              (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy            URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/measure-lambda-cold-starts.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/measure-lambda-cold-starts.js)_
@@ -236,6 +243,8 @@ OPTIONS
 
   --autoOptimizeAlias=autoOptimizeAlias  the state machine will create or update this alias with the new optimal power
                                          value
+
+  --httpProxy=httpProxy                  URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/powertune-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/powertune-lambda.js)_
@@ -256,6 +265,9 @@ OPTIONS
   -p, --profile=profile             AWS CLI profile name
   -r, --region=region               (required) AWS region, e.g. us-east-1
   -t, --targetType=SQS|SNS|Kinesis  [default: SQS] valid values are SQS [default], SNS, and Kinesis
+  --httpProxy=httpProxy             URL of the http/https proxy (when running in a corporate network)
+  --targetProfile=targetProfile     AWS CLI profile name to use for the target account
+  --targetRegion=targetRegion       AWS region for the target resource, e.g. eu-west-1
 ```
 
 _See code: [src/commands/replay-sqs-dlq.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/replay-sqs-dlq.js)_
@@ -279,6 +291,7 @@ OPTIONS
   -x, --prefix=prefix                  (required) object prefix
   --compressionType=(NONE|GZIP|BZIP2)  [default: NONE] the objects' compression format - NONE, GZIP or BZIP2
   --csvConfig=csvConfig                [default: {}] JSON config on how to parse CSV files
+  --httpProxy=httpProxy                URL of the http/https proxy (when running in a corporate network)
   --jsonConfig=jsonConfig              [default: {"Type": "DOCUMENT"}] JSON config on how to parse JSON files
   --outputCsvConfig=outputCsvConfig    [default: {}] JSON config on how to format the output file in CSV
   --outputJsonConfig=outputJsonConfig  [default: {}] JSON config on how to format the output file in JSON
@@ -300,6 +313,7 @@ OPTIONS
   -n, --topicName=topicName      (required) name of the SNS topic, e.g. my-topic-dev
   -p, --profile=profile          AWS CLI profile name
   -r, --region=region            (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy          URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/send-to-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/send-to-sns.js)_
@@ -317,6 +331,7 @@ OPTIONS
   -n, --queueName=queueName  (required) name of the SQS queue, e.g. task-queue-dev
   -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy      URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/send-to-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/send-to-sqs.js)_
@@ -334,6 +349,7 @@ OPTIONS
   -n, --stackName=stackName  (required) name of the CloudFormation stack, e.g. hello-world-dev
   -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy      URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/sls-remove.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/sls-remove.js)_
@@ -361,6 +377,7 @@ OPTIONS
   -n, --eventBusName=eventBusName  name of the CloudWatch Events bus, if omitted, then the default bus is used
   -p, --profile=profile            AWS CLI profile name
   -r, --region=region              (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy            URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-cloudwatch-events-bus.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-cloudwatch-events-bus.js)_
@@ -378,6 +395,7 @@ OPTIONS
   -n, --ruleName=ruleName          (required) name of the CloudWatch Events rule
   -p, --profile=profile            AWS CLI profile name
   -r, --region=region              (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy            URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-cloudwatch-events-rule.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-cloudwatch-events-rule.js)_
@@ -402,6 +420,8 @@ OPTIONS
   -p, --profile=profile              AWS CLI profile name
 
   -r, --region=region                (required) AWS region, e.g. us-east-1
+
+  --httpProxy=httpProxy              URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-cloudwatch-logs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-cloudwatch-logs.js)_
@@ -419,6 +439,7 @@ OPTIONS
   -n, --tableName=tableName  (required) name of the DynamoDB table, e.g. users-dev
   -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy      URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-dynamodb.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-dynamodb.js)_
@@ -435,6 +456,7 @@ OPTIONS
   -n, --eventBusName=eventBusName  name of the EventBridge bus, if omitted, then the default bus is used
   -p, --profile=profile            AWS CLI profile name
   -r, --region=region              (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy            URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-eventbridge-bus.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-eventbridge-bus.js)_
@@ -452,6 +474,7 @@ OPTIONS
   -n, --ruleName=ruleName          (required) name of the EventBridge rule
   -p, --profile=profile            AWS CLI profile name
   -r, --region=region              (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy            URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-eventbridge-rule.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-eventbridge-rule.js)_
@@ -468,6 +491,7 @@ OPTIONS
   -n, --streamName=streamName  (required) name of the Kinesis stream, e.g. event-stream-dev
   -p, --profile=profile        AWS CLI profile name
   -r, --region=region          (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy        URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-kinesis.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-kinesis.js)_
@@ -484,6 +508,7 @@ OPTIONS
   -n, --topicName=topicName  (required) name of the SNS topic, e.g. task-topic-dev
   -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy      URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-sns.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-sns.js)_
@@ -500,6 +525,7 @@ OPTIONS
   -n, --queueName=queueName  (required) name of the SQS queue, e.g. task-queue-dev
   -p, --profile=profile      AWS CLI profile name
   -r, --region=region        (required) AWS region, e.g. us-east-1
+  --httpProxy=httpProxy      URL of the http/https proxy (when running in a corporate network)
 ```
 
 _See code: [src/commands/tail-sqs.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/tail-sqs.js)_

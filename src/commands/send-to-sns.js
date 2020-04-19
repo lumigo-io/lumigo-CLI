@@ -12,10 +12,11 @@ require("colors");
 class SendToSnsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(SendToSnsCommand);
-		const { topicName, region, profile, filePath, concurrency } = flags;
+		const { topicName, region, profile, filePath, concurrency, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -122,6 +123,10 @@ SendToSnsCommand.flags = {
 		description: "how many concurrent pollers to run",
 		required: false,
 		default: 10
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
 	})
 };
 

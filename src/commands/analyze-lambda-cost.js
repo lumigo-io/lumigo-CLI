@@ -15,9 +15,10 @@ const COST_PER_100MS = 0.000000208;
 class AnalyzeLambdaCostCommand extends Command {
 	async run() {
 		const { flags } = this.parse(AnalyzeLambdaCostCommand);
-		const { name, region, profile, days } = flags;
+		const { name, region, profile, days, httpProxy } = flags;
 
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 		global.days = days || 30; // defaults to check last 30 days
 
 		checkVersion();
@@ -215,6 +216,10 @@ AnalyzeLambdaCostCommand.flags = {
 	days: flags.integer({
 		char: "d",
 		description: "analyze lambda cost for the last X days",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

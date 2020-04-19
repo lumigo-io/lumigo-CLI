@@ -20,9 +20,10 @@ require("colors");
 class ClearAccountCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ClearAccountCommand);
-		const { force, profile, retries } = flags;
+		const { force, profile, retries, httpProxy } = flags;
 
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 		this.retries = retries;
 
 		checkVersion();
@@ -249,6 +250,10 @@ ClearAccountCommand.flags = {
 		description: "How many times to try to delete stubborn resource",
 		required: false,
 		default: 2
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
 	})
 };
 

@@ -25,6 +25,10 @@ TailCloudwatchEventsBusCommand.flags = {
 		char: "p",
 		description: "AWS CLI profile name",
 		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
 	})
 };
 

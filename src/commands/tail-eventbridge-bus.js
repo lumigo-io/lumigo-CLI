@@ -6,10 +6,11 @@ const { track } = require("../lib/analytics");
 class TailEventbridgeBusCommand extends Command {
 	async run() {
 		const { flags } = this.parse(TailEventbridgeBusCommand);
-		const { eventBusName, region, profile } = flags;
+		const { eventBusName, region, profile, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 		global.eventBusName = eventBusName;
 
 		track("tail-eventbridge-bus", { region });
@@ -90,6 +91,10 @@ TailEventbridgeBusCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

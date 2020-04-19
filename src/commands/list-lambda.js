@@ -14,9 +14,10 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 class ListLambdaCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ListLambdaCommand);
-		const { inactive, region, profile } = flags;
+		const { inactive, region, profile, httpProxy } = flags;
 
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -171,6 +172,10 @@ ListLambdaCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const { track } = require("../lib/analytics");
@@ -7,13 +7,11 @@ const { track } = require("../lib/analytics");
 class SlsRemoveCommand extends Command {
 	async run() {
 		const { flags } = this.parse(SlsRemoveCommand);
-		const { stackName, emptyS3Buckets, region, profile } = flags;
+		const { stackName, emptyS3Buckets, region, profile, httpProxy } = flags;
 
-		AWS.config.region = region;
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.profile = profile;
+		global.region = region;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -57,6 +55,7 @@ class SlsRemoveCommand extends Command {
 	}
 
 	async getDeploymentBucketName(stackName) {
+		const AWS = getAWSSDK();
 		const CloudFormation = new AWS.CloudFormation();
 		const resp = await CloudFormation.describeStacks({
 			StackName: stackName
@@ -69,6 +68,7 @@ class SlsRemoveCommand extends Command {
 	}
 
 	async getBucketNames(stackName) {
+		const AWS = getAWSSDK();
 		const CloudFormation = new AWS.CloudFormation();
 		const resp = await CloudFormation.describeStackResources({
 			StackName: stackName
@@ -80,6 +80,7 @@ class SlsRemoveCommand extends Command {
 	}
 
 	async emptyBucket(bucketName) {
+		const AWS = getAWSSDK();
 		const S3 = new AWS.S3();
 		const listResp = await S3.listObjectsV2({
 			Bucket: bucketName
@@ -95,6 +96,7 @@ class SlsRemoveCommand extends Command {
 	}
 
 	async deleteStack(stackName) {
+		const AWS = getAWSSDK();
 		const CloudFormation = new AWS.CloudFormation();
 		await CloudFormation.deleteStack({
 			StackName: stackName
@@ -128,6 +130,10 @@ SlsRemoveCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

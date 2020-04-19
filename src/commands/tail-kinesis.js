@@ -9,10 +9,11 @@ require("colors");
 class TailKinesisCommand extends Command {
 	async run() {
 		const { flags } = this.parse(TailKinesisCommand);
-		const { streamName, region, profile } = flags;
+		const { streamName, region, profile, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -135,6 +136,10 @@ TailKinesisCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

@@ -26,6 +26,7 @@
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "p-queue": "^6.2.0",
+    "proxy-agent": "^3.1.1",
     "restify": "^8.4.0",
     "semver": "^6.3.0",
     "uuid": "^3.3.3"
