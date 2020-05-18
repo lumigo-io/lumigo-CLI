@@ -22,6 +22,14 @@ const getAWSSDK = options => {
 		AWS.config.credentials = credentials;
 	}
 
+	const httpProxy = _.get(options, "httpProxy", global.httpProxy);
+	if (httpProxy) {
+		const ProxyAgent = require("proxy-agent");
+		AWS.config.update({
+			httpOptions: { agent: new ProxyAgent(httpProxy) }
+		});
+	}
+
 	return AWS;
 };
 

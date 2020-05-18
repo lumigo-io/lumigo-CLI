@@ -29,11 +29,13 @@ class PowertuneLambdaCommand extends Command {
 			outputFile,
 			noVisualization,
 			autoOptimize,
-			autoOptimizeAlias
+			autoOptimizeAlias,
+			httpProxy
 		} = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -210,6 +212,10 @@ PowertuneLambdaCommand.flags = {
 		description:
 			"the state machine will create or update this alias with the new optimal power value",
 		dependsOn: ["autoOptimize"],
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

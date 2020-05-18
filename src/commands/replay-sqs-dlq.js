@@ -18,11 +18,13 @@ class ReplaySqsDlqCommand extends Command {
 			region,
 			concurrency,
 			profile,
-			keep
+			keep,
+			httpProxy
 		} = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 		global.keep = keep;
 		const AWS = getAWSSDK();
 		global.SQS = new AWS.SQS();
@@ -229,6 +231,10 @@ ReplaySqsDlqCommand.flags = {
 		description: "whether to keep the replayed messages in the DLQ",
 		required: false,
 		default: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
 	})
 };
 

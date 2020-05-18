@@ -27,8 +27,9 @@ fields @memorySize / 1000000 as memorySize
 class AnalyzeLambdaColdStartsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(AnalyzeLambdaColdStartsCommand);
-		let { name, region, profile, minutes, hours, days } = flags;
+		let { name, region, profile, minutes, hours, days, httpProxy } = flags;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -457,6 +458,10 @@ AnalyzeLambdaColdStartsCommand.flags = {
 		char: "d",
 		description: "only find cold starts in the last X days",
 		exclusive: ["hours", "minutes"],
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

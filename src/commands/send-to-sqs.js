@@ -16,10 +16,11 @@ const MAX_PAYLOAD = 256 * 1024;
 class SendToSqsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(SendToSqsCommand);
-		const { queueName, region, profile, filePath } = flags;
+		const { queueName, region, profile, filePath, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -139,6 +140,10 @@ SendToSqsCommand.flags = {
 		char: "f",
 		description: "path to the file",
 		required: true
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
 	})
 };
 

@@ -8,10 +8,11 @@ require("colors");
 class TailDynamodbCommand extends Command {
 	async run() {
 		const { flags } = this.parse(TailDynamodbCommand);
-		const { tableName, region, profile, endpoint } = flags;
+		const { tableName, region, profile, endpoint, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 		global.endpoint = endpoint;
 
 		checkVersion();
@@ -162,6 +163,10 @@ TailDynamodbCommand.flags = {
 	endpoint: flags.string({
 		char: "e",
 		description: "DynamoDB endpoint (for when using dynamodb-local)",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

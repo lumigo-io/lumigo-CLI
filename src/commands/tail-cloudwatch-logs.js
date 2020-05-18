@@ -11,10 +11,11 @@ require("colors");
 class TailCloudwatchLogsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(TailCloudwatchLogsCommand);
-		const { namePrefix, region, profile, filterPattern, interval } = flags;
+		const { namePrefix, region, profile, filterPattern, interval, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 		global.filterPattern = filterPattern;
 		global.interval = interval || 1000;
 
@@ -176,6 +177,10 @@ TailCloudwatchLogsCommand.flags = {
 		description: "interval (ms) for polling CloudWatch Logs",
 		required: false,
 		default: 1000
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
 	})
 };
 

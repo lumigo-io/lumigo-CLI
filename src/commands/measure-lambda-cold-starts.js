@@ -14,10 +14,11 @@ const StackName = "serverlessrepo-lumigo-cli-measure-cold-start";
 class MeasureLambdaColdStartsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(MeasureLambdaColdStartsCommand);
-		const { functionName, region, profile, invocations, file } = flags;
+		const { functionName, region, profile, invocations, file, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -113,6 +114,10 @@ MeasureLambdaColdStartsCommand.flags = {
 		description: "file that contains the JSON payload to send to the function",
 		required: false,
 		exclusive: ["payload"]
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
 	})
 };
 

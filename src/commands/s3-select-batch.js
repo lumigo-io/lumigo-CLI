@@ -11,12 +11,21 @@ require("colors");
 class S3SelectBatchCommand extends Command {
 	async run() {
 		const { flags } = this.parse(S3SelectBatchCommand);
-		const { bucket, prefix, expression, concurrency, region, profile } = flags;
+		const {
+			bucket,
+			prefix,
+			expression,
+			concurrency,
+			region,
+			profile,
+			httpProxy
+		} = flags;
 		const { fileType, compressionType, csvConfig, jsonConfig } = flags;
 		const { outputCsvConfig, outputJsonConfig, outputFile } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -235,6 +244,10 @@ S3SelectBatchCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

@@ -11,10 +11,11 @@ let seenMessageIds = new Set();
 class TailSqsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(TailSqsCommand);
-		const { queueName, region, profile } = flags;
+		const { queueName, region, profile, httpProxy } = flags;
 
 		global.region = region;
 		global.profile = profile;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -95,6 +96,10 @@ TailSqsCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "URL of the http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };

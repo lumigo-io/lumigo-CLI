@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const AWS = require("aws-sdk");
+const { getAWSSDK } = require("../lib/aws");
 const Table = require("cli-table");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
@@ -12,13 +12,11 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 class ListKinesisShardsCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ListKinesisShardsCommand);
-		const { streamName, region, profile } = flags;
+		const { streamName, region, profile, httpProxy } = flags;
 
-		AWS.config.region = region;
-		if (profile) {
-			const credentials = new AWS.SharedIniFileCredentials({ profile });
-			AWS.config.credentials = credentials;
-		}
+		global.profile = profile;
+		global.region = region;
+		global.httpProxy = httpProxy;
 
 		checkVersion();
 
@@ -47,6 +45,7 @@ class ListKinesisShardsCommand extends Command {
 	}
 
 	async describeStream(streamName) {
+		const AWS = getAWSSDK();
 		const Kinesis = new AWS.Kinesis();
 		const resp = await Kinesis.describeStream({
 			StreamName: streamName
@@ -62,6 +61,7 @@ class ListKinesisShardsCommand extends Command {
 	}
 
 	async getUsageMetrics(streamName, shardsIds) {
+		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch();
 		const metricNames = [
 			["IncomingBytes", "Average"],
@@ -181,6 +181,10 @@ ListKinesisShardsCommand.flags = {
 	profile: flags.string({
 		char: "p",
 		description: "AWS CLI profile name",
+		required: false
+	}),
+	httpProxy: flags.string({
+		description: "http/https proxy (when running in a corporate network)",
 		required: false
 	})
 };
