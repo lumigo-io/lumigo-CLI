@@ -243,8 +243,8 @@ class ClearAccountCommand extends Command {
 		console.info("");
 		await this.clearPolicies(AWS);
 		console.info("");
-		await this.clearEventBridges(AWS);
-		console.info("");
+		// await this.clearEventBridges(AWS);
+		// console.info("");
 	}
 }
 
