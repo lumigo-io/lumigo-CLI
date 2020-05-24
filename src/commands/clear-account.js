@@ -14,6 +14,7 @@ const { getBucketCount, deleteAllBuckets } = require("../lib/s3");
 const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
 const { getAllLogGroupsCount, deleteAllLogGroups } = require("../lib/cloudwatch-logs");
 const { getAllNatGatewaysCount, deleteAllNatGateways } = require("../lib/nat");
+const { getAllEventBridgeCount, deleteAllEventBridges } = require("../lib/eventbridge");
 const { track } = require("../lib/analytics");
 require("colors");
 
@@ -211,6 +212,20 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
+	async clearEventBridges(AWS) {
+		this.log("EventBridge".bold);
+		await this.resourceDeletion(
+			async () => {
+				return await getAllEventBridgeCount(AWS);
+			},
+			async () => {
+				return await deleteAllEventBridges(AWS);
+			},
+			"EventBridge",
+			true
+		);
+	}
+
 	async clearEnvironment(AWS) {
 		await this.clearS3(AWS);
 		console.info("");
@@ -227,6 +242,8 @@ class ClearAccountCommand extends Command {
 		await this.clearNatGateways(AWS);
 		console.info("");
 		await this.clearPolicies(AWS);
+		console.info("");
+		await this.clearEventBridges(AWS);
 		console.info("");
 	}
 }

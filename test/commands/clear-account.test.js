@@ -7,6 +7,7 @@ const cf = require("../../src/lib/cloudformation");
 const versionCheck = require("../../src/lib/version-check");
 const cwLogs = require("../../src/lib/cloudwatch-logs");
 const natGateways = require("../../src/lib/nat");
+const eventBridge = require("../../src/lib/eventbridge");
 
 jest.mock("../../src/lib/version-check");
 jest.mock("../../src/lib/cloudformation");
@@ -16,6 +17,7 @@ jest.mock("../../src/lib/apigw");
 jest.mock("../../src/lib/iam");
 jest.mock("../../src/lib/lambda");
 jest.mock("../../src/lib/nat");
+jest.mock("../../src/lib/eventbridge");
 describe("User forces clear account", () => {
 	beforeEach(() => {
 		versionCheck.checkVersion.mockResolvedValue(null);
@@ -35,6 +37,8 @@ describe("User forces clear account", () => {
 		lambda.deleteAllFunctions.mockResolvedValue([{ status: "success" }]);
 		natGateways.getAllNatGatewaysCount.mockResolvedValue(1);
 		natGateways.deleteAllNatGateways.mockResolvedValue([{ status: "success" }]);
+		eventBridge.getAllEventBridgeCount.mockResolvedValue(1);
+		eventBridge.deleteAllEventBridges.mockResolvedValue([{ status: "success" }]);
 	});
 	afterEach(() => {
 		jest.restoreAllMocks();
@@ -50,6 +54,7 @@ describe("User forces clear account", () => {
 			expect(ctx.stdout).to.contain("Deleting 1 API Gateway(s)");
 			expect(ctx.stdout).to.contain("Deleting 1 NAT Gateway(s)");
 			expect(ctx.stdout).to.contain("Deleting 1 Policy(s)");
+			expect(ctx.stdout).to.contain("Deleting 1 EventBridge(s)");
 
 			expect(cf.deleteAllStacks.mock.calls.length).to.equal(1);
 			expect(lambda.deleteAllFunctions.mock.calls.length).to.equal(0);
@@ -58,5 +63,6 @@ describe("User forces clear account", () => {
 			expect(s3.deleteAllBuckets.mock.calls.length).to.equal(3); // retry
 			expect(natGateways.deleteAllNatGateways.mock.calls.length).to.equal(1);
 			expect(iam.deleteAllPolicies.mock.calls.length).to.equal(1);
+			expect(eventBridge.deleteAllEventBridges.mock.calls.length).to.equal(1);
 		});
 });
