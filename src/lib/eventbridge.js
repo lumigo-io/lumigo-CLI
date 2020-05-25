@@ -40,11 +40,13 @@ const deleteEventBridge = async (eventBridgeName, region, retryOpts, AWS) => {
 					AWS
 				);
 				const targetIDs = targets.map(target => target.targetId);
-				await EventBridge.removeTargets({
-					Ids: targetIDs,
-					Rule: rule.name,
-					EventBusName: eventBridgeName
-				}).promise();
+				if (targetIDs.length > 0) {
+					await EventBridge.removeTargets({
+						Ids: targetIDs,
+						Rule: rule.name,
+						EventBusName: eventBridgeName
+					}).promise();
+				}
 				await EventBridge.deleteRule({
 					Name: rule.name,
 					EventBusName: eventBridgeName
