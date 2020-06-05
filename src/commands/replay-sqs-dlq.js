@@ -97,14 +97,14 @@ class ReplaySqsDlqCommand extends Command {
 						{ DataType, StringValue }
 					]);
 				const messageAttributes = _.fromPairs(supportedAttrs);
-        
+
 				return {
 					Id: msg.MessageId,
 					MessageBody: msg.Body,
 					MessageAttributes: messageAttributes
 				};
 			});
-      
+
 			await SQS.sendMessageBatch({
 				QueueUrl: queueUrl,
 				Entries: sendEntries
