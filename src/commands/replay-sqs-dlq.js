@@ -86,11 +86,25 @@ class ReplaySqsDlqCommand extends Command {
 		const SQS = new AWS.SQS();
 
 		return async messages => {
-			const sendEntries = messages.map(msg => ({
-				Id: msg.MessageId,
-				MessageBody: msg.Body,
-				MessageAttributes: msg.MessageAttributes
-			}));
+			const sendEntries = messages.map(msg => {
+				// as per #94, can't send message attributes where StringListValues is defined...
+				const msgAttrPairs = _.toPairs(msg.MessageAttributes);
+				const supportedAttrs = msgAttrPairs
+					// eslint-disable-next-line no-unused-vars
+					.filter(([key, value]) => value.DataType === "String")
+					.map(([key, { DataType, StringValue }]) => [
+						key,
+						{ DataType, StringValue }
+					]);
+				const messageAttributes = _.fromPairs(supportedAttrs);
+
+				return {
+					Id: msg.MessageId,
+					MessageBody: msg.Body,
+					MessageAttributes: messageAttributes
+				};
+			});
+
 			await SQS.sendMessageBatch({
 				QueueUrl: queueUrl,
 				Entries: sendEntries
