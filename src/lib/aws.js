@@ -22,7 +22,7 @@ const getAWSSDK = options => {
 	} else if (global.region) {
 		AWS.config.region = global.region;
 	}
-  
+
 	const tokenCodeFn = (mfaSerial, cb) => {
 		inquirer
 			.prompt({
@@ -51,15 +51,29 @@ const getAWSSDK = options => {
 		const credentials = new AWS.SharedIniFileCredentials({
 			tokenCodeFn
 		});
-    
+
 		AWS.config.credentialProvider.providers = [
-			function () { return new AWS.EnvironmentCredentials("AWS"); },
-			function () { return new AWS.EnvironmentCredentials("AMAZON"); },
-			function () { return credentials; },
-			function () { return new AWS.ECSCredentials(); },
-			function () { return new AWS.ProcessCredentials(); },
-			function () { return new AWS.TokenFileWebIdentityCredentials(); },
-			function () { return new AWS.EC2MetadataCredentials(); }
+			function() {
+				return new AWS.EnvironmentCredentials("AWS");
+			},
+			function() {
+				return new AWS.EnvironmentCredentials("AMAZON");
+			},
+			function() {
+				return credentials;
+			},
+			function() {
+				return new AWS.ECSCredentials();
+			},
+			function() {
+				return new AWS.ProcessCredentials();
+			},
+			function() {
+				return new AWS.TokenFileWebIdentityCredentials();
+			},
+			function() {
+				return new AWS.EC2MetadataCredentials();
+			}
 		];
 	}
 
@@ -70,7 +84,7 @@ const getAWSSDK = options => {
 			httpOptions: { agent: new ProxyAgent(httpProxy) }
 		});
 	}
-  
+
 	cache[key] = AWS;
 	return AWS;
 };
