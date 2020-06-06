@@ -47,6 +47,34 @@ const getAWSSDK = options => {
 			tokenCodeFn
 		});
 		AWS.config.credentials = credentials;
+	} else {
+		const credentials = new AWS.SharedIniFileCredentials({
+			tokenCodeFn
+		});
+
+		AWS.config.credentialProvider.providers = [
+			function() {
+				return new AWS.EnvironmentCredentials("AWS");
+			},
+			function() {
+				return new AWS.EnvironmentCredentials("AMAZON");
+			},
+			function() {
+				return credentials;
+			},
+			function() {
+				return new AWS.ECSCredentials();
+			},
+			function() {
+				return new AWS.ProcessCredentials();
+			},
+			function() {
+				return new AWS.TokenFileWebIdentityCredentials();
+			},
+			function() {
+				return new AWS.EC2MetadataCredentials();
+			}
+		];
 	}
 
 	const httpProxy = _.get(options, "httpProxy", global.httpProxy);
