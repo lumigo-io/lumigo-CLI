@@ -1,7 +1,20 @@
 process.env.AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1";
+process.env.AWS_SDK_LOAD_CONFIG = "1";
 const _ = require("lodash");
+const inquirer = require("inquirer");
+
+const cache = {};
 
 const getAWSSDK = options => {
+	const key = JSON.stringify({
+		region: _.get(options, "region"),
+		profile: _.get(options, "profile"),
+		httpProxy: _.get(options, "httpProxy")
+	});
+	if (cache[key]) {
+		return cache[key];
+	}
+
 	const AWS = require("aws-sdk");
 
 	if (_.get(options, "region")) {
@@ -9,17 +22,45 @@ const getAWSSDK = options => {
 	} else if (global.region) {
 		AWS.config.region = global.region;
 	}
+  
+	const tokenCodeFn = (mfaSerial, cb) => {
+		inquirer
+			.prompt({
+				name: "token",
+				type: "input",
+				message: `Enter MFA code for ${mfaSerial}:`
+			})
+			.then(result => {
+				cb(null, result.token);
+			});
+	};
 
 	if (_.get(options, "profile")) {
 		const credentials = new AWS.SharedIniFileCredentials({
-			profile: options.profile
+			profile: options.profile,
+			tokenCodeFn
 		});
 		AWS.config.credentials = credentials;
 	} else if (global.profile) {
 		const credentials = new AWS.SharedIniFileCredentials({
-			profile: global.profile
+			profile: global.profile,
+			tokenCodeFn
 		});
 		AWS.config.credentials = credentials;
+	} else {
+		const credentials = new AWS.SharedIniFileCredentials({
+			tokenCodeFn
+		});
+    
+		AWS.config.credentialProvider.providers = [
+			function () { return new AWS.EnvironmentCredentials("AWS"); },
+			function () { return new AWS.EnvironmentCredentials("AMAZON"); },
+			function () { return credentials; },
+			function () { return new AWS.ECSCredentials(); },
+			function () { return new AWS.ProcessCredentials(); },
+			function () { return new AWS.TokenFileWebIdentityCredentials(); },
+			function () { return new AWS.EC2MetadataCredentials(); }
+		];
 	}
 
 	const httpProxy = _.get(options, "httpProxy", global.httpProxy);
@@ -29,7 +70,8 @@ const getAWSSDK = options => {
 			httpOptions: { agent: new ProxyAgent(httpProxy) }
 		});
 	}
-
+  
+	cache[key] = AWS;
 	return AWS;
 };
 
