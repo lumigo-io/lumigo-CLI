@@ -1,5 +1,4 @@
 process.env.AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1";
-process.env.AWS_SDK_LOAD_CONFIG = "1";
 const _ = require("lodash");
 const inquirer = require("inquirer");
 
@@ -36,45 +35,19 @@ const getAWSSDK = options => {
 	};
 
 	if (_.get(options, "profile")) {
+		process.env.AWS_SDK_LOAD_CONFIG = "1";
 		const credentials = new AWS.SharedIniFileCredentials({
 			profile: options.profile,
 			tokenCodeFn
 		});
 		AWS.config.credentials = credentials;
 	} else if (global.profile) {
+		process.env.AWS_SDK_LOAD_CONFIG = "1";
 		const credentials = new AWS.SharedIniFileCredentials({
 			profile: global.profile,
 			tokenCodeFn
 		});
 		AWS.config.credentials = credentials;
-	} else {
-		const credentials = new AWS.SharedIniFileCredentials({
-			tokenCodeFn
-		});
-
-		AWS.config.credentialProvider.providers = [
-			function() {
-				return new AWS.EnvironmentCredentials("AWS");
-			},
-			function() {
-				return new AWS.EnvironmentCredentials("AMAZON");
-			},
-			function() {
-				return credentials;
-			},
-			function() {
-				return new AWS.ECSCredentials();
-			},
-			function() {
-				return new AWS.ProcessCredentials();
-			},
-			function() {
-				return new AWS.TokenFileWebIdentityCredentials();
-			},
-			function() {
-				return new AWS.EC2MetadataCredentials();
-			}
-		];
 	}
 
 	const httpProxy = _.get(options, "httpProxy", global.httpProxy);
