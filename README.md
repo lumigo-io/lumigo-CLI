@@ -245,6 +245,8 @@ OPTIONS
                                          value
 
   --httpProxy=httpProxy                  URL of the http/https proxy (when running in a corporate network)
+
+  --parallelInvocation                   run invocations in parallel
 ```
 
 _See code: [src/commands/powertune-lambda.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/powertune-lambda.js)_
