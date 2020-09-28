@@ -31,7 +31,7 @@ class PowertuneLambdaCommand extends Command {
 			autoOptimize,
 			autoOptimizeAlias,
 			httpProxy,
-			parallelInvocation,
+			parallelInvocation
 		} = flags;
 
 		global.region = region;
@@ -223,7 +223,7 @@ PowertuneLambdaCommand.flags = {
 		description: "run invocations in parallel",
 		default: false,
 		required: false
-	}),
+	})
 };
 
 const openVisualization = url => {
