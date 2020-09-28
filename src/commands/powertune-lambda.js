@@ -30,7 +30,8 @@ class PowertuneLambdaCommand extends Command {
 			noVisualization,
 			autoOptimize,
 			autoOptimizeAlias,
-			httpProxy
+			httpProxy,
+			parallelInvocation
 		} = flags;
 
 		global.region = region;
@@ -88,7 +89,7 @@ class PowertuneLambdaCommand extends Command {
 			lambdaARN: lambdaArn,
 			num: invocations,
 			payload: payload,
-			parallelInvocation: false,
+			parallelInvocation,
 			strategy,
 			balancedWeight,
 			powerValues,
@@ -216,6 +217,11 @@ PowertuneLambdaCommand.flags = {
 	}),
 	httpProxy: flags.string({
 		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
+	}),
+	parallelInvocation: flags.boolean({
+		description: "run invocations in parallel",
+		default: false,
 		required: false
 	})
 };
