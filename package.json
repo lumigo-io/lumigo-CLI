@@ -1,7 +1,7 @@
 {
   "name": "lumigo-cli",
   "description": "A collection of helpful commands for working with AWS Lambda",
-  "version": "0.40.1",
+  "version": "0.46.2",
   "author": "Lumigo LTD (https://lumigo.io)",
   "bin": {
     "lumigo-cli": "./bin/run"
@@ -15,7 +15,7 @@
     "analytics-node": "^3.4.0-beta.1",
     "async": "^3.1.0",
     "async-retry": "^1.2.3",
-    "aws-sdk": "^2.584.0",
+    "aws-sdk": "^2.691.0",
     "axios": "^0.19.0",
     "bluebird": "^3.5.5",
     "cli-table": "^0.3.1",
@@ -49,6 +49,7 @@
     "globby": "^10.0.1",
     "husky": "^3.0.0",
     "jest": "^24.9.0",
+    "jest-circus": "^26.0.1",
     "lint-staged": "^9.1.0",
     "prettier": "^1.18.2",
     "semantic-release": "^15.13.24"

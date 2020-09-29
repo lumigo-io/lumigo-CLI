@@ -1,7 +1,19 @@
 process.env.AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1";
 const _ = require("lodash");
+const inquirer = require("inquirer");
+
+const cache = {};
 
 const getAWSSDK = options => {
+	const key = JSON.stringify({
+		region: _.get(options, "region"),
+		profile: _.get(options, "profile"),
+		httpProxy: _.get(options, "httpProxy")
+	});
+	if (cache[key]) {
+		return cache[key];
+	}
+
 	const AWS = require("aws-sdk");
 
 	if (_.get(options, "region")) {
@@ -10,14 +22,30 @@ const getAWSSDK = options => {
 		AWS.config.region = global.region;
 	}
 
+	const tokenCodeFn = (mfaSerial, cb) => {
+		inquirer
+			.prompt({
+				name: "token",
+				type: "input",
+				message: `Enter MFA code for ${mfaSerial}:`
+			})
+			.then(result => {
+				cb(null, result.token);
+			});
+	};
+
 	if (_.get(options, "profile")) {
+		process.env.AWS_SDK_LOAD_CONFIG = "1";
 		const credentials = new AWS.SharedIniFileCredentials({
-			profile: options.profile
+			profile: options.profile,
+			tokenCodeFn
 		});
 		AWS.config.credentials = credentials;
 	} else if (global.profile) {
+		process.env.AWS_SDK_LOAD_CONFIG = "1";
 		const credentials = new AWS.SharedIniFileCredentials({
-			profile: global.profile
+			profile: global.profile,
+			tokenCodeFn
 		});
 		AWS.config.credentials = credentials;
 	}
@@ -30,6 +58,7 @@ const getAWSSDK = options => {
 		});
 	}
 
+	cache[key] = AWS;
 	return AWS;
 };
 
