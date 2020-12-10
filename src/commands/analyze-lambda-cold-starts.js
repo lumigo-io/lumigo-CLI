@@ -7,6 +7,7 @@ const { checkVersion } = require("../lib/version-check");
 const Lambda = require("../lib/lambda");
 const Retry = require("async-retry");
 const { track } = require("../lib/analytics");
+const { RateLimit } = require("async-sema");
 require("colors");
 
 const ONE_MIN_IN_MILLIS = 60 * 1000;
@@ -106,6 +107,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 
 		const AWS = getAWSSDK();
 		const Lambda = new AWS.Lambda({ region });
+		const rateLimit = RateLimit(10); // rps
 
 		this.log(
 			`${region}: analyzing Provisioned Concurrency for ${functionNames.length} functions`
@@ -117,6 +119,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 			qualifiers = [],
 			marker
 		) => {
+			await rateLimit();
 			const resp = await Lambda.listProvisionedConcurrencyConfigs({
 				FunctionName: functionName,
 				Marker: marker
@@ -171,7 +174,7 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		return _.fromPairs(pairs);
 	}
 
-	async utilizationMetric(functionName, qualifier) {
+	utilizationMetric(functionName, qualifier) {
 		return {
 			Id:
 				functionName.toLowerCase().replace(/\W/g, "") +
@@ -202,12 +205,12 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 	async getProvisionedConcurrencyUtilization(region, functions) {
 		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch({ region });
-
+    
 		const startTime = new Date(Date.now() - global.minutes * ONE_MIN_IN_MILLIS);
 		const queries = _.flatMap(functions, ({ functionName, qualifiers }) =>
 			qualifiers.map(qualifier => this.utilizationMetric(functionName, qualifier))
 		);
-
+    
 		// CloudWatch only allows 100 queries per request
 		const promises = _.chunk(queries, 100).map(async chunk => {
 			const resp = await CloudWatch.getMetricData({
