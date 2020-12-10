@@ -205,12 +205,12 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 	async getProvisionedConcurrencyUtilization(region, functions) {
 		const AWS = getAWSSDK();
 		const CloudWatch = new AWS.CloudWatch({ region });
-    
+
 		const startTime = new Date(Date.now() - global.minutes * ONE_MIN_IN_MILLIS);
 		const queries = _.flatMap(functions, ({ functionName, qualifiers }) =>
 			qualifiers.map(qualifier => this.utilizationMetric(functionName, qualifier))
 		);
-    
+
 		// CloudWatch only allows 100 queries per request
 		const promises = _.chunk(queries, 100).map(async chunk => {
 			const resp = await CloudWatch.getMetricData({

@@ -80,7 +80,8 @@ class MeasureLambdaColdStartsCommand extends Command {
 	}
 }
 
-MeasureLambdaColdStartsCommand.description = "Measures a function's cold start duration (i.e. duration + initDuration)";
+MeasureLambdaColdStartsCommand.description =
+	"Measures a function's cold start duration (i.e. duration + initDuration)";
 MeasureLambdaColdStartsCommand.flags = {
 	functionName: flags.string({
 		char: "n",
