@@ -228,7 +228,7 @@ class ClearAccountCommand extends Command {
 
 	async clearEnvironment(AWS) {
 		await this.clearS3(AWS);
-		console.info("");
+    console.info("");
     await this.clearEventBridges(AWS);
 		console.info("");
 		await this.clearCF(AWS);
