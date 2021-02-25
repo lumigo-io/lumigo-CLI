@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:10.16.0
+      - image: circleci/node:14.3
     working_directory: ~/lumigo-cli
     steps:
       - checkout
@@ -13,7 +13,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/node:10.16.0
+      - image: circleci/node:14.3
     working_directory: ~/lumigo-cli
     steps:
       - checkout
