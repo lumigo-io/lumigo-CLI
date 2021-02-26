@@ -293,7 +293,9 @@ ClearAccountCommand.flags = {
 	}),
 	skipResources: flags.string({
 		description:
-			"List of resources to skip, separated with ','. Example: S3,IAMRoles",
+			"List of resources to skip, separated with ','. Example: S3,IAMRoles. " +
+			"Supported resources: S3, eventBridge, cloudFormation, apiGateway, IAMRoles, " +
+			"lambdas, logGroups, natGateways, IAMPolicies",
 		required: false
 	})
 };
