@@ -20,6 +20,7 @@ jest.mock("../../src/lib/nat");
 jest.mock("../../src/lib/eventbridge");
 describe("User forces clear account", () => {
 	beforeEach(() => {
+		jest.resetAllMocks();
 		versionCheck.checkVersion.mockResolvedValue(null);
 		s3.getBucketCount.mockResolvedValue(1);
 		s3.deleteAllBuckets.mockResolvedValue([{ status: "fail" }]);
@@ -61,6 +62,27 @@ describe("User forces clear account", () => {
 			expect(iam.deleteAllRoles.mock.calls.length).to.equal(1);
 			expect(apigw.deleteAllApiGw.mock.calls.length).to.equal(1);
 			expect(s3.deleteAllBuckets.mock.calls.length).to.equal(3); // retry
+			expect(natGateways.deleteAllNatGateways.mock.calls.length).to.equal(1);
+			expect(iam.deleteAllPolicies.mock.calls.length).to.equal(1);
+			expect(eventBridge.deleteAllEventBridges.mock.calls.length).to.equal(1);
+		});
+	test.stdout()
+		.command(["clear-account", "-f", "--skipResources", "S3,IAMRoles"])
+		.it("Delete all resources", async ctx => {
+			expect(ctx.stdout).not.to.contain("bucket(s)");
+			expect(ctx.stdout).to.contain("No lambda(s) to delete. Skipping...");
+			expect(ctx.stdout).to.contain("Deleting 1 CF stack(s)");
+			expect(ctx.stdout).not.to.contain("role(s)");
+			expect(ctx.stdout).to.contain("Deleting 1 API Gateway(s)");
+			expect(ctx.stdout).to.contain("Deleting 1 NAT Gateway(s)");
+			expect(ctx.stdout).to.contain("Deleting 1 Policy(s)");
+			expect(ctx.stdout).to.contain("Deleting 1 EventBridge(s)");
+
+			expect(cf.deleteAllStacks.mock.calls.length).to.equal(1);
+			expect(lambda.deleteAllFunctions.mock.calls.length).to.equal(0);
+			expect(iam.deleteAllRoles.mock.calls.length).to.equal(0); // no call
+			expect(apigw.deleteAllApiGw.mock.calls.length).to.equal(1);
+			expect(s3.deleteAllBuckets.mock.calls.length).to.equal(0); // no call
 			expect(natGateways.deleteAllNatGateways.mock.calls.length).to.equal(1);
 			expect(iam.deleteAllPolicies.mock.calls.length).to.equal(1);
 			expect(eventBridge.deleteAllEventBridges.mock.calls.length).to.equal(1);

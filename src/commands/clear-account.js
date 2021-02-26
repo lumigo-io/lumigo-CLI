@@ -21,11 +21,12 @@ require("colors");
 class ClearAccountCommand extends Command {
 	async run() {
 		const { flags } = this.parse(ClearAccountCommand);
-		const { force, profile, retries, httpProxy } = flags;
+		const { force, profile, retries, httpProxy, skipResources } = flags;
 
 		global.profile = profile;
 		global.httpProxy = httpProxy;
 		this.retries = retries;
+		this.skipResources = skipResources ? skipResources.split(",") : [];
 
 		checkVersion();
 
@@ -227,23 +228,41 @@ class ClearAccountCommand extends Command {
 	}
 
 	async clearEnvironment(AWS) {
-		await this.clearS3(AWS);
+		if (!this.skipResources.includes("S3")) {
+			await this.clearS3(AWS);
+		}
 		console.info("");
-		await this.clearEventBridges(AWS);
+		if (!this.skipResources.includes("eventBridge")) {
+			await this.clearEventBridges(AWS);
+		}
 		console.info("");
-		await this.clearCF(AWS);
+		if (!this.skipResources.includes("cloudFormation")) {
+			await this.clearCF(AWS);
+		}
 		console.info("");
-		await this.clearApiGw(AWS);
+		if (!this.skipResources.includes("apiGateway")) {
+			await this.clearApiGw(AWS);
+		}
 		console.info("");
-		await this.clearRoles(AWS);
+		if (!this.skipResources.includes("IAMRoles")) {
+			await this.clearRoles(AWS);
+		}
 		console.info("");
-		await this.clearLambdas(AWS);
+		if (!this.skipResources.includes("lambdas")) {
+			await this.clearLambdas(AWS);
+		}
 		console.info("");
-		await this.clearLogGroups(AWS);
+		if (!this.skipResources.includes("logGroups")) {
+			await this.clearLogGroups(AWS);
+		}
 		console.info("");
-		await this.clearNatGateways(AWS);
+		if (!this.skipResources.includes("natGateways")) {
+			await this.clearNatGateways(AWS);
+		}
 		console.info("");
-		await this.clearPolicies(AWS);
+		if (!this.skipResources.includes("IAMPolicies")) {
+			await this.clearPolicies(AWS);
+		}
 		console.info("");
 	}
 }
@@ -270,6 +289,11 @@ ClearAccountCommand.flags = {
 	}),
 	httpProxy: flags.string({
 		description: "URL of the http/https proxy (when running in a corporate network)",
+		required: false
+	}),
+	skipResources: flags.string({
+		description:
+			"List of resources to skip, separated with ','. Example: S3,IAMRoles",
 		required: false
 	})
 };
