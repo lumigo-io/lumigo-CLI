@@ -1,6 +1,6 @@
 {
   "name": "lumigo-cli",
-  "description": "A collection of helpful commands for working with AWS Lambda",
+  "description": "A collection of helpful commands designed to smooth out the development and management of event-based, distributed applications. Lumigo-cli also powers the Stackoscope that runs health-check on Serverless environments to detect security, cost, scalability, resilience, and performance issues.",
   "version": "0.40.1",
   "author": "Lumigo LTD (https://lumigo.io)",
   "bin": {
