@@ -2,6 +2,7 @@ lumigo-cli
 ==========
 
 A collection of helpful commands designed to smooth out the development and management of event-based, distributed applications. 
+
 Lumigo-cli also powers the Stackoscope that runs health-check on Serverless environments to detect security, cost, scalability, resilience, and performance issues.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
