@@ -114,7 +114,8 @@ Sending metadata to Lumigo for processing...
 	}
 }
 
-ScannerCommand.description = "Scans your AWS account and suggest improvements";
+ScannerCommand.description =
+	"Use Lumigo Stackoscope to scan your AWS account and suggest improvements";
 ScannerCommand.flags = {
 	profile: flags.string({
 		char: "p",
