@@ -1,7 +1,8 @@
 lumigo-cli
 ==========
 
-A collection of helpful commands for working with AWS Lambda.
+A collection of helpful commands designed to smooth out the development and management of event-based, distributed applications. 
+Lumigo-cli also powers the Stackoscope that runs health-check on Serverless environments to detect security, cost, scalability, resilience, and performance issues.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/lumigo-cli.svg)](https://npmjs.org/package/lumigo-cli)
@@ -21,7 +22,7 @@ $ npm install -g lumigo-cli
 $ lumigo-cli COMMAND
 running command...
 $ lumigo-cli (-v|--version|version)
-lumigo-cli/0.40.1 darwin-x64 node-v10.16.0
+lumigo-cli/0.40.1 darwin-x64 node-v14.3.0
 $ lumigo-cli --help [COMMAND]
 USAGE
   $ lumigo-cli COMMAND
@@ -42,6 +43,7 @@ USAGE
 * [`lumigo-cli powertune-lambda`](#lumigo-cli-powertune-lambda)
 * [`lumigo-cli replay-sqs-dlq`](#lumigo-cli-replay-sqs-dlq)
 * [`lumigo-cli s3-select-batch`](#lumigo-cli-s3-select-batch)
+* [`lumigo-cli scanner`](#lumigo-cli-scanner)
 * [`lumigo-cli send-to-sns`](#lumigo-cli-send-to-sns)
 * [`lumigo-cli send-to-sqs`](#lumigo-cli-send-to-sqs)
 * [`lumigo-cli sls-remove`](#lumigo-cli-sls-remove)
@@ -197,7 +199,7 @@ _See code: [src/commands/list-lambda.js](https://github.com/lumigo-io/lumigo-cli
 
 ## `lumigo-cli measure-lambda-cold-starts`
 
-Measures a function's initialization time
+Measures a function's cold start duration (i.e. duration + initDuration)
 
 ```
 USAGE
@@ -300,6 +302,21 @@ OPTIONS
 ```
 
 _See code: [src/commands/s3-select-batch.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/s3-select-batch.js)_
+
+## `lumigo-cli scanner`
+
+Use Lumigo Stackoscope to scan your AWS account and suggest improvements
+
+```
+USAGE
+  $ lumigo-cli scanner
+
+OPTIONS
+  -p, --profile=profile  AWS CLI profile name
+  --httpProxy=httpProxy  URL of the http/https proxy (when running in a corporate network)
+```
+
+_See code: [src/commands/scanner.js](https://github.com/lumigo-io/lumigo-cli/blob/v0.40.1/src/commands/scanner.js)_
 
 ## `lumigo-cli send-to-sns`
 
