@@ -72,7 +72,8 @@ const deleteAllStacks = async (
 	AWS,
 	retryOpts = {
 		retries: 3,
-		minTimeout: 1000
+		minTimeout: 1000,
+		maxTimeout: 5000
 	}
 ) => {
 	const allStacksPromises = regions.map(region =>
