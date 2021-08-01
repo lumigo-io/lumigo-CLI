@@ -15,8 +15,6 @@ const { getAWSSDK } = require("../lib/aws");
 const AWS = getAWSSDK();
 const STS = new AWS.STS();
 
-
-
 const getConfigurationFileName = () => {
 	const configurationFileName = ".lumigo-cli.json";
 	try {
@@ -29,11 +27,10 @@ const getConfigurationFileName = () => {
 const loadConf = () => {
 	let approved = false;
 	try {
-		
 		if (fs.existsSync(getConfigurationFileName())) {
 			const data = fs.readFileSync(getConfigurationFileName());
 			const lumigoConf = JSON.parse(data);
-			approved = Boolean(lumigoConf.approved);			
+			approved = Boolean(lumigoConf.approved);
 		}
 	} catch (err) {
 		// Ignore gracefully
@@ -43,13 +40,12 @@ const loadConf = () => {
 	};
 };
 
-const saveConf = (approved) => {
+const saveConf = approved => {
 	try {
-		fs.writeFileSync(getConfigurationFileName(), JSON.stringify({approved}));
+		fs.writeFileSync(getConfigurationFileName(), JSON.stringify({ approved }));
 	} catch (error) {
 		// Ignore gracefully
 	}
-	
 };
 
 class ScannerCommand extends Command {
@@ -72,11 +68,10 @@ and recommends areas that can be improved.
 
 A customized report will be sent to your email.
 `);
-		
-		let {approved} = loadConf();
-		
+
+		let { approved } = loadConf();
+
 		if (!approved) {
-			
 			this.log("We will send metadata about AWS resources to Lumigo.".yellow);
 
 			let { toProceed } = await inquirer.prompt([
@@ -99,7 +94,6 @@ A customized report will be sent to your email.
 						"Do you give Lumigo permission to receive metadata about AWS resources?"
 				}
 			]);
-			
 
 			if (!toProceed) {
 				return;
