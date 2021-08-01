@@ -1,4 +1,5 @@
 const _ = require("lodash");
+var fs = require("fs");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const { track } = require("../lib/analytics");
@@ -13,6 +14,43 @@ const { getAWSSDK } = require("../lib/aws");
 
 const AWS = getAWSSDK();
 const STS = new AWS.STS();
+
+
+
+const getConfigurationFileName = () => {
+	const configurationFileName = ".lumigo-cli.json";
+	try {
+		const homedir = require("os").homedir();
+		return `${homedir}/${configurationFileName}`;
+	} catch (err) {
+		return configurationFileName;
+	}
+};
+const loadConf = () => {
+	let approved = false;
+	try {
+		
+		if (fs.existsSync(getConfigurationFileName())) {
+			const data = fs.readFileSync(getConfigurationFileName());
+			const lumigoConf = JSON.parse(data);
+			approved = Boolean(lumigoConf.approved);			
+		}
+	} catch (err) {
+		// Ignore gracefully
+	}
+	return {
+		approved
+	};
+};
+
+const saveConf = (approved) => {
+	try {
+		fs.writeFileSync(getConfigurationFileName(), JSON.stringify({approved}));
+	} catch (error) {
+		// Ignore gracefully
+	}
+	
+};
 
 class ScannerCommand extends Command {
 	async run() {
@@ -34,22 +72,40 @@ and recommends areas that can be improved.
 
 A customized report will be sent to your email.
 `);
+		
+		let {approved} = loadConf();
+		
+		if (!approved) {
+			
+			this.log("We will send metadata about AWS resources to Lumigo.".yellow);
 
-		this.log("We will send metadata about AWS resources to Lumigo.".yellow);
+			let { toProceed } = await inquirer.prompt([
+				{
+					type: "confirm",
+					name: "toProceed",
+					message:
+						"Do you agree to Lumigo Terms of Use and Privacy policy ?'\n\tTerm of Use: https://lumigo.io/terms/\n\tPrivacy Policy: https://lumigo.io/privacy-policy/\n"
+				}
+			]);
 
-		const { toProceed } = await inquirer.prompt([
-			{
-				type: "confirm",
-				name: "toProceed",
-				message:
-					"Do you give Lumigo permission to receive metadata about AWS resources?"
+			if (!toProceed) {
+				return;
 			}
-		]);
+			toProceed = await inquirer.prompt([
+				{
+					type: "confirm",
+					name: "toProceed",
+					message:
+						"Do you give Lumigo permission to receive metadata about AWS resources?"
+				}
+			]);
+			
 
-		if (!toProceed) {
-			return;
+			if (!toProceed) {
+				return;
+			}
 		}
-
+		saveConf(true);
 		const email = await this.signIn().catch(err => {
 			throw err;
 		});
