@@ -72,8 +72,6 @@ A customized report will be sent to your email.
 		let { approved } = loadConf();
 
 		if (!approved) {
-			this.log("We will send metadata about AWS resources to Lumigo.".yellow);
-
 			let { toProceed } = await inquirer.prompt([
 				{
 					type: "confirm",
