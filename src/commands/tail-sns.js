@@ -85,19 +85,21 @@ class TailSnsCommand extends Command {
 		const subscriptionArn = await this.subscribeToSNS(topicArn, queueArn);
 
 		this.log(`polling SNS topic [${topicArn}]...`);
-		this.log("press <any key> to stop");
+		this.log("press ctrl-C to stop");
 
 		let polling = true;
 		const readline = require("readline");
 		readline.emitKeypressEvents(process.stdin);
 		process.stdin.setRawMode(true);
 		const stdin = process.openStdin();
-		stdin.once("keypress", async () => {
-			polling = false;
-			this.log("stopping...");
+		stdin.on("keypress", async (data, key) => {
+			if (key && key.ctrl && key.name == "c") {
+				polling = false;
+				this.log("stopping...");
 
-			await this.unsubscribeFromSNS(subscriptionArn);
-			await this.deleteQueue(queueUrl);
+				await this.unsubscribeFromSNS(subscriptionArn);
+				await this.deleteQueue(queueUrl);
+			}
 		});
 
 		const AWS = getAWSSDK();
