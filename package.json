@@ -85,7 +85,8 @@
     "commands": "./src/commands",
     "bin": "lumigo-cli",
     "plugins": [
-      "@oclif/plugin-help"
+       "@oclif/plugin-help",
+       "@oclif/plugin-autocomplete"
     ]
   },
   "repository": "lumigo-io/lumigo-cli",
