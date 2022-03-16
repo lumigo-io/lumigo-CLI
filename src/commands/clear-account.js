@@ -249,7 +249,7 @@ class ClearAccountCommand extends Command {
 }
 
 ClearAccountCommand.description =
-	"Clear your AWS account from all supported resources. Use with cautious!";
+	"Clear your AWS account from all supported resources. Use with caution!";
 ClearAccountCommand.flags = {
 	force: flags.boolean({
 		char: "f",
