@@ -26,7 +26,7 @@
     "inquirer": "^7.0.0",
     "line-reader": "^0.4.0",
     "lodash": "^4.17.15",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "p-queue": "^6.2.0",
     "proxy-agent": "^3.1.1",
     "restify": "^8.4.0",
