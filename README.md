@@ -1,3 +1,7 @@
+**PLEASE NOTE, THIS PROJECT IS NO LONGER BEING MAINTAINED**
+
+It will not receive any future updates or bug fixes.
+
 lumigo-cli
 ==========
 
