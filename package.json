@@ -11,6 +11,7 @@
     "@aws-amplify/auth": "^3.4.12",
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.13.3",
+    "@oclif/plugin-autocomplete": "^1.2.0",
     "@oclif/plugin-help": "^2.2.1",
     "@octokit/rest": "^16.33.1",
     "analytics-node": "^3.4.0-beta.1",
@@ -85,7 +86,8 @@
     "commands": "./src/commands",
     "bin": "lumigo-cli",
     "plugins": [
-      "@oclif/plugin-help"
+      "@oclif/plugin-help",
+      "@oclif/plugin-autocomplete"
     ]
   },
   "repository": "lumigo-io/lumigo-cli",
