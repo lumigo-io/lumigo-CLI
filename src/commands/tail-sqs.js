@@ -25,7 +25,7 @@ class TailSqsCommand extends Command {
 		const queueUrl = await getQueueUrl(queueName);
 
 		this.log(`polling SQS queue [${queueUrl}]...`);
-		this.log("press <any key> to stop");
+		this.log("press ctrl-C to stop");
 		await this.pollSqs(queueUrl);
 
 		this.exit(0);
@@ -40,10 +40,12 @@ class TailSqsCommand extends Command {
 		readline.emitKeypressEvents(process.stdin);
 		process.stdin.setRawMode(true);
 		const stdin = process.openStdin();
-		stdin.once("keypress", () => {
-			polling = false;
-			this.log("stopping...");
-			seenMessageIds = new Set();
+		stdin.on("keypress", async (data, key) => {
+			if (key && key.ctrl && key.name == "c") {
+				polling = false;
+				this.log("stopping...");
+				seenMessageIds = new Set();
+			}
 		});
 
 		// eslint-disable-next-line no-constant-condition

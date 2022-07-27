@@ -138,19 +138,20 @@ class TailEventbridgeRuleCommand extends Command {
 		await this.addTarget(queueArn);
 
 		this.log(`polling event rule [${ruleArn}]...`);
-		this.log("press <any key> to stop");
+		this.log("press ctrl-C to stop");
 
 		let polling = true;
 		const readline = require("readline");
 		readline.emitKeypressEvents(process.stdin);
 		process.stdin.setRawMode(true);
 		const stdin = process.openStdin();
-		stdin.once("keypress", async () => {
-			polling = false;
-			this.log("stopping...");
-
-			await this.removeTarget();
-			await this.deleteQueue(queueUrl);
+		stdin.on("keypress", async (data, key) => {
+			if (key && key.ctrl && key.name == "c") {
+				this.log("stopping...");
+				polling = false;
+				await this.removeTarget();
+				await this.deleteQueue(queueUrl);
+			}
 		});
 
 		const AWS = getAWSSDK();

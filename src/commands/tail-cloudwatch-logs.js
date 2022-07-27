@@ -32,7 +32,7 @@ class TailCloudwatchLogsCommand extends Command {
 		const logGroupName = await this.getLogGroupName(namePrefix);
 
 		this.log(`polling CLoudWatch log group [${logGroupName}]...`);
-		this.log("press <any key> to stop");
+		this.log("press ctrl+C to stop");
 		await this.pollLogGroup(logGroupName);
 
 		this.exit(0);
@@ -94,9 +94,11 @@ class TailCloudwatchLogsCommand extends Command {
 		readline.emitKeypressEvents(process.stdin);
 		process.stdin.setRawMode(true);
 		const stdin = process.openStdin();
-		stdin.once("keypress", () => {
-			polling = false;
-			this.log("stopping...");
+		stdin.on("keypress", async (data, key) => {
+			if (key && key.ctrl && key.name == "c") {
+				polling = false;
+				this.log("stopping...");
+			}
 		});
 
 		const fetch = async (startTime, endTime, nextToken, acc = []) => {

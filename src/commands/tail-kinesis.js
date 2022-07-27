@@ -25,7 +25,7 @@ class TailKinesisCommand extends Command {
 		this.log(
 			`polling Kinesis stream [${streamName}] (${stream.shardIds.length} shards)...`
 		);
-		this.log("press <any key> to stop");
+		this.log("press ctrl-C to stop");
 		await this.pollKinesis(streamName, stream.shardIds);
 	}
 
@@ -63,9 +63,11 @@ class TailKinesisCommand extends Command {
 		readline.emitKeypressEvents(process.stdin);
 		process.stdin.setRawMode(true);
 		const stdin = process.openStdin();
-		stdin.once("keypress", () => {
-			polling = false;
-			this.log("stopping...");
+		stdin.on("keypress", async (data, key) => {
+			if (key && key.ctrl && key.name == "c") {
+				polling = false;
+				this.log("stopping...");
+			}
 		});
 
 		const promises = shardIds.map(async shardId => {
