@@ -41,6 +41,27 @@ describe("deleteAllStacks", () => {
 		});
 	});
 
+	it("Skipping CDK bootstrap stack", async function() {
+		AWS.CloudFormation.prototype.deleteStack = success;
+		AWS.CloudFormation.prototype.waitFor = success;
+		AWS.CloudFormation.prototype.listStacks = getPromiseResponse({
+			StackSummaries: [
+				{
+					StackId: "12345",
+					StackName: "CDKToolkit",
+					StackStatus: "CREATE_COMPLETE"
+				}
+			]
+		});
+
+		const result = await deleteAllStacks(AWS);
+
+		expect(result.length).to.equal(16);
+		result.forEach(val => {
+			expect(val.status).to.equal("skip");
+		});
+	});
+
 	it("Fail Deleting all stacks", async function() {
 		AWS.CloudFormation.prototype.deleteStack = fail;
 
