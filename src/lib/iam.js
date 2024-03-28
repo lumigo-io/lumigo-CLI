@@ -52,6 +52,10 @@ const deleteAllPolicies = async AWS => {
 
 	const apiToDeletePromises = allRoles.map(async policy => {
 		try {
+			if (policy.name.includes("cdk-hnb659fds")) {
+				process.stdout.write("S".green);
+				return ClearResult.getSkipped(policy.name, "global");
+			}
 			await deletePolicy(policy, AWS);
 			process.stdout.write(".".green);
 			return ClearResult.getSuccess(policy.name, "global");
@@ -140,6 +144,10 @@ const deleteAllRoles = async AWS => {
 
 	const apiToDeletePromises = allRoles.map(async role => {
 		try {
+			if (role.name.includes("cdk-hnb659fds")) {
+				process.stdout.write("S".green);
+				return ClearResult.getSkipped(role.name, "global");
+			}
 			await deleteRole(role, AWS);
 			process.stdout.write(".".green);
 			return ClearResult.getSuccess(role.name, "global");
