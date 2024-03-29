@@ -43,6 +43,21 @@ describe("deleteAllBuckets", () => {
 		expect(result[0].status).to.equal("success");
 	});
 
+	it("Skip cdk bootstrap bucket", async function() {
+		AWS.S3.prototype.listBuckets = getPromiseResponse({
+			Buckets: [{ Name: "cdk-hnb659fds-assets-99999999-us-west-2" }]
+		});
+
+		AWS.S3.prototype.listObjectsV2 = getPromiseResponse({
+			Contents: [{ Key: "MyItem.txt" }]
+		});
+		const result = await deleteAllBuckets(AWS);
+
+		expect(result.length).to.equal(1);
+		expect(result[0].name).to.equal("cdk-hnb659fds-assets-99999999-us-west-2");
+		expect(result[0].status).to.equal("skip");
+	});
+
 	it("Failed delete of a single bucket", async function() {
 		AWS.S3.prototype.deleteBucket = fail;
 

@@ -36,10 +36,15 @@ const deleteAllBuckets = async AWS => {
 	const buckets = await S3.listBuckets().promise();
 	const promises = buckets.Buckets.map(async bucket => {
 		try {
-			await emptyBucket(bucket.Name, AWS);
-			await S3.deleteBucket({ Bucket: bucket.Name }).promise();
-			process.stdout.write(".".green);
-			return ClearResult.getSuccess(bucket.Name, null);
+			if (bucket.Name.includes("cdk-hnb659fds")) {
+				process.stdout.write("S".green);
+				return ClearResult.getSkipped(bucket.Name, null);
+			} else {
+				await emptyBucket(bucket.Name, AWS);
+				await S3.deleteBucket({ Bucket: bucket.Name }).promise();
+				process.stdout.write(".".green);
+				return ClearResult.getSuccess(bucket.Name, null);
+			}
 		} catch (e) {
 			process.stdout.write("F".red);
 			return ClearResult.getFailed(bucket.Name, null, e);

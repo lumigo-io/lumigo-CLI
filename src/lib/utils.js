@@ -13,6 +13,10 @@ class ClearResult {
 	static getSuccess(name, region) {
 		return new ClearResult(name, ClearResult.SUCCESS, region, null);
 	}
+
+	static getSkipped(name, region) {
+		return new ClearResult(name, ClearResult.SKIP, region, null);
+	}
 }
 
 ClearResult.SUCCESS = "success";

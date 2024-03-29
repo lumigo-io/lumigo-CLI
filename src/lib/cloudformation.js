@@ -84,9 +84,14 @@ const deleteAllStacks = async (
 	const asyncQueue = async.queue(async stack => {
 		if (stackStatusToDelete.includes(stack.stackStatus)) {
 			try {
-				await deleteStack(stack.stackName, stack.region, retryOpts, AWS);
-				process.stdout.write(".".green);
-				results.push(ClearResult.getSuccess(stack.stackName, stack.region));
+				if (stack.stackName.includes("CDKToolkit")) {
+					process.stdout.write("S".green);
+					results.push(ClearResult.getSkipped(stack.stackName, stack.region));
+				} else {
+					await deleteStack(stack.stackName, stack.region, retryOpts, AWS);
+					process.stdout.write(".".green);
+					results.push(ClearResult.getSuccess(stack.stackName, stack.region));
+				}
 			} catch (e) {
 				process.stdout.write("F".red);
 				results.push(ClearResult.getFailed(stack.stackName, stack.region, e));

@@ -52,6 +52,24 @@ describe("deleteAllRoles", () => {
 		expect(result[0].status).to.equal("success");
 	});
 
+	it("Skipping CDK IAM roles", async function() {
+		AWS.IAM.prototype.listRoles = getPromiseResponse({
+			Roles: [
+				{
+					Path: "/my-roles/",
+					RoleId: "5678",
+					RoleName: "cdk-hnb659fds-deployment-role"
+				}
+			]
+		});
+		AWS.IAM.prototype.deleteRole = success;
+
+		const result = await deleteAllRoles(AWS);
+
+		expect(result.length).to.equal(1);
+		expect(result[0].status).to.equal("skip");
+	});
+
 	it("Failed deleting IAM role", async function() {
 		AWS.IAM.prototype.deleteRole = fail;
 
@@ -122,6 +140,24 @@ describe("deleteAllPolicies", () => {
 
 		expect(result.length).to.equal(2);
 		expect(result[0].status).to.equal("fail");
+	});
+
+	it("Skipping cdk policy", async function() {
+		AWS.IAM.prototype.listPolicies = getPromiseResponse({
+			Policies: [
+				{
+					Arn: "aws:policy1",
+					PolicyName: "cdk-hnb659fds-policy"
+				},
+				{ Arn: "aws:policy2", PolicyName: "my_policy2" }
+			]
+		});
+
+		const result = await deleteAllPolicies(AWS);
+
+		expect(result.length).to.equal(2);
+		expect(result[0].status).to.equal("skip");
+		expect(result[1].status).to.equal("success");
 	});
 
 	it("Failed deleting IAM policy, retry once, then fail", async function() {
