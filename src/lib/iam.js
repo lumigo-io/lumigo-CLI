@@ -55,10 +55,11 @@ const deleteAllPolicies = async AWS => {
 			if (policy.name.includes("cdk-hnb659fds")) {
 				process.stdout.write("S".green);
 				return ClearResult.getSkipped(policy.name, "global");
+			} else {
+				await deletePolicy(policy, AWS);
+				process.stdout.write(".".green);
+				return ClearResult.getSuccess(policy.name, "global");
 			}
-			await deletePolicy(policy, AWS);
-			process.stdout.write(".".green);
-			return ClearResult.getSuccess(policy.name, "global");
 		} catch (e) {
 			process.stdout.write("F".red);
 			return ClearResult.getFailed(policy.name, "global", e);
@@ -147,10 +148,11 @@ const deleteAllRoles = async AWS => {
 			if (role.name.includes("cdk-hnb659fds")) {
 				process.stdout.write("S".green);
 				return ClearResult.getSkipped(role.name, "global");
+			} else {
+				await deleteRole(role, AWS);
+				process.stdout.write(".".green);
+				return ClearResult.getSuccess(role.name, "global");
 			}
-			await deleteRole(role, AWS);
-			process.stdout.write(".".green);
-			return ClearResult.getSuccess(role.name, "global");
 		} catch (e) {
 			process.stdout.write("F".red);
 			return ClearResult.getFailed(role.name, "global", e);
