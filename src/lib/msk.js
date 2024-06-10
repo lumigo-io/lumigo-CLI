@@ -41,9 +41,7 @@ const deleteAllMsk = async (
 		minTimeout: 1000
 	}
 ) => {
-	const allMskPromises = regions.map(region =>
-		getAllMskInRegion(region, AWS)
-	);
+	const allMskPromises = regions.map(region => getAllMskInRegion(region, AWS));
 	const allMsks = await Promise.all(allMskPromises);
 	const results = [];
 	const asyncQueue = async.queue(async cluster => {
@@ -76,9 +74,7 @@ const getAllMskInRegion = async (region, AWS) => {
 };
 
 const getAllMskCount = async AWS => {
-	const allMskPromises = regions.map(region =>
-		getAllMskInRegion(region, AWS)
-	);
+	const allMskPromises = regions.map(region => getAllMskInRegion(region, AWS));
 	const allMsks = await Promise.all(allMskPromises);
 
 	return _.flatten(allMsks).length;
