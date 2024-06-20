@@ -17,6 +17,7 @@ const { getAllNatGatewaysCount, deleteAllNatGateways } = require("../lib/nat");
 const { getAllEventBridgeCount, deleteAllEventBridges } = require("../lib/eventbridge");
 const { track } = require("../lib/analytics");
 require("colors");
+const { getAllMskCount, deleteAllMsk } = require("../lib/msk");
 
 class ClearAccountCommand extends Command {
 	async run() {
@@ -226,6 +227,20 @@ class ClearAccountCommand extends Command {
 		);
 	}
 
+	async clearMsk(AWS) {
+		this.log("Msk".bold);
+		await this.resourceDeletion(
+			async () => {
+				return await getAllMskCount(AWS);
+			},
+			async () => {
+				return await deleteAllMsk(AWS);
+			},
+			"Msk",
+			true
+		);
+	}
+
 	async clearEnvironment(AWS) {
 		await this.clearS3(AWS);
 		console.info("");
@@ -244,6 +259,8 @@ class ClearAccountCommand extends Command {
 		await this.clearNatGateways(AWS);
 		console.info("");
 		await this.clearPolicies(AWS);
+		console.info("");
+		await this.clearMsk(AWS);
 		console.info("");
 	}
 }
