@@ -6,7 +6,6 @@ const moment = require("moment");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const Lambda = require("../lib/lambda");
-const { track } = require("../lib/analytics");
 require("colors");
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -20,8 +19,6 @@ class ListLambdaCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("list-lambda", { region, inactive });
 
 		if (region) {
 			this.show(await this.getFunctionsInRegion(region, inactive));

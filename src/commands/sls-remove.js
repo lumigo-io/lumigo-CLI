@@ -2,7 +2,6 @@ const _ = require("lodash");
 const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
-const { track } = require("../lib/analytics");
 
 class SlsRemoveCommand extends Command {
 	async run() {
@@ -14,8 +13,6 @@ class SlsRemoveCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("sls-remove", { region, emptyS3Buckets });
 
 		this.log(`getting the deployment bucket name for [${stackName}] in [${region}]`);
 		const deploymentBucketName = await this.getDeploymentBucketName(stackName);

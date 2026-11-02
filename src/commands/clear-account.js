@@ -15,7 +15,6 @@ const { deleteAllStacks, getAllStacksCount } = require("../lib/cloudformation");
 const { getAllLogGroupsCount, deleteAllLogGroups } = require("../lib/cloudwatch-logs");
 const { getAllNatGatewaysCount, deleteAllNatGateways } = require("../lib/nat");
 const { getAllEventBridgeCount, deleteAllEventBridges } = require("../lib/eventbridge");
-const { track } = require("../lib/analytics");
 require("colors");
 
 class ClearAccountCommand extends Command {
@@ -28,8 +27,6 @@ class ClearAccountCommand extends Command {
 		this.retries = retries;
 
 		checkVersion();
-
-		track("clear-account", { force, retries });
 
 		const AWS = getAWSSDK();
 

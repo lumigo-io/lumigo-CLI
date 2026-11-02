@@ -3,7 +3,6 @@ const zlib = require("zlib");
 const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
-const { track } = require("../lib/analytics");
 require("colors");
 
 class TailKinesisCommand extends Command {
@@ -16,8 +15,6 @@ class TailKinesisCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("tail-kinesis", { region });
 
 		this.log(`checking Kinesis stream [${streamName}] in [${region}]`);
 		const stream = await this.describeStream(streamName);

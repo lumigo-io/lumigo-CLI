@@ -6,7 +6,6 @@ const { getAWSSDK } = require("../lib/aws");
 const { getTopicArn } = require("../lib/sns");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
-const { track } = require("../lib/analytics");
 require("colors");
 
 class SendToSnsCommand extends Command {
@@ -19,8 +18,6 @@ class SendToSnsCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("send-to-sns", { region, concurrency });
 
 		this.log(`finding the topic [${topicName}] in [${region}]`);
 		const topicArn = await getTopicArn(topicName);

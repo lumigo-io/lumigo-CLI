@@ -4,7 +4,6 @@ const Table = require("cli-table");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const uuid = require("uuid/v4");
-const { track } = require("../lib/analytics");
 require("colors");
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -19,8 +18,6 @@ class ListKinesisShardsCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("list-kinesis-shards", { region, hasName: !_.isEmpty(streamName) });
 
 		this.log(`checking Kinesis stream [${streamName}] in [${region}]`);
 		const stream = await this.describeStream(streamName);
