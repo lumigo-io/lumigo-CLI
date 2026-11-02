@@ -6,7 +6,6 @@ const { checkVersion } = require("../lib/version-check");
 const Kinesis = require("../lib/kinesis");
 const uuid = require("uuid");
 const { getStreamsInRegion } = require("../lib/kinesis");
-const { track } = require("../lib/analytics");
 require("colors");
 
 const FIVE_MIN_IN_SECONDS = 60 * 5;
@@ -28,8 +27,6 @@ class ListKinesisStreamsCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("list-kinesis-streams", { region });
 
 		let streamsDescription = [];
 		if (region) {

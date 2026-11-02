@@ -6,7 +6,6 @@ const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const Lambda = require("../lib/lambda");
 const Retry = require("async-retry");
-const { track } = require("../lib/analytics");
 const { RateLimit } = require("async-sema");
 require("colors");
 
@@ -43,14 +42,6 @@ class AnalyzeLambdaColdStartsCommand extends Command {
 		}
 
 		global.minutes = minutes;
-
-		track("analyze-lambda-cold-starts", {
-			region,
-			minutes,
-			hours,
-			days,
-			hasName: !_.isEmpty(name)
-		});
 
 		this.log(`analyzing cold starts over the last ${minutes} minutes`);
 

@@ -1,7 +1,6 @@
 const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const TailEventBridgeRuleCommand = require("./tail-eventbridge-rule");
-const { track } = require("../lib/analytics");
 
 class TailEventbridgeBusCommand extends Command {
 	async run() {
@@ -12,8 +11,6 @@ class TailEventbridgeBusCommand extends Command {
 		global.profile = profile;
 		global.httpProxy = httpProxy;
 		global.eventBusName = eventBusName;
-
-		track("tail-eventbridge-bus", { region });
 
 		const ruleName = await this.createRule();
 		this.log(

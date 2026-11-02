@@ -5,7 +5,6 @@ const humanize = require("humanize");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const Lambda = require("../lib/lambda");
-const { track } = require("../lib/analytics");
 require("colors");
 
 const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
@@ -22,8 +21,6 @@ class AnalyzeLambdaCostCommand extends Command {
 		global.days = days || 30; // defaults to check last 30 days
 
 		checkVersion();
-
-		track("analyze-lambda-cost", { region, days, hasName: !_.isEmpty(name) });
 
 		if (name) {
 			this.show(await this.getFunctionInRegion(name, region));

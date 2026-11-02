@@ -2,7 +2,6 @@ const _ = require("lodash");
 var fs = require("fs");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
-const { track } = require("../lib/analytics");
 const inquirer = require("inquirer");
 const lambda = require("../lib/scanners/lambda");
 const sns = require("../lib/scanners/sns");
@@ -57,8 +56,6 @@ class ScannerCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("scanner", {});
 
 		this.log(`
 Hi, welcome to the Lumigo scanner!

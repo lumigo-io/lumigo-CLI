@@ -5,7 +5,6 @@ const { getQueueUrl } = require("../lib/sqs");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const uuid = require("uuid/v4");
-const { track } = require("../lib/analytics");
 require("colors");
 
 // SQS SendMessageBatch allows up to 10 messages at a time
@@ -23,8 +22,6 @@ class SendToSqsCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("send-to-sqs", { region });
 
 		this.log(`finding the queue [${queueName}] in [${region}]`);
 		const queueUrl = await getQueueUrl(queueName);

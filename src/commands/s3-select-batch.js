@@ -5,7 +5,6 @@ const humanize = require("humanize");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const async = require("async");
-const { track } = require("../lib/analytics");
 require("colors");
 
 class S3SelectBatchCommand extends Command {
@@ -28,8 +27,6 @@ class S3SelectBatchCommand extends Command {
 		global.httpProxy = httpProxy;
 
 		checkVersion();
-
-		track("s3-select-batch", { region, concurrency });
 
 		this.log(`finding objects with prefix of [${prefix}] in the bucket [${bucket}]`);
 		const { keys, totalSize } = await this.getObjectKeys(bucket, prefix);

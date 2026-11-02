@@ -3,7 +3,6 @@ const { getAWSSDK } = require("../lib/aws");
 const { Command, flags } = require("@oclif/command");
 const { checkVersion } = require("../lib/version-check");
 const uuid = require("uuid/v4");
-const { track } = require("../lib/analytics");
 require("colors");
 
 class TailEventbridgeRuleCommand extends Command {
@@ -18,8 +17,6 @@ class TailEventbridgeRuleCommand extends Command {
 		global.eventBusName = eventBusName;
 
 		checkVersion();
-
-		track("tail-eventbridge-rule", { region });
 
 		this.log(
 			`finding the rule [${ruleName}] (bus [${eventBusName ||
